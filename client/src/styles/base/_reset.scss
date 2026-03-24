@@ -1,0 +1,55 @@
+@use '../abstracts/variables' as v;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: v.$font-family;
+  font-size: v.$font-size-base;
+  color: v.$color-text-primary;
+  background-color: v.$color-bg-dark;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a {
+  color: v.$color-primary-light;
+  text-decoration: none;
+  transition: color v.$transition-fast;
+
+  &:hover {
+    color: v.$color-primary;
+  }
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid v.$color-primary;
+  outline-offset: 2px;
+}
+
+#root {
+  min-height: 100vh;
+}
