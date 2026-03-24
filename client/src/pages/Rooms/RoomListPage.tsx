@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchRooms, fetchDepartments, type Room, type Department } from '../../services/api/medboardApi';
+import AddRoomModal from './AddRoomModal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
 import './RoomListPage.scss';
@@ -18,18 +19,21 @@ export default function RoomListPage() {
   const [search, setSearch] = useState('');
   const [filterDept, setFilterDept] = useState<number | undefined>();
   const [filterStatus, setFilterStatus] = useState<string | undefined>();
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     fetchDepartments().then(setDepartments).catch(() => {});
   }, []);
 
-  useEffect(() => {
+  const loadRooms = () => {
     setLoading(true);
     fetchRooms({ department_id: filterDept, status: filterStatus, search: search || undefined })
       .then(setRooms)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [filterDept, filterStatus, search]);
+  };
+
+  useEffect(() => { loadRooms(); }, [filterDept, filterStatus, search]);
 
   const getOccupancyClass = (room: Room) => {
     if (room.total_beds === 0) return '';
@@ -47,7 +51,7 @@ export default function RoomListPage() {
           <p className="page-header__subtitle">{rooms.length} phong</p>
         </div>
         <div className="page-header__actions">
-          <button className="btn btn--primary">
+          <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
             <img src={iconPlus} alt="" className="btn__icon" style={{ filter: 'brightness(0) invert(1)' }} />
             Them phong
           </button>
@@ -140,6 +144,12 @@ export default function RoomListPage() {
           </table>
         </div>
       )}
+
+      <AddRoomModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCreated={loadRooms}
+      />
     </div>
   );
 }

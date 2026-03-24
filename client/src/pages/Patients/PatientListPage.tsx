@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchPatients, type Patient } from '../../services/api/medboardApi';
+import AddPatientModal from './AddPatientModal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
 import './PatientListPage.scss';
@@ -23,14 +24,17 @@ export default function PatientListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>();
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
+  const loadPatients = () => {
     setLoading(true);
     fetchPatients({ status: filterStatus, search: search || undefined })
       .then(setPatients)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [filterStatus, search]);
+  };
+
+  useEffect(() => { loadPatients(); }, [filterStatus, search]);
 
   const formatDate = (d: string | null) => {
     if (!d) return '--';
@@ -45,7 +49,7 @@ export default function PatientListPage() {
           <p className="page-header__subtitle">{patients.length} benh nhan</p>
         </div>
         <div className="page-header__actions">
-          <button className="btn btn--primary">
+          <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
             <img src={iconPlus} alt="" className="btn__icon" style={{ filter: 'brightness(0) invert(1)' }} />
             Them benh nhan
           </button>
@@ -123,6 +127,12 @@ export default function PatientListPage() {
           </table>
         </div>
       )}
+
+      <AddPatientModal
+        open={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCreated={loadPatients}
+      />
     </div>
   );
 }
