@@ -36,9 +36,10 @@
     gap: v.$space-4;
   }
 
+  // Search
   &__search {
     position: relative;
-    width: 260px;
+    width: 280px;
   }
 
   &__search-icon {
@@ -49,6 +50,7 @@
     width: 16px;
     height: 16px;
     opacity: 0.35;
+    z-index: 1;
   }
 
   &__search-input {
@@ -63,17 +65,119 @@
     color: v.$color-text-primary;
     transition: border-color v.$transition-fast;
 
-    &::placeholder {
-      color: v.$color-text-muted;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: v.$color-primary;
-      background: v.$color-bg-white;
-    }
+    &::placeholder { color: v.$color-text-muted; }
+    &:focus { outline: none; border-color: v.$color-primary; background: v.$color-bg-white; }
   }
 
+  &__search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    box-shadow: v.$shadow-sm;
+    max-height: 320px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  &__search-group-title {
+    padding: v.$space-2 v.$space-3;
+    font-size: 11px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid v.$color-border;
+    background: v.$color-bg-surface;
+  }
+
+  &__search-item {
+    padding: v.$space-2 v.$space-3;
+    font-size: v.$font-size-sm;
+    cursor: pointer;
+    transition: background v.$transition-fast;
+    &:hover { background: v.$color-bg-surface; }
+  }
+
+  // Notifications
+  &__notif-btn {
+    position: relative;
+    background: none;
+    border: none;
+    padding: v.$space-1;
+    cursor: pointer;
+    color: v.$color-text-secondary;
+    border-radius: v.$radius;
+    transition: background v.$transition-fast;
+    &:hover { background: v.$color-bg-surface; }
+  }
+
+  &__notif-badge {
+    position: absolute;
+    top: -2px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: #DC2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: v.$font-weight-bold;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  &__notif-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    width: 340px;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    box-shadow: v.$shadow-sm;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  &__notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: v.$space-3;
+    border-bottom: 1px solid v.$color-border;
+    font-size: v.$font-size-sm;
+  }
+
+  &__notif-empty {
+    padding: v.$space-6;
+    text-align: center;
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+
+  &__notif-item {
+    padding: v.$space-3;
+    border-bottom: 1px solid v.$color-border;
+    transition: background v.$transition-fast;
+    &:hover { background: v.$color-bg-surface; }
+    &--unread { background: #EFF6FF; }
+
+    &-title { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$color-text-primary; }
+    &-msg { font-size: 12px; color: v.$color-text-secondary; margin-top: 2px; }
+    &-time { font-size: 11px; color: v.$color-text-muted; margin-top: 4px; }
+  }
+
+  // User
   &__user {
     display: flex;
     align-items: center;
@@ -83,15 +187,17 @@
     cursor: default;
   }
 
-  &__user-avatar {
-    width: 28px;
-    height: 28px;
-    opacity: 0.5;
-  }
+  &__user-avatar { width: 28px; height: 28px; opacity: 0.5; }
+  &__user-name { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$color-text-primary; }
+}
 
-  &__user-name {
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
-    color: v.$color-text-primary;
+// Responsive
+@media (max-width: 768px) {
+  .header {
+    left: 0 !important;
+    padding: 0 v.$space-3;
+
+    &__search { width: 160px; }
+    &__user-name { display: none; }
   }
 }

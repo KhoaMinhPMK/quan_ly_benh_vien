@@ -8,6 +8,9 @@ import RoomListPage from './pages/Rooms/RoomListPage';
 import RoomDetailPage from './pages/Rooms/RoomDetailPage';
 import PatientListPage from './pages/Patients/PatientListPage';
 import DischargeListPage from './pages/Discharge/DischargeListPage';
+import UserListPage from './pages/Admin/UserListPage';
+import ReportsPage from './pages/Admin/ReportsPage';
+import AdminPage from './pages/Admin/AdminPage';
 import './styles/index.scss';
 
 export default function App() {
@@ -31,6 +34,9 @@ export default function App() {
             <Route path="/rooms/:id" element={<RoomDetailPage />} />
             <Route path="/patients" element={<PatientListPage />} />
             <Route path="/discharge" element={<DischargeListPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/users" element={<UserListPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

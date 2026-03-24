@@ -5,11 +5,14 @@ import * as ctrl from './beds.controller';
 const router = Router();
 router.use(authMiddleware);
 
+router.get('/available', ctrl.listAvailable);
 router.get('/room/:roomId', ctrl.listByRoom);
 router.get('/:id', ctrl.getById);
+router.get('/:id/history', ctrl.getHistory);
 router.post('/', ctrl.create);
 router.patch('/:id/status', ctrl.updateStatus);
 router.post('/:id/assign', ctrl.assign);
 router.post('/:id/release', ctrl.release);
+router.post('/:id/transfer', ctrl.transfer);
 
 export default router;
