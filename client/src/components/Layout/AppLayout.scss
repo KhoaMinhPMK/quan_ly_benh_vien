@@ -7,7 +7,7 @@
   &__main {
     margin-left: v.$sidebar-width;
     margin-top: v.$header-height;
-    padding: v.$space-8;
+    padding: v.$space-6;
     min-height: calc(100vh - v.$header-height);
     transition: margin-left v.$transition-smooth;
   }

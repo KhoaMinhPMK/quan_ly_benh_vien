@@ -46,7 +46,7 @@ export default function RoomDetailPage() {
 
   if (loading) {
     return (
-      <div className="card card--no-hover" style={{ textAlign: 'center', padding: '64px' }}>
+      <div className="card" style={{ textAlign: 'center', padding: '64px' }}>
         <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
         <p style={{ color: '#94A3B8' }}>Dang tai thong tin phong...</p>
       </div>
@@ -55,7 +55,7 @@ export default function RoomDetailPage() {
 
   if (!room) {
     return (
-      <div className="card card--no-hover">
+      <div className="card">
         <div className="empty-state">
           <div className="empty-state__title">Khong tim thay phong</div>
           <div className="empty-state__text">Phong khong ton tai hoac da bi xoa.</div>
@@ -117,7 +117,7 @@ export default function RoomDetailPage() {
       {/* Bed Grid */}
       <div className="room-detail__grid">
         {beds.length === 0 ? (
-          <div className="card card--no-hover" style={{ gridColumn: '1 / -1' }}>
+          <div className="card" style={{ gridColumn: '1 / -1' }}>
             <div className="empty-state">
               <img src={iconBed} alt="" className="empty-state__icon" />
               <div className="empty-state__title">Chua co giuong</div>

@@ -1,29 +1,29 @@
 @use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
 
 .dashboard {
   &__welcome {
-    margin-bottom: v.$space-8;
+    margin-bottom: v.$space-6;
   }
 
   &__welcome-title {
-    font-size: v.$font-size-2xl;
-    font-weight: v.$font-weight-bold;
+    font-size: v.$font-size-xl;
+    font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
-    letter-spacing: -0.02em;
   }
 
   &__welcome-text {
     font-size: v.$font-size-sm;
     color: v.$color-text-muted;
-    margin-top: v.$space-2;
+    margin-top: 2px;
   }
 
   // Stats grid
   &__stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: v.$space-5;
-    margin-bottom: v.$space-8;
+    gap: v.$space-4;
+    margin-bottom: v.$space-6;
 
     @media (max-width: v.$breakpoint-lg) {
       grid-template-columns: repeat(2, 1fr);
@@ -36,26 +36,25 @@
 
   // Sections
   &__section-title {
-    font-size: v.$font-size-lg;
+    font-size: v.$font-size-md;
     font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
     margin-bottom: v.$space-4;
-    letter-spacing: -0.01em;
   }
 
-  // Room grid (visual cards)
+  // Room grid
   &__room-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: v.$space-4;
-    margin-bottom: v.$space-8;
+    margin-bottom: v.$space-6;
   }
 
   // Content grid
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: v.$space-5;
+    gap: v.$space-4;
 
     @media (max-width: v.$breakpoint-md) {
       grid-template-columns: 1fr;
@@ -67,7 +66,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: v.$space-4;
-    margin-bottom: v.$space-8;
+    margin-bottom: v.$space-6;
 
     @media (max-width: v.$breakpoint-md) {
       grid-template-columns: 1fr;
@@ -75,30 +74,15 @@
   }
 }
 
-// Room status card (dashboard)
+// Room status card
 .room-card {
-  background: v.$color-bg-white;
-  border: 1px solid v.$color-border;
-  border-radius: v.$radius-lg;
-  padding: v.$space-5;
-  transition: all v.$transition-base;
+  @include m.card;
+  box-shadow: v.$shadow-sm;
   cursor: pointer;
+  transition: background v.$transition-fast;
 
   &:hover {
-    box-shadow: v.$shadow-card-hover;
-    transform: translateY(-2px);
-  }
-
-  &--full {
-    border-left: 4px solid v.$color-error;
-  }
-
-  &--near-full {
-    border-left: 4px solid v.$color-warning;
-  }
-
-  &--ok {
-    border-left: 4px solid v.$color-success;
+    background: v.$color-bg-hover;
   }
 
   &__header {
@@ -109,7 +93,7 @@
   }
 
   &__name {
-    font-size: v.$font-size-md;
+    font-size: v.$font-size-base;
     font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
   }
@@ -117,7 +101,6 @@
   &__code {
     font-size: v.$font-size-xs;
     color: v.$color-text-muted;
-    font-weight: v.$font-weight-medium;
   }
 
   &__dept {
@@ -132,8 +115,8 @@
 
   &__progress-bar {
     width: 100%;
-    height: 6px;
-    background: v.$color-bg-surface;
+    height: 4px;
+    background: v.$color-bg-active;
     border-radius: v.$radius-full;
     overflow: hidden;
   }
@@ -143,9 +126,9 @@
     border-radius: v.$radius-full;
     transition: width v.$transition-smooth;
 
-    &--success { background: v.$gradient-success; }
-    &--warning { background: v.$gradient-warning; }
-    &--error { background: v.$gradient-error; }
+    &--success { background: v.$color-success; }
+    &--warning { background: v.$color-warning; }
+    &--error { background: v.$color-error; }
   }
 
   &__stats {
@@ -161,38 +144,36 @@
   }
 }
 
-// Quick action card
+// Quick action card — uniform background
 .action-card {
-  background: v.$color-bg-white;
-  border: 1px solid v.$color-border;
-  border-radius: v.$radius-lg;
-  padding: v.$space-5;
+  @include m.card;
+  box-shadow: v.$shadow-sm;
   display: flex;
   align-items: center;
-  gap: v.$space-4;
+  gap: v.$space-3;
   cursor: pointer;
-  transition: all v.$transition-base;
   text-decoration: none;
   color: inherit;
+  transition: background v.$transition-fast;
 
   &:hover {
-    box-shadow: v.$shadow-card-hover;
-    transform: translateY(-1px);
+    background: v.$color-bg-hover;
   }
 
   &__icon {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: v.$radius-lg;
+    border-radius: v.$radius;
+    background: v.$color-primary-bg;
     flex-shrink: 0;
 
     img {
-      width: 22px;
-      height: 22px;
-      filter: brightness(0) invert(1);
+      width: 18px;
+      height: 18px;
+      opacity: 0.8;
     }
   }
 
@@ -205,6 +186,6 @@
   &__desc {
     font-size: v.$font-size-xs;
     color: v.$color-text-muted;
-    margin-top: 2px;
+    margin-top: 1px;
   }
 }

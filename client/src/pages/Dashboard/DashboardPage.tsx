@@ -31,19 +31,19 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
-  const getOccupancyClass = (occupied: number, total: number) => {
-    if (total === 0) return 'ok';
+  const getOccupancyLevel = (occupied: number, total: number) => {
+    if (total === 0) return 'success';
     const ratio = occupied / total;
-    if (ratio >= 1) return 'full';
-    if (ratio >= 0.8) return 'near-full';
-    return 'ok';
+    if (ratio >= 1) return 'error';
+    if (ratio >= 0.8) return 'warning';
+    return 'success';
   };
 
   return (
     <div className="dashboard">
       <div className="dashboard__welcome">
         <h2 className="dashboard__welcome-title">
-          Xin chao, {user.fullName} 👋
+          Xin chao, {user.fullName}
         </h2>
         <p className="dashboard__welcome-text">
           {ROLE_LABELS[user.role] || user.role} — {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -53,51 +53,51 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="dashboard__stats">
         <div className="stat-card">
-          <div className="stat-card__icon" style={{ background: '#EEF2FF' }}>
-            <img src={iconUsers} alt="" style={{ opacity: 0.8 }} />
+          <div className="stat-card__icon">
+            <img src={iconUsers} alt="" />
           </div>
           <div>
-            <div className="stat-card__value">{loading ? '--' : stats?.total_patients ?? 0}</div>
+            <div className="stat-card__value">{loading ? '—' : stats?.total_patients ?? 0}</div>
             <div className="stat-card__label">Benh nhan noi tru</div>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card__icon" style={{ background: '#ECFDF5' }}>
-            <img src={iconBed} alt="" style={{ opacity: 0.8 }} />
+          <div className="stat-card__icon">
+            <img src={iconBed} alt="" />
           </div>
           <div>
-            <div className="stat-card__value">{loading ? '--' : stats?.beds.empty_beds ?? 0}</div>
+            <div className="stat-card__value">{loading ? '—' : stats?.beds.empty_beds ?? 0}</div>
             <div className="stat-card__label">Giuong trong</div>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card__icon" style={{ background: '#FFFBEB' }}>
-            <img src={iconDoorExit} alt="" style={{ opacity: 0.8 }} />
+          <div className="stat-card__icon">
+            <img src={iconDoorExit} alt="" />
           </div>
           <div>
-            <div className="stat-card__value">{loading ? '--' : stats?.discharge_pending ?? 0}</div>
+            <div className="stat-card__value">{loading ? '—' : stats?.discharge_pending ?? 0}</div>
             <div className="stat-card__label">Du kien ra vien</div>
           </div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card__icon" style={{ background: '#FEF2F2' }}>
-            <img src={iconClipboardCheck} alt="" style={{ opacity: 0.8 }} />
+          <div className="stat-card__icon">
+            <img src={iconClipboardCheck} alt="" />
           </div>
           <div>
-            <div className="stat-card__value">{loading ? '--' : stats?.patients_missing_checklist ?? 0}</div>
+            <div className="stat-card__value">{loading ? '—' : stats?.patients_missing_checklist ?? 0}</div>
             <div className="stat-card__label">Ho so can kiem tra</div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions — uniform icon bg */}
       <h3 className="dashboard__section-title">Thao tac nhanh</h3>
       <div className="dashboard__actions">
         <Link to="/patients" className="action-card">
-          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
+          <div className="action-card__icon">
             <img src={iconPlus} alt="" />
           </div>
           <div>
@@ -106,35 +106,35 @@ export default function DashboardPage() {
           </div>
         </Link>
         <Link to="/rooms" className="action-card">
-          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+          <div className="action-card__icon">
             <img src={iconBed} alt="" />
           </div>
           <div>
             <div className="action-card__text">Quan ly phong giuong</div>
-            <div className="action-card__desc">Xem trang thai & xep giuong</div>
+            <div className="action-card__desc">Xem trang thai va xep giuong</div>
           </div>
         </Link>
         <Link to="/discharge" className="action-card">
-          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
+          <div className="action-card__icon">
             <img src={iconDoorExit} alt="" />
           </div>
           <div>
             <div className="action-card__text">Ra vien hom nay</div>
-            <div className="action-card__desc">Kiem tra ho so & xac nhan</div>
+            <div className="action-card__desc">Kiem tra ho so va xac nhan</div>
           </div>
         </Link>
       </div>
 
-      {/* Room Occupancy Cards */}
+      {/* Room Occupancy */}
       {stats && stats.rooms.length > 0 && (
         <>
           <h3 className="dashboard__section-title">Cong suat phong</h3>
           <div className="dashboard__room-grid">
             {stats.rooms.map((r) => {
               const ratio = r.total_beds > 0 ? (r.occupied_beds / r.total_beds) * 100 : 0;
-              const cls = getOccupancyClass(r.occupied_beds, r.total_beds);
+              const level = getOccupancyLevel(r.occupied_beds, r.total_beds);
               return (
-                <Link to="/rooms" key={r.id} className={`room-card room-card--${cls}`} style={{ textDecoration: 'none' }}>
+                <Link to={`/rooms/${r.id}`} key={r.id} className="room-card" style={{ textDecoration: 'none' }}>
                   <div className="room-card__header">
                     <span className="room-card__name">{r.name}</span>
                     <span className="room-card__code">{r.room_code}</span>
@@ -142,14 +142,14 @@ export default function DashboardPage() {
                   <div className="room-card__progress">
                     <div className="room-card__progress-bar">
                       <div
-                        className={`room-card__progress-fill room-card__progress-fill--${cls === 'full' ? 'error' : cls === 'near-full' ? 'warning' : 'success'}`}
+                        className={`room-card__progress-fill room-card__progress-fill--${level}`}
                         style={{ width: `${Math.min(ratio, 100)}%` }}
                       />
                     </div>
                   </div>
                   <div className="room-card__stats">
                     <span><span className="room-card__stat-value">{r.occupied_beds}</span>/{r.total_beds} giuong</span>
-                    <span className={`badge badge--${cls === 'full' ? 'error' : cls === 'near-full' ? 'warning' : 'success'}`}>
+                    <span className={`badge badge--${level}`}>
                       {Math.round(ratio)}%
                     </span>
                   </div>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       )}
 
       {!loading && (!stats || stats.rooms.length === 0) && (
-        <div className="card card--no-hover">
+        <div className="card">
           <div className="empty-state">
             <div className="empty-state__title">Chua co du lieu</div>
             <div className="empty-state__text">He thong se hien thi trang thai phong khi duoc cau hinh.</div>
