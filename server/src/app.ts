@@ -3,6 +3,10 @@ import cors from 'cors';
 import { env } from './config/env';
 import { testConnection } from './config/database';
 import authRoutes from './modules/auth/auth.routes';
+import roomsRoutes from './modules/rooms/rooms.routes';
+import bedsRoutes from './modules/beds/beds.routes';
+import patientsRoutes from './modules/patients/patients.routes';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -19,6 +23,10 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/rooms', roomsRoutes);
+app.use('/api/beds', bedsRoutes);
+app.use('/api/patients', patientsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Error handling
 app.use(notFoundHandler);

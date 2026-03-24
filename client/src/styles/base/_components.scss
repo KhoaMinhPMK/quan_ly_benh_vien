@@ -1,0 +1,271 @@
+@use 'sass:color';
+@use '../abstracts/variables' as v;
+@use '../abstracts/mixins' as m;
+
+// ============================================================
+// BUTTONS
+// ============================================================
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: v.$space-2;
+  height: 40px;
+  padding: 0 v.$space-4;
+  font-size: v.$font-size-base;
+  font-weight: v.$font-weight-medium;
+  border: 1px solid transparent;
+  border-radius: v.$radius;
+  cursor: pointer;
+  transition: all v.$transition-fast;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: v.$color-primary;
+    color: v.$color-text-white;
+
+    &:hover:not(:disabled) {
+      background: v.$color-primary-dark;
+    }
+  }
+
+  &--secondary {
+    background: v.$color-bg-white;
+    color: v.$color-text-primary;
+    border-color: v.$color-border;
+
+    &:hover:not(:disabled) {
+      background: v.$color-bg-hover;
+    }
+  }
+
+  &--danger {
+    background: v.$color-error;
+    color: v.$color-text-white;
+
+    &:hover:not(:disabled) {
+      background: color.adjust(v.$color-error, $lightness: -8%);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: v.$color-text-secondary;
+
+    &:hover:not(:disabled) {
+      background: v.$color-bg-hover;
+      color: v.$color-text-primary;
+    }
+  }
+
+  &--sm {
+    height: 32px;
+    padding: 0 v.$space-3;
+    font-size: v.$font-size-sm;
+  }
+
+  &--lg {
+    height: 48px;
+    padding: 0 v.$space-6;
+    font-size: v.$font-size-md;
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// ============================================================
+// CARD
+// ============================================================
+.card {
+  @include m.card;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: v.$space-4;
+  }
+
+  &__title {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+}
+
+// ============================================================
+// BADGE
+// ============================================================
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: v.$space-1;
+  padding: 2px v.$space-2;
+  font-size: v.$font-size-xs;
+  font-weight: v.$font-weight-medium;
+  border-radius: v.$radius-sm;
+  white-space: nowrap;
+
+  &--success {
+    background: v.$color-success-bg;
+    color: v.$color-success;
+  }
+
+  &--error {
+    background: v.$color-error-bg;
+    color: v.$color-error;
+  }
+
+  &--warning {
+    background: v.$color-warning-bg;
+    color: v.$color-warning;
+  }
+
+  &--info {
+    background: v.$color-info-bg;
+    color: v.$color-info;
+  }
+
+  &--neutral {
+    background: v.$color-bg-active;
+    color: v.$color-text-secondary;
+  }
+}
+
+// ============================================================
+// STATUS DOT
+// ============================================================
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--success { background: v.$color-success; }
+  &--error { background: v.$color-error; }
+  &--warning { background: v.$color-warning; }
+  &--info { background: v.$color-info; }
+  &--neutral { background: v.$color-text-muted; }
+}
+
+// ============================================================
+// FORM
+// ============================================================
+.form-field {
+  margin-bottom: v.$space-4;
+
+  &__label {
+    display: block;
+    margin-bottom: v.$space-1;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$color-text-primary;
+  }
+
+  &__input {
+    @include m.form-input;
+  }
+
+  &__textarea {
+    @include m.form-input;
+    height: auto;
+    min-height: 80px;
+    padding: v.$space-3;
+    resize: vertical;
+  }
+
+  &__hint {
+    margin-top: v.$space-1;
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+  }
+
+  &__error {
+    margin-top: v.$space-1;
+    font-size: v.$font-size-xs;
+    color: v.$color-error;
+  }
+}
+
+// ============================================================
+// TABLE
+// ============================================================
+.data-table {
+  @include m.data-table;
+}
+
+// ============================================================
+// PAGE HEADER
+// ============================================================
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: v.$space-6;
+
+  &__title {
+    font-size: v.$font-size-xl;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+
+  &__subtitle {
+    font-size: v.$font-size-sm;
+    color: v.$color-text-secondary;
+    margin-top: v.$space-1;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+  }
+}
+
+// ============================================================
+// STAT CARD
+// ============================================================
+.stat-card {
+  @include m.card;
+  display: flex;
+  align-items: flex-start;
+  gap: v.$space-4;
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: v.$radius;
+    flex-shrink: 0;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__value {
+    font-size: v.$font-size-2xl;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+    line-height: 1.2;
+  }
+
+  &__label {
+    font-size: v.$font-size-sm;
+    color: v.$color-text-secondary;
+    margin-top: v.$space-1;
+  }
+}

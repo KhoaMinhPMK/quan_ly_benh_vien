@@ -17,25 +17,28 @@ html {
 body {
   font-family: v.$font-family;
   font-size: v.$font-size-base;
+  font-weight: v.$font-weight-normal;
   color: v.$color-text-primary;
-  background-color: v.$color-bg-dark;
-  line-height: 1.6;
+  background-color: v.$color-bg-page;
+  line-height: 1.5;
   min-height: 100vh;
 }
 
 a {
-  color: v.$color-primary-light;
+  color: v.$color-primary;
   text-decoration: none;
   transition: color v.$transition-fast;
 
   &:hover {
-    color: v.$color-primary;
+    color: v.$color-primary-dark;
   }
 }
 
 button {
   cursor: pointer;
   font-family: inherit;
+  border: none;
+  background: none;
 }
 
 input,
@@ -48,6 +51,16 @@ textarea {
 :focus-visible {
   outline: 2px solid v.$color-primary;
   outline-offset: 2px;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
 }
 
 #root {

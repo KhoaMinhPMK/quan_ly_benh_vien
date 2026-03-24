@@ -1,0 +1,65 @@
+@use '../../styles/abstracts/variables' as v;
+
+.discharge {
+  &__layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: v.$space-4;
+
+    @media (max-width: v.$breakpoint-lg) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__row--active {
+    background: v.$color-primary-bg !important;
+  }
+
+  &__checklist {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-2;
+  }
+
+  &__check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$space-3;
+    padding: v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    cursor: pointer;
+    transition: background v.$transition-fast;
+
+    &:hover {
+      background: v.$color-bg-hover;
+    }
+
+    input[type="checkbox"] {
+      margin-top: 3px;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      accent-color: v.$color-primary;
+    }
+  }
+
+  &__check-name {
+    display: block;
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+    color: v.$color-text-primary;
+
+    &--done {
+      text-decoration: line-through;
+      color: v.$color-text-muted;
+    }
+  }
+
+  &__check-desc {
+    display: block;
+    font-size: v.$font-size-xs;
+    color: v.$color-text-secondary;
+    margin-top: 2px;
+  }
+}

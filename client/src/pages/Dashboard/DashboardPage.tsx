@@ -1,100 +1,133 @@
+import { useState, useEffect } from 'react';
+import { fetchDashboardStats, type DashboardStats } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
+import iconBed from '../../assets/icons/outline/bed.svg';
+import iconUsers from '../../assets/icons/outline/users.svg';
+import iconDoorExit from '../../assets/icons/outline/door-exit.svg';
+import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
 import './DashboardPage.scss';
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Quản trị viên',
-  doctor: 'Bác sĩ',
-  nurse: 'Điều dưỡng',
-  records_staff: 'Nhân viên hồ sơ',
-  receptionist: 'Lễ tân',
+  admin: 'Quan tri vien',
+  doctor: 'Bac si',
+  nurse: 'Dieu duong',
+  records_staff: 'Nhan vien ho so',
+  receptionist: 'Le tan',
 };
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats()
+      .then(setStats)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   if (!user) return null;
 
   return (
     <div className="dashboard">
-      <header className="dashboard__header">
-        <div className="dashboard__brand">
-          <svg viewBox="0 0 32 32" fill="none" className="dashboard__logo-icon">
-            <rect width="32" height="32" rx="8" fill="#1a73e8" />
-            <path d="M10 16h12M16 10v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-          </svg>
-          <span className="dashboard__brand-text">MedBoard</span>
-        </div>
+      <div className="dashboard__welcome">
+        <h2 className="dashboard__welcome-title">
+          Xin chao, {user.fullName}
+        </h2>
+        <p className="dashboard__welcome-text">
+          {ROLE_LABELS[user.role] || user.role} -- {user.email}
+        </p>
+      </div>
 
-        <div className="dashboard__user-info">
-          <div className="dashboard__user-details">
-            <span className="dashboard__user-name">{user.fullName}</span>
-            <span className="dashboard__user-role">{ROLE_LABELS[user.role] || user.role}</span>
+      {/* Stats Grid */}
+      <div className="dashboard__stats">
+        <div className="stat-card">
+          <div className="stat-card__icon" style={{ background: '#EFF6FF' }}>
+            <img src={iconUsers} alt="" style={{ opacity: 0.8 }} />
           </div>
-          <button className="dashboard__logout" onClick={logout}>
-            Đăng xuất
-          </button>
-        </div>
-      </header>
-
-      <main className="dashboard__main">
-        <div className="dashboard__welcome">
-          <h1 className="dashboard__welcome-title">
-            Xin chào, {user.fullName}! 👋
-          </h1>
-          <p className="dashboard__welcome-text">
-            Chào mừng bạn đến với hệ thống quản lý y tế nội trú MedBoard.
-          </p>
-        </div>
-
-        <div className="dashboard__cards">
-          <div className="dashboard__card">
-            <div className="dashboard__card-icon dashboard__card-icon--blue">🏥</div>
-            <div className="dashboard__card-content">
-              <h3 className="dashboard__card-title">Quản lý giường</h3>
-              <p className="dashboard__card-desc">Xem sơ đồ phòng – giường bệnh</p>
-            </div>
-            <span className="dashboard__card-badge">Sắp ra mắt</span>
-          </div>
-
-          <div className="dashboard__card">
-            <div className="dashboard__card-icon dashboard__card-icon--green">👤</div>
-            <div className="dashboard__card-content">
-              <h3 className="dashboard__card-title">Bệnh nhân</h3>
-              <p className="dashboard__card-desc">Quản lý danh sách bệnh nhân nội trú</p>
-            </div>
-            <span className="dashboard__card-badge">Sắp ra mắt</span>
-          </div>
-
-          <div className="dashboard__card">
-            <div className="dashboard__card-icon dashboard__card-icon--orange">📋</div>
-            <div className="dashboard__card-content">
-              <h3 className="dashboard__card-title">Ra viện</h3>
-              <p className="dashboard__card-desc">Checklist và xác nhận ra viện</p>
-            </div>
-            <span className="dashboard__card-badge">Sắp ra mắt</span>
-          </div>
-
-          <div className="dashboard__card">
-            <div className="dashboard__card-icon dashboard__card-icon--purple">📊</div>
-            <div className="dashboard__card-content">
-              <h3 className="dashboard__card-title">Báo cáo</h3>
-              <p className="dashboard__card-desc">Thống kê công suất, hiệu suất</p>
-            </div>
-            <span className="dashboard__card-badge">Sắp ra mắt</span>
+          <div>
+            <div className="stat-card__value">{loading ? '--' : stats?.total_patients ?? 0}</div>
+            <div className="stat-card__label">Benh nhan noi tru</div>
           </div>
         </div>
 
-        <div className="dashboard__info">
-          <h2>Thông tin hệ thống</h2>
-          <table className="dashboard__table">
+        <div className="stat-card">
+          <div className="stat-card__icon" style={{ background: '#ECFDF5' }}>
+            <img src={iconBed} alt="" style={{ opacity: 0.8 }} />
+          </div>
+          <div>
+            <div className="stat-card__value">{loading ? '--' : stats?.beds.empty_beds ?? 0}</div>
+            <div className="stat-card__label">Giuong trong</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card__icon" style={{ background: '#FFFBEB' }}>
+            <img src={iconDoorExit} alt="" style={{ opacity: 0.8 }} />
+          </div>
+          <div>
+            <div className="stat-card__value">{loading ? '--' : stats?.discharge_pending ?? 0}</div>
+            <div className="stat-card__label">Du kien ra vien</div>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-card__icon" style={{ background: '#FEF2F2' }}>
+            <img src={iconClipboardCheck} alt="" style={{ opacity: 0.8 }} />
+          </div>
+          <div>
+            <div className="stat-card__value">{loading ? '--' : stats?.patients_missing_checklist ?? 0}</div>
+            <div className="stat-card__label">Ho so can kiem tra</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Room occupancy */}
+      {stats && stats.rooms.length > 0 && (
+        <div className="card">
+          <div className="card__header">
+            <h3 className="card__title">Cong suat phong</h3>
+          </div>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Ma phong</th>
+                <th>Ten phong</th>
+                <th>Giuong</th>
+                <th>Cong suat</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td>Tài khoản</td><td>{user.email}</td></tr>
-              <tr><td>Vai trò</td><td>{ROLE_LABELS[user.role] || user.role}</td></tr>
-              <tr><td>Trạng thái</td><td><span className="dashboard__status-badge">Đang hoạt động</span></td></tr>
+              {stats.rooms.map((r) => {
+                const ratio = r.total_beds > 0 ? (r.occupied_beds / r.total_beds) * 100 : 0;
+                const badgeClass = ratio >= 100 ? 'badge--error' : ratio >= 80 ? 'badge--warning' : 'badge--success';
+                return (
+                  <tr key={r.id}>
+                    <td><strong>{r.room_code}</strong></td>
+                    <td>{r.name}</td>
+                    <td>{r.occupied_beds}/{r.total_beds}</td>
+                    <td><span className={`badge ${badgeClass}`}>{Math.round(ratio)}%</span></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </main>
+      )}
+
+      {!loading && (!stats || stats.rooms.length === 0) && (
+        <div className="dashboard__grid">
+          <div className="card">
+            <div className="card__header">
+              <h3 className="card__title">Phong gan day</h3>
+            </div>
+            <p style={{ color: '#6B7280', fontSize: '14px' }}>
+              Chua co du lieu. He thong se hien thi trang thai phong khi duoc cau hinh.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

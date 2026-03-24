@@ -1,0 +1,28 @@
+@use '../../styles/abstracts/variables' as v;
+
+.room-filters {
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  margin-bottom: v.$space-4;
+
+  &__search {
+    position: relative;
+    flex: 1;
+    max-width: 320px;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: v.$space-3;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    opacity: 0.4;
+  }
+
+  .form-field__input {
+    padding-left: 36px;
+  }
+}

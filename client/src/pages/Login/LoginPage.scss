@@ -1,4 +1,5 @@
 @use '../../styles/abstracts/variables' as v;
+@use '../../styles/abstracts/mixins' as m;
 
 .login {
   min-height: 100vh;
@@ -6,65 +7,16 @@
   align-items: center;
   justify-content: center;
   padding: v.$space-4;
-  position: relative;
-  overflow: hidden;
-
-  // Decorative background
-  &__bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  &__bg-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.15;
-    animation: float 20s ease-in-out infinite;
-
-    &--1 {
-      width: 600px;
-      height: 600px;
-      background: v.$color-primary;
-      top: -200px;
-      right: -200px;
-    }
-
-    &--2 {
-      width: 400px;
-      height: 400px;
-      background: v.$color-success;
-      bottom: -100px;
-      left: -100px;
-      animation-delay: -7s;
-    }
-
-    &--3 {
-      width: 300px;
-      height: 300px;
-      background: v.$color-info;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      animation-delay: -14s;
-    }
-  }
+  background: v.$color-bg-page;
 
   // Card
   &__card {
-    position: relative;
-    z-index: 1;
     width: 100%;
-    max-width: 420px;
-    background: rgba(30, 41, 59, 0.8);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: v.$radius-xl;
+    max-width: 400px;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
     padding: v.$space-10;
-    box-shadow: v.$shadow-xl;
-    animation: slideUp 0.5s ease-out;
   }
 
   // Brand
@@ -73,23 +25,17 @@
     margin-bottom: v.$space-8;
   }
 
-  &__logo {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto v.$space-4;
-    animation: pulse 3s ease-in-out infinite;
-
-    svg {
-      width: 100%;
-      height: 100%;
-    }
+  &__logo-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto v.$space-3;
+    opacity: 0.85;
   }
 
   &__title {
-    font-size: v.$font-size-3xl;
-    font-weight: 700;
+    font-size: v.$font-size-2xl;
+    font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
-    letter-spacing: -0.02em;
   }
 
   &__subtitle {
@@ -102,49 +48,23 @@
   &__form {
     display: flex;
     flex-direction: column;
-    gap: v.$space-5;
+    gap: v.$space-4;
   }
 
   &__field {
     display: flex;
     flex-direction: column;
-    gap: v.$space-2;
+    gap: v.$space-1;
   }
 
   &__label {
     font-size: v.$font-size-sm;
-    font-weight: 500;
-    color: v.$color-text-secondary;
+    font-weight: v.$font-weight-medium;
+    color: v.$color-text-primary;
   }
 
   &__input {
-    width: 100%;
-    padding: v.$space-3 v.$space-4;
-    background: v.$color-bg-input;
-    border: 1px solid v.$color-border;
-    border-radius: v.$radius-md;
-    color: v.$color-text-primary;
-    font-size: v.$font-size-base;
-    transition: all v.$transition-fast;
-
-    &::placeholder {
-      color: v.$color-text-muted;
-    }
-
-    &:hover {
-      border-color: v.$color-bg-hover;
-    }
-
-    &:focus {
-      outline: none;
-      border-color: v.$color-primary;
-      box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.15);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
+    @include m.form-input;
   }
 
   &__password-wrap {
@@ -153,21 +73,24 @@
 
   &__toggle-pw {
     position: absolute;
-    right: v.$space-3;
+    right: v.$space-2;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
-    font-size: v.$font-size-lg;
     cursor: pointer;
     padding: v.$space-1;
-    line-height: 1;
-    opacity: 0.7;
+    opacity: 0.5;
     transition: opacity v.$transition-fast;
 
     &:hover {
-      opacity: 1;
+      opacity: 0.8;
     }
+  }
+
+  &__toggle-pw-icon {
+    width: 18px;
+    height: 18px;
   }
 
   // Error
@@ -175,13 +98,12 @@
     display: flex;
     align-items: center;
     gap: v.$space-2;
-    padding: v.$space-3 v.$space-4;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: v.$radius-md;
-    color: v.$color-error;
+    padding: v.$space-3;
+    background: v.$color-error-bg;
+    border: 1px solid v.$color-error;
+    border-radius: v.$radius;
     font-size: v.$font-size-sm;
-    animation: shake 0.4s ease-out;
+    color: v.$color-error;
   }
 
   &__error-icon {
@@ -190,18 +112,18 @@
     flex-shrink: 0;
   }
 
-  // Submit button
+  // Submit
   &__submit {
     width: 100%;
-    padding: v.$space-3 v.$space-4;
+    height: 40px;
     background: v.$color-primary;
-    color: white;
+    color: v.$color-text-white;
     border: none;
-    border-radius: v.$radius-md;
+    border-radius: v.$radius;
     font-size: v.$font-size-base;
-    font-weight: 600;
+    font-weight: v.$font-weight-semibold;
     cursor: pointer;
-    transition: all v.$transition-fast;
+    transition: background v.$transition-fast;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -210,16 +132,10 @@
 
     &:hover:not(:disabled) {
       background: v.$color-primary-dark;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
     }
 
     &:disabled {
-      opacity: 0.7;
+      opacity: 0.6;
       cursor: not-allowed;
     }
 
@@ -229,8 +145,8 @@
   }
 
   &__spinner {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-top-color: white;
     border-radius: 50%;
@@ -246,7 +162,7 @@
   }
 }
 
-// Loading screen (for ProtectedRoute)
+// Loading screen
 .loading-screen {
   min-height: 100vh;
   display: flex;
@@ -257,45 +173,15 @@
   color: v.$color-text-secondary;
 
   &__spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid v.$color-bg-card;
+    width: 32px;
+    height: 32px;
+    border: 3px solid v.$color-border;
     border-top-color: v.$color-primary;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
 }
 
-// Animations
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  50% { transform: translateX(6px); }
-  75% { transform: translateX(-3px); }
-}
-
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translate(0, 0); }
-  33% { transform: translate(30px, -30px); }
-  66% { transform: translate(-20px, 20px); }
 }
