@@ -6,14 +6,15 @@
   right: 0;
   left: v.$sidebar-width;
   height: v.$header-height;
-  background: v.$color-bg-white;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid v.$color-border;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 v.$space-6;
+  padding: 0 v.$space-8;
   z-index: 50;
-  transition: left v.$transition-base;
+  transition: left v.$transition-smooth;
 
   .layout--collapsed & {
     left: v.$sidebar-collapsed-width;
@@ -29,6 +30,7 @@
     font-size: v.$font-size-lg;
     font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
+    letter-spacing: -0.01em;
   }
 
   // ---- Right ----
@@ -41,38 +43,44 @@
   // ---- Search ----
   &__search {
     position: relative;
-    width: 280px;
+    width: 300px;
   }
 
   &__search-icon {
     position: absolute;
-    left: v.$space-3;
+    left: v.$space-4;
     top: 50%;
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
-    opacity: 0.4;
+    opacity: 0.35;
   }
 
   &__search-input {
     width: 100%;
-    height: 36px;
-    padding: 0 v.$space-3 0 36px;
+    height: 40px;
+    padding: 0 v.$space-4 0 40px;
     background: v.$color-bg-surface;
-    border: 1px solid v.$color-border;
-    border-radius: v.$radius;
+    border: 1px solid transparent;
+    border-radius: v.$radius-full;
     font-size: v.$font-size-sm;
+    font-family: v.$font-family;
     color: v.$color-text-primary;
-    transition: border-color v.$transition-fast, background v.$transition-fast;
+    transition: all v.$transition-base;
 
     &::placeholder {
       color: v.$color-text-muted;
+    }
+
+    &:hover {
+      background: v.$color-bg-hover;
     }
 
     &:focus {
       outline: none;
       border-color: v.$color-primary;
       background: v.$color-bg-white;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.08);
     }
   }
 
@@ -80,16 +88,21 @@
   &__user {
     display: flex;
     align-items: center;
-    gap: v.$space-2;
+    gap: v.$space-3;
     padding: v.$space-2 v.$space-3;
-    border-radius: v.$radius;
+    border-radius: v.$radius-full;
     cursor: default;
+    transition: background v.$transition-base;
+
+    &:hover {
+      background: v.$color-bg-hover;
+    }
   }
 
   &__user-avatar {
-    width: 28px;
-    height: 28px;
-    opacity: 0.6;
+    width: 32px;
+    height: 32px;
+    opacity: 0.5;
   }
 
   &__user-name {

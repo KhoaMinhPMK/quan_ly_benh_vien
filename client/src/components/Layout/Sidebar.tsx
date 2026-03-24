@@ -7,8 +7,7 @@ import iconDashboard from '../../assets/icons/outline/layout-dashboard.svg';
 import iconBed from '../../assets/icons/outline/bed.svg';
 import iconUsers from '../../assets/icons/outline/users.svg';
 import iconDoorExit from '../../assets/icons/outline/door-exit.svg';
-import iconClipboard from '../../assets/icons/outline/clipboard-check.svg';
-import iconSettings from '../../assets/icons/outline/settings.svg';
+
 import iconBuilding from '../../assets/icons/outline/building-hospital.svg';
 import iconLogout from '../../assets/icons/outline/logout.svg';
 import iconChevronLeft from '../../assets/icons/outline/chevron-left.svg';
@@ -25,8 +24,6 @@ const navItems: NavItem[] = [
   { path: '/rooms', label: 'Phong - Giuong', icon: iconBed },
   { path: '/patients', label: 'Benh nhan', icon: iconUsers },
   { path: '/discharge', label: 'Ra vien', icon: iconDoorExit },
-  { path: '/records', label: 'Ho so', icon: iconClipboard },
-  { path: '/admin', label: 'Quan tri', icon: iconSettings },
 ];
 
 interface SidebarProps {

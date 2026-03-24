@@ -7,16 +7,48 @@
   align-items: center;
   justify-content: center;
   padding: v.$space-4;
-  background: v.$color-bg-page;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
 
-  // Card
+  // Decorative bg shapes
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.1;
+  }
+
+  &::before {
+    width: 600px;
+    height: 600px;
+    background: white;
+    top: -200px;
+    right: -100px;
+  }
+
+  &::after {
+    width: 400px;
+    height: 400px;
+    background: white;
+    bottom: -150px;
+    left: -100px;
+  }
+
+  // Card — glass effect
   &__card {
     width: 100%;
-    max-width: 400px;
-    background: v.$color-bg-white;
-    border: 1px solid v.$color-border;
-    border-radius: v.$radius;
-    padding: v.$space-10;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: v.$radius-xl;
+    padding: v.$space-10 v.$space-8;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15), 0 8px 24px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 1;
+    animation: fadeInUp 0.5s ease-out;
   }
 
   // Brand
@@ -26,45 +58,52 @@
   }
 
   &__logo-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto v.$space-3;
-    opacity: 0.85;
+    width: 56px;
+    height: 56px;
+    margin: 0 auto v.$space-4;
+    padding: v.$space-3;
+    background: v.$gradient-primary;
+    border-radius: v.$radius-lg;
+    filter: brightness(0) invert(1);
   }
 
   &__title {
     font-size: v.$font-size-2xl;
-    font-weight: v.$font-weight-semibold;
+    font-weight: v.$font-weight-bold;
     color: v.$color-text-primary;
+    letter-spacing: -0.02em;
   }
 
   &__subtitle {
     font-size: v.$font-size-sm;
-    color: v.$color-text-secondary;
-    margin-top: v.$space-1;
+    color: v.$color-text-muted;
+    margin-top: v.$space-2;
   }
 
   // Form
   &__form {
     display: flex;
     flex-direction: column;
-    gap: v.$space-4;
+    gap: v.$space-5;
   }
 
   &__field {
     display: flex;
     flex-direction: column;
-    gap: v.$space-1;
+    gap: v.$space-2;
   }
 
   &__label {
     font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
+    font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
   }
 
   &__input {
     @include m.form-input;
+    height: 48px;
+    border-radius: v.$radius;
+    font-size: v.$font-size-md;
   }
 
   &__password-wrap {
@@ -73,15 +112,15 @@
 
   &__toggle-pw {
     position: absolute;
-    right: v.$space-2;
+    right: v.$space-3;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
     padding: v.$space-1;
-    opacity: 0.5;
-    transition: opacity v.$transition-fast;
+    opacity: 0.4;
+    transition: opacity v.$transition-base;
 
     &:hover {
       opacity: 0.8;
@@ -89,8 +128,8 @@
   }
 
   &__toggle-pw-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
   }
 
   // Error
@@ -98,9 +137,9 @@
     display: flex;
     align-items: center;
     gap: v.$space-2;
-    padding: v.$space-3;
+    padding: v.$space-3 v.$space-4;
     background: v.$color-error-bg;
-    border: 1px solid v.$color-error;
+    border: 1px solid rgba(239, 68, 68, 0.2);
     border-radius: v.$radius;
     font-size: v.$font-size-sm;
     color: v.$color-error;
@@ -115,23 +154,30 @@
   // Submit
   &__submit {
     width: 100%;
-    height: 40px;
-    background: v.$color-primary;
+    height: 48px;
+    background: v.$gradient-primary;
     color: v.$color-text-white;
     border: none;
     border-radius: v.$radius;
-    font-size: v.$font-size-base;
+    font-size: v.$font-size-md;
     font-weight: v.$font-weight-semibold;
+    font-family: v.$font-family;
     cursor: pointer;
-    transition: background v.$transition-fast;
+    transition: all v.$transition-base;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: v.$space-2;
     margin-top: v.$space-2;
+    box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
 
     &:hover:not(:disabled) {
-      background: v.$color-primary-dark;
+      box-shadow: 0 6px 24px rgba(79, 70, 229, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
     }
 
     &:disabled {
@@ -145,8 +191,8 @@
   }
 
   &__spinner {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-top-color: white;
     border-radius: 50%;
@@ -171,10 +217,11 @@
   justify-content: center;
   gap: v.$space-4;
   color: v.$color-text-secondary;
+  background: v.$color-bg-page;
 
   &__spinner {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     border: 3px solid v.$color-border;
     border-top-color: v.$color-primary;
     border-radius: 50%;
@@ -184,4 +231,15 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

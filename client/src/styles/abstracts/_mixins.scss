@@ -16,28 +16,35 @@
 }
 
 // ============================================================
-// CARD
+// CARD — Modern elevated
 // ============================================================
 @mixin card {
   background: v.$color-bg-white;
   border: 1px solid v.$color-border;
-  border-radius: v.$radius;
+  border-radius: v.$radius-lg;
   padding: v.$space-6;
+  transition: box-shadow v.$transition-base, transform v.$transition-base;
+}
+
+@mixin card-hover {
+  box-shadow: v.$shadow-card-hover;
+  transform: translateY(-1px);
 }
 
 // ============================================================
-// FORM FIELD
+// FORM FIELD — Taller, modern
 // ============================================================
 @mixin form-input {
   width: 100%;
-  height: 40px;
-  padding: 0 v.$space-3;
+  height: 44px;
+  padding: 0 v.$space-4;
   background: v.$color-bg-input;
   border: 1px solid v.$color-border;
   border-radius: v.$radius;
   font-size: v.$font-size-base;
+  font-family: v.$font-family;
   color: v.$color-text-primary;
-  transition: border-color v.$transition-fast;
+  transition: all v.$transition-base;
 
   &::placeholder {
     color: v.$color-text-muted;
@@ -50,7 +57,7 @@
   &:focus {
     outline: none;
     border-color: v.$color-primary;
-    box-shadow: 0 0 0 3px rgba(v.$color-primary, 0.1);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
   }
 
   &:disabled {
@@ -61,14 +68,14 @@
 }
 
 // ============================================================
-// TABLE
+// TABLE — Modern with hover and cursor
 // ============================================================
 @mixin data-table {
   width: 100%;
   border-collapse: collapse;
 
   th, td {
-    padding: v.$space-3 v.$space-4;
+    padding: v.$space-3 v.$space-5;
     text-align: left;
     border-bottom: 1px solid v.$color-border;
   }
@@ -78,7 +85,7 @@
     font-size: v.$font-size-xs;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: v.$color-text-secondary;
+    color: v.$color-text-muted;
     background: v.$color-bg-surface;
     white-space: nowrap;
   }
@@ -90,9 +97,14 @@
 
   tbody tr {
     transition: background v.$transition-fast;
+    cursor: pointer;
 
     &:hover {
-      background: v.$color-bg-hover;
+      background: v.$color-primary-bg;
+    }
+
+    &:last-child td {
+      border-bottom: none;
     }
   }
 }
@@ -104,4 +116,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// ============================================================
+// PROGRESS BAR
+// ============================================================
+@mixin progress-bar($height: 8px) {
+  width: 100%;
+  height: $height;
+  background: v.$color-bg-surface;
+  border-radius: v.$radius-full;
+  overflow: hidden;
+}
+
+@mixin progress-fill {
+  height: 100%;
+  border-radius: v.$radius-full;
+  transition: width v.$transition-smooth;
 }

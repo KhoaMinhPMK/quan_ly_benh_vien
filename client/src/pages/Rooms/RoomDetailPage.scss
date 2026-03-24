@@ -1,0 +1,147 @@
+@use '../../styles/abstracts/variables' as v;
+
+.room-detail {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: v.$space-6;
+  }
+
+  &__header-stats {
+    display: flex;
+    gap: v.$space-2;
+  }
+
+  // Summary bar
+  &__summary {
+    display: flex;
+    gap: v.$space-6;
+    padding: v.$space-5 v.$space-6;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius-lg;
+    margin-bottom: v.$space-6;
+  }
+
+  &__summary-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: v.$space-1;
+    min-width: 64px;
+  }
+
+  &__summary-value {
+    font-size: v.$font-size-2xl;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-text-primary;
+    line-height: 1;
+
+    &--success { color: v.$color-success; }
+    &--info { color: v.$color-info; }
+    &--muted { color: v.$color-text-muted; }
+  }
+
+  &__summary-label {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    font-weight: v.$font-weight-medium;
+  }
+
+  // Bed grid
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: v.$space-4;
+  }
+}
+
+// Bed Card
+.bed-card {
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  padding: v.$space-5;
+  transition: all v.$transition-base;
+  cursor: default;
+  position: relative;
+
+  &:hover {
+    box-shadow: v.$shadow-md;
+    transform: translateY(-1px);
+  }
+
+  &--empty {
+    border-left: 4px solid v.$color-success;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, transparent 100%);
+  }
+
+  &--occupied {
+    border-left: 4px solid v.$color-info;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, transparent 100%);
+  }
+
+  &--locked {
+    border-left: 4px solid v.$color-text-muted;
+    background: v.$color-bg-surface;
+    opacity: 0.7;
+  }
+
+  &--cleaning {
+    border-left: 4px solid v.$color-warning;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.03) 0%, transparent 100%);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: v.$space-2;
+  }
+
+  &__code {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-text-primary;
+    letter-spacing: -0.01em;
+  }
+
+  &__status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--empty { background: v.$color-success; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
+    &--occupied { background: v.$color-info; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+    &--locked { background: v.$color-text-muted; }
+    &--cleaning { background: v.$color-warning; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
+  }
+
+  &__status-text {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    font-weight: v.$font-weight-medium;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: v.$space-3;
+  }
+
+  &__patient {
+    padding-top: v.$space-3;
+    border-top: 1px solid v.$color-border;
+  }
+
+  &__patient-name {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+
+  &__patient-code {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    margin-top: 2px;
+  }
+}

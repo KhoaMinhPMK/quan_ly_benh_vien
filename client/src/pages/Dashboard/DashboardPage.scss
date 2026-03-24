@@ -2,27 +2,28 @@
 
 .dashboard {
   &__welcome {
-    margin-bottom: v.$space-6;
+    margin-bottom: v.$space-8;
   }
 
   &__welcome-title {
-    font-size: v.$font-size-xl;
-    font-weight: v.$font-weight-semibold;
+    font-size: v.$font-size-2xl;
+    font-weight: v.$font-weight-bold;
     color: v.$color-text-primary;
+    letter-spacing: -0.02em;
   }
 
   &__welcome-text {
     font-size: v.$font-size-sm;
-    color: v.$color-text-secondary;
-    margin-top: v.$space-1;
+    color: v.$color-text-muted;
+    margin-top: v.$space-2;
   }
 
   // Stats grid
   &__stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: v.$space-4;
-    margin-bottom: v.$space-6;
+    gap: v.$space-5;
+    margin-bottom: v.$space-8;
 
     @media (max-width: v.$breakpoint-lg) {
       grid-template-columns: repeat(2, 1fr);
@@ -33,14 +34,177 @@
     }
   }
 
+  // Sections
+  &__section-title {
+    font-size: v.$font-size-lg;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+    margin-bottom: v.$space-4;
+    letter-spacing: -0.01em;
+  }
+
+  // Room grid (visual cards)
+  &__room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: v.$space-4;
+    margin-bottom: v.$space-8;
+  }
+
   // Content grid
   &__grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: v.$space-4;
+    gap: v.$space-5;
 
     @media (max-width: v.$breakpoint-md) {
       grid-template-columns: 1fr;
     }
+  }
+
+  // Quick actions
+  &__actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: v.$space-4;
+    margin-bottom: v.$space-8;
+
+    @media (max-width: v.$breakpoint-md) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// Room status card (dashboard)
+.room-card {
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  padding: v.$space-5;
+  transition: all v.$transition-base;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: v.$shadow-card-hover;
+    transform: translateY(-2px);
+  }
+
+  &--full {
+    border-left: 4px solid v.$color-error;
+  }
+
+  &--near-full {
+    border-left: 4px solid v.$color-warning;
+  }
+
+  &--ok {
+    border-left: 4px solid v.$color-success;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: v.$space-3;
+  }
+
+  &__name {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+
+  &__code {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    font-weight: v.$font-weight-medium;
+  }
+
+  &__dept {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    margin-bottom: v.$space-3;
+  }
+
+  &__progress {
+    margin-bottom: v.$space-2;
+  }
+
+  &__progress-bar {
+    width: 100%;
+    height: 6px;
+    background: v.$color-bg-surface;
+    border-radius: v.$radius-full;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    border-radius: v.$radius-full;
+    transition: width v.$transition-smooth;
+
+    &--success { background: v.$gradient-success; }
+    &--warning { background: v.$gradient-warning; }
+    &--error { background: v.$gradient-error; }
+  }
+
+  &__stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+  }
+
+  &__stat-value {
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+}
+
+// Quick action card
+.action-card {
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  padding: v.$space-5;
+  display: flex;
+  align-items: center;
+  gap: v.$space-4;
+  cursor: pointer;
+  transition: all v.$transition-base;
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    box-shadow: v.$shadow-card-hover;
+    transform: translateY(-1px);
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: v.$radius-lg;
+    flex-shrink: 0;
+
+    img {
+      width: 22px;
+      height: 22px;
+      filter: brightness(0) invert(1);
+    }
+  }
+
+  &__text {
+    font-size: v.$font-size-base;
+    font-weight: v.$font-weight-medium;
+    color: v.$color-text-primary;
+  }
+
+  &__desc {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+    margin-top: 2px;
   }
 }

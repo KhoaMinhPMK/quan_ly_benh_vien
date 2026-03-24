@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchRooms, fetchDepartments, type Room, type Department } from '../../services/api/medboardApi';
 import AddRoomModal from './AddRoomModal';
 import iconSearch from '../../assets/icons/outline/search.svg';
@@ -12,7 +13,15 @@ const TYPE_LABELS: Record<string, string> = {
   isolation: 'Cach ly',
 };
 
+const TYPE_BADGE: Record<string, string> = {
+  normal: 'badge--neutral',
+  vip: 'badge--warning',
+  icu: 'badge--error',
+  isolation: 'badge--info',
+};
+
 export default function RoomListPage() {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,20 +44,20 @@ export default function RoomListPage() {
 
   useEffect(() => { loadRooms(); }, [filterDept, filterStatus, search]);
 
-  const getOccupancyClass = (room: Room) => {
-    if (room.total_beds === 0) return '';
+  const getOccupancyColor = (room: Room) => {
+    if (room.total_beds === 0) return { cls: 'badge--neutral', fill: '#94A3B8' };
     const ratio = room.occupied_beds / room.total_beds;
-    if (ratio >= 1) return 'badge--error';
-    if (ratio >= 0.8) return 'badge--warning';
-    return 'badge--success';
+    if (ratio >= 1) return { cls: 'badge--error', fill: '#EF4444' };
+    if (ratio >= 0.8) return { cls: 'badge--warning', fill: '#F59E0B' };
+    return { cls: 'badge--success', fill: '#10B981' };
   };
 
   return (
     <div>
       <div className="page-header">
         <div>
-          <h2 className="page-header__title">Phong - Giuong</h2>
-          <p className="page-header__subtitle">{rooms.length} phong</p>
+          <h2 className="page-header__title">Phong — Giuong</h2>
+          <p className="page-header__subtitle">{rooms.length} phong trong he thong</p>
         </div>
         <div className="page-header__actions">
           <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
@@ -96,16 +105,19 @@ export default function RoomListPage() {
 
       {/* Table */}
       {loading ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
+        <div className="card card--no-hover" style={{ textAlign: 'center', padding: '64px' }}>
           <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: '#6B7280' }}>Dang tai du lieu...</p>
+          <p style={{ color: '#94A3B8' }}>Dang tai du lieu...</p>
         </div>
       ) : rooms.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
-          <p style={{ color: '#6B7280' }}>Chua co phong nao. Hay tao phong moi.</p>
+        <div className="card card--no-hover">
+          <div className="empty-state">
+            <div className="empty-state__title">Chua co phong nao</div>
+            <div className="empty-state__text">Hay tao phong moi de bat dau.</div>
+          </div>
         </div>
       ) : (
-        <div className="card" style={{ padding: 0 }}>
+        <div className="card card--no-hover" style={{ padding: 0 }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -115,31 +127,44 @@ export default function RoomListPage() {
                 <th>Loai</th>
                 <th>Tang</th>
                 <th>Giuong</th>
-                <th>Cong suat</th>
+                <th style={{ minWidth: '120px' }}>Cong suat</th>
                 <th>Trang thai</th>
               </tr>
             </thead>
             <tbody>
-              {rooms.map((room) => (
-                <tr key={room.id}>
-                  <td><strong>{room.room_code}</strong></td>
-                  <td>{room.name}</td>
-                  <td>{room.department_name}</td>
-                  <td>{TYPE_LABELS[room.room_type] || room.room_type}</td>
-                  <td>{room.floor}</td>
-                  <td>{room.occupied_beds}/{room.total_beds}</td>
-                  <td>
-                    <span className={`badge ${getOccupancyClass(room)}`}>
-                      {room.total_beds > 0 ? Math.round((room.occupied_beds / room.total_beds) * 100) : 0}%
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${room.status === 'active' ? 'badge--success' : room.status === 'maintenance' ? 'badge--warning' : 'badge--neutral'}`}>
-                      {room.status === 'active' ? 'Hoat dong' : room.status === 'maintenance' ? 'Bao tri' : 'Dong'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+              {rooms.map((room) => {
+                const { fill } = getOccupancyColor(room);
+                const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
+                return (
+                  <tr key={room.id} onClick={() => navigate(`/rooms/${room.id}`)}>
+                    <td><strong>{room.room_code}</strong></td>
+                    <td>{room.name}</td>
+                    <td>{room.department_name}</td>
+                    <td>
+                      <span className={`badge ${TYPE_BADGE[room.room_type] || 'badge--neutral'}`}>
+                        {TYPE_LABELS[room.room_type] || room.room_type}
+                      </span>
+                    </td>
+                    <td>{room.floor}</td>
+                    <td><strong>{room.occupied_beds}</strong>/{room.total_beds}</td>
+                    <td>
+                      <div className="occupancy-bar">
+                        <div className="occupancy-bar__track">
+                          <div className="occupancy-bar__fill" style={{ width: `${Math.min(ratio, 100)}%`, background: fill }} />
+                        </div>
+                        <span className={`occupancy-bar__text`} style={{ color: fill }}>
+                          {Math.round(ratio)}%
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`badge ${room.status === 'active' ? 'badge--success' : room.status === 'maintenance' ? 'badge--warning' : 'badge--neutral'}`}>
+                        {room.status === 'active' ? 'Hoat dong' : room.status === 'maintenance' ? 'Bao tri' : 'Dong'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

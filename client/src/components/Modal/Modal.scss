@@ -6,50 +6,59 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .modal {
-  background: #fff;
-  border-radius: v.$radius;
+  background: v.$color-bg-white;
+  border-radius: v.$radius-xl;
   width: 100%;
   max-width: 560px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: v.$shadow-lg;
+  box-shadow: v.$shadow-xl;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: v.$space-4 v.$space-5;
+    padding: v.$space-5 v.$space-6;
     border-bottom: 1px solid v.$color-border;
   }
 
   &__title {
     font-size: v.$font-size-lg;
-    font-weight: v.$font-weight-semibold;
+    font-weight: v.$font-weight-bold;
     color: v.$color-text-primary;
+    letter-spacing: -0.01em;
   }
 
   &__close {
     background: none;
     border: none;
     cursor: pointer;
-    padding: v.$space-1;
+    padding: v.$space-2;
     font-size: 20px;
     color: v.$color-text-muted;
     line-height: 1;
+    border-radius: v.$radius;
+    transition: all v.$transition-base;
 
-    &:hover { color: v.$color-text-primary; }
+    &:hover {
+      color: v.$color-text-primary;
+      background: v.$color-bg-hover;
+    }
   }
 
   &__body {
-    padding: v.$space-5;
+    padding: v.$space-6;
     display: flex;
     flex-direction: column;
     gap: v.$space-4;
@@ -64,16 +73,35 @@
   &__footer {
     display: flex;
     justify-content: flex-end;
-    gap: v.$space-2;
-    padding: v.$space-4 v.$space-5;
+    gap: v.$space-3;
+    padding: v.$space-4 v.$space-6;
     border-top: 1px solid v.$color-border;
+    background: v.$color-bg-surface;
+    border-radius: 0 0 v.$radius-xl v.$radius-xl;
   }
 
   &__error {
     color: v.$color-error;
     font-size: v.$font-size-sm;
-    padding: v.$space-2 v.$space-3;
-    background: #FEF2F2;
+    padding: v.$space-3 v.$space-4;
+    background: v.$color-error-bg;
     border-radius: v.$radius;
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

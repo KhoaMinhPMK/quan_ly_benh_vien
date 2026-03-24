@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchDashboardStats, type DashboardStats } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import iconBed from '../../assets/icons/outline/bed.svg';
 import iconUsers from '../../assets/icons/outline/users.svg';
 import iconDoorExit from '../../assets/icons/outline/door-exit.svg';
 import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
+import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
 import './DashboardPage.scss';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -29,21 +31,29 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
+  const getOccupancyClass = (occupied: number, total: number) => {
+    if (total === 0) return 'ok';
+    const ratio = occupied / total;
+    if (ratio >= 1) return 'full';
+    if (ratio >= 0.8) return 'near-full';
+    return 'ok';
+  };
+
   return (
     <div className="dashboard">
       <div className="dashboard__welcome">
         <h2 className="dashboard__welcome-title">
-          Xin chao, {user.fullName}
+          Xin chao, {user.fullName} 👋
         </h2>
         <p className="dashboard__welcome-text">
-          {ROLE_LABELS[user.role] || user.role} -- {user.email}
+          {ROLE_LABELS[user.role] || user.role} — {new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="dashboard__stats">
         <div className="stat-card">
-          <div className="stat-card__icon" style={{ background: '#EFF6FF' }}>
+          <div className="stat-card__icon" style={{ background: '#EEF2FF' }}>
             <img src={iconUsers} alt="" style={{ opacity: 0.8 }} />
           </div>
           <div>
@@ -83,48 +93,78 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Room occupancy */}
-      {stats && stats.rooms.length > 0 && (
-        <div className="card">
-          <div className="card__header">
-            <h3 className="card__title">Cong suat phong</h3>
+      {/* Quick Actions */}
+      <h3 className="dashboard__section-title">Thao tac nhanh</h3>
+      <div className="dashboard__actions">
+        <Link to="/patients" className="action-card">
+          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
+            <img src={iconPlus} alt="" />
           </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Ma phong</th>
-                <th>Ten phong</th>
-                <th>Giuong</th>
-                <th>Cong suat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.rooms.map((r) => {
-                const ratio = r.total_beds > 0 ? (r.occupied_beds / r.total_beds) * 100 : 0;
-                const badgeClass = ratio >= 100 ? 'badge--error' : ratio >= 80 ? 'badge--warning' : 'badge--success';
-                return (
-                  <tr key={r.id}>
-                    <td><strong>{r.room_code}</strong></td>
-                    <td>{r.name}</td>
-                    <td>{r.occupied_beds}/{r.total_beds}</td>
-                    <td><span className={`badge ${badgeClass}`}>{Math.round(ratio)}%</span></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+          <div>
+            <div className="action-card__text">Tiep nhan benh nhan</div>
+            <div className="action-card__desc">Them benh nhan moi vao he thong</div>
+          </div>
+        </Link>
+        <Link to="/rooms" className="action-card">
+          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+            <img src={iconBed} alt="" />
+          </div>
+          <div>
+            <div className="action-card__text">Quan ly phong giuong</div>
+            <div className="action-card__desc">Xem trang thai & xep giuong</div>
+          </div>
+        </Link>
+        <Link to="/discharge" className="action-card">
+          <div className="action-card__icon" style={{ background: 'linear-gradient(135deg, #F59E0B, #D97706)' }}>
+            <img src={iconDoorExit} alt="" />
+          </div>
+          <div>
+            <div className="action-card__text">Ra vien hom nay</div>
+            <div className="action-card__desc">Kiem tra ho so & xac nhan</div>
+          </div>
+        </Link>
+      </div>
+
+      {/* Room Occupancy Cards */}
+      {stats && stats.rooms.length > 0 && (
+        <>
+          <h3 className="dashboard__section-title">Cong suat phong</h3>
+          <div className="dashboard__room-grid">
+            {stats.rooms.map((r) => {
+              const ratio = r.total_beds > 0 ? (r.occupied_beds / r.total_beds) * 100 : 0;
+              const cls = getOccupancyClass(r.occupied_beds, r.total_beds);
+              return (
+                <Link to="/rooms" key={r.id} className={`room-card room-card--${cls}`} style={{ textDecoration: 'none' }}>
+                  <div className="room-card__header">
+                    <span className="room-card__name">{r.name}</span>
+                    <span className="room-card__code">{r.room_code}</span>
+                  </div>
+                  <div className="room-card__progress">
+                    <div className="room-card__progress-bar">
+                      <div
+                        className={`room-card__progress-fill room-card__progress-fill--${cls === 'full' ? 'error' : cls === 'near-full' ? 'warning' : 'success'}`}
+                        style={{ width: `${Math.min(ratio, 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="room-card__stats">
+                    <span><span className="room-card__stat-value">{r.occupied_beds}</span>/{r.total_beds} giuong</span>
+                    <span className={`badge badge--${cls === 'full' ? 'error' : cls === 'near-full' ? 'warning' : 'success'}`}>
+                      {Math.round(ratio)}%
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {!loading && (!stats || stats.rooms.length === 0) && (
-        <div className="dashboard__grid">
-          <div className="card">
-            <div className="card__header">
-              <h3 className="card__title">Phong gan day</h3>
-            </div>
-            <p style={{ color: '#6B7280', fontSize: '14px' }}>
-              Chua co du lieu. He thong se hien thi trang thai phong khi duoc cau hinh.
-            </p>
+        <div className="card card--no-hover">
+          <div className="empty-state">
+            <div className="empty-state__title">Chua co du lieu</div>
+            <div className="empty-state__text">He thong se hien thi trang thai phong khi duoc cau hinh.</div>
           </div>
         </div>
       )}
