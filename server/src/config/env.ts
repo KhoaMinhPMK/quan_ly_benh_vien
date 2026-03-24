@@ -1,9 +1,15 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load .env from server directory
-// From dist/src/config/env.js -> ../../../.env = server/.env
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Load .env from server root (process.cwd)
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Fallback: also try __dirname-based paths
+if (!process.env.DB_PASSWORD) {
+  dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+}
+if (!process.env.DB_PASSWORD) {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
 
 export const env = {
   port: parseInt(process.env.PORT || '3011', 10),
