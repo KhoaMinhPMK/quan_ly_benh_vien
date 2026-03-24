@@ -75,12 +75,14 @@ INSERT INTO patients (patient_code, full_name, date_of_birth, gender, phone, add
 ('BN020', 'Luong Thi Uyen', '1993-08-22', 'female', '0900000111', '12 NKKN, Q3', 'Sot ret - da dieu tri xong', 'BS. Nguyen Thanh Long', NULL, 'discharged', '2026-03-08 10:00:00', '2026-03-22 08:00:00', NULL);
 
 -- Bed history cho cac benh nhan da ra vien
-INSERT INTO bed_history (bed_id, patient_id, assigned_at, released_at) VALUES
-(3, 19, '2026-03-05 08:00:00', '2026-03-20 10:00:00'),
-(16, 20, '2026-03-08 10:00:00', '2026-03-22 09:00:00');
+INSERT INTO bed_history (bed_id, patient_id, action, performed_by, notes) VALUES
+(3, 19, 'assign', 1, 'Nhap vien'),
+(3, 19, 'release', 1, 'Ra vien'),
+(16, 20, 'assign', 1, 'Nhap vien'),
+(16, 20, 'release', 1, 'Ra vien');
 
 -- Checklists cho benh nhan cho ra vien
-INSERT INTO patient_checklists (patient_id, template_id, is_completed, completed_at, completed_by) VALUES
+INSERT INTO patient_checklists (patient_id, checklist_template_id, is_completed, completed_at, completed_by) VALUES
 -- BN014: 5/7 checklist done
 (14, 1, TRUE, '2026-03-24 08:00:00', 1),
 (14, 2, TRUE, '2026-03-24 08:30:00', 1),
@@ -105,3 +107,4 @@ INSERT INTO patient_checklists (patient_id, template_id, is_completed, completed
 (16, 5, FALSE, NULL, NULL),
 (16, 6, FALSE, NULL, NULL),
 (16, 7, FALSE, NULL, NULL);
+
