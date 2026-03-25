@@ -5,8 +5,9 @@ import * as roomsService from './rooms.service';
 
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
+    const userDept = req.user?.role !== 'admin' ? req.user?.departmentId : undefined;
     const rooms = await roomsService.getAllRooms({
-      department_id: req.query.department_id ? Number(req.query.department_id) : undefined,
+      department_id: req.query.department_id ? Number(req.query.department_id) : (userDept ?? undefined),
       status: req.query.status as string | undefined,
       search: req.query.search as string | undefined,
     });

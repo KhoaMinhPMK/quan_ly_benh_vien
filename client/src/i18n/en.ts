@@ -462,6 +462,12 @@ const en: Translations = {
     noAuditLogs: 'No audit logs yet',
     on: 'On',
     off: 'Off',
+    tabStatuses: 'Statuses',
+    bedStatuses: 'Bed Statuses',
+    patientStatuses: 'Patient Statuses',
+    statusKey: 'Code',
+    statusLabel: 'Label',
+    statusPreview: 'Preview',
   },
 
   // ── Login ──

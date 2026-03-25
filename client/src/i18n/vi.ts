@@ -460,6 +460,12 @@ const vi = {
     noAuditLogs: 'Chưa có nhật ký',
     on: 'Bật',
     off: 'Tắt',
+    tabStatuses: 'Trạng thái',
+    bedStatuses: 'Trạng thái giường',
+    patientStatuses: 'Trạng thái bệnh nhân',
+    statusKey: 'Mã',
+    statusLabel: 'Nhãn',
+    statusPreview: 'Xem trước',
   },
 
   // ── Login ──

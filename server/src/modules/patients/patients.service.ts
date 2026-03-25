@@ -19,7 +19,7 @@ interface PatientRow extends RowDataPacket {
   expected_discharge: string;
 }
 
-export async function getAllPatients(filters: { status?: string; search?: string; room_id?: number; doctor_name?: string }) {
+export async function getAllPatients(filters: { status?: string; search?: string; room_id?: number; doctor_name?: string; department_id?: number }) {
   let sql = `
     SELECT p.*, b.bed_code, r.room_code, r.name AS room_name
     FROM patients p
@@ -41,6 +41,10 @@ export async function getAllPatients(filters: { status?: string; search?: string
   if (filters.doctor_name) {
     sql += ' AND p.doctor_name LIKE ?';
     params.push(`%${filters.doctor_name}%`);
+  }
+  if (filters.department_id) {
+    sql += ' AND r.department_id = ?';
+    params.push(filters.department_id);
   }
 
   sql += ' ORDER BY p.admitted_at DESC';
@@ -135,7 +139,7 @@ export async function dischargePatient(id: number, performedBy?: number) {
   }
 }
 
-export async function getDischargeList(filters: { date?: string }) {
+export async function getDischargeList(filters: { date?: string; department_id?: number }) {
   let sql = `
     SELECT p.*, b.bed_code, r.room_code, r.name AS room_name
     FROM patients p
@@ -144,13 +148,17 @@ export async function getDischargeList(filters: { date?: string }) {
     WHERE p.status IN ('treating', 'waiting_discharge')
     AND p.expected_discharge IS NOT NULL
   `;
-  const params: string[] = [];
+  const params: (string | number)[] = [];
 
   if (filters.date) {
     sql += ' AND p.expected_discharge = ?';
     params.push(filters.date);
   } else {
     sql += ' AND p.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)';
+  }
+  if (filters.department_id) {
+    sql += ' AND r.department_id = ?';
+    params.push(filters.department_id);
   }
 
   sql += ' ORDER BY p.expected_discharge ASC';

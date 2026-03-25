@@ -15,6 +15,7 @@ export interface UserInfo {
   email: string;
   fullName: string;
   role: UserRole;
+  departmentId: number | null;
   isActive: boolean;
 }
 

@@ -11,13 +11,14 @@ interface UserRow extends RowDataPacket {
   password_hash: string;
   full_name: string;
   role: string;
+  department_id: number | null;
   is_active: boolean;
 }
 
 export async function loginUser(email: string, password: string): Promise<LoginResponse> {
   // Find user by email
   const [rows] = await db.execute<UserRow[]>(
-    'SELECT id, email, password_hash, full_name, role, is_active FROM users WHERE email = ?',
+    'SELECT id, email, password_hash, full_name, role, department_id, is_active FROM users WHERE email = ?',
     [email]
   );
 
@@ -53,6 +54,7 @@ export async function loginUser(email: string, password: string): Promise<LoginR
     email: user.email,
     fullName: user.full_name,
     role: user.role as UserInfo['role'],
+    departmentId: user.department_id,
     isActive: user.is_active,
   };
 

@@ -5,7 +5,7 @@ import { useTranslation } from '../../i18n/LanguageContext';
 import Modal from '../../components/Modal/Modal';
 import './AdminPages.scss';
 
-type Tab = 'config' | 'departments' | 'checklists' | 'audit';
+type Tab = 'config' | 'departments' | 'checklists' | 'statuses' | 'audit';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -18,13 +18,14 @@ export default function AdminPage() {
     <div>
       <div className="page-header"><div><h2 className="page-header__title">{t.admin.title}</h2></div></div>
       <div className="tab-bar">
-        {([['config', t.admin.tabConfig], ['departments', t.admin.tabDepartments], ['checklists', t.admin.tabChecklists], ['audit', t.admin.tabAudit]] as [Tab, string][]).map(([k, v]) => (
+        {([['config', t.admin.tabConfig], ['departments', t.admin.tabDepartments], ['checklists', t.admin.tabChecklists], ['statuses', t.admin.tabStatuses], ['audit', t.admin.tabAudit]] as [Tab, string][]).map(([k, v]) => (
           <button key={k} className={`tab-bar__item ${tab === k ? 'tab-bar__item--active' : ''}`} onClick={() => setTab(k)}>{v}</button>
         ))}
       </div>
       {tab === 'config' && <ConfigSection />}
       {tab === 'departments' && <DepartmentSection />}
       {tab === 'checklists' && <ChecklistSection />}
+      {tab === 'statuses' && <StatusSection />}
       {tab === 'audit' && <AuditSection />}
     </div>
   );
@@ -205,6 +206,73 @@ function AuditSection() {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+const BED_STATUSES = [
+  { key: 'empty', badge: 'success' },
+  { key: 'occupied', badge: 'error' },
+  { key: 'locked', badge: 'neutral' },
+  { key: 'cleaning', badge: 'warning' },
+] as const;
+
+const PATIENT_STATUSES = [
+  { key: 'admitted', badge: 'info' },
+  { key: 'treating', badge: 'success' },
+  { key: 'waiting_discharge', badge: 'warning' },
+  { key: 'discharged', badge: 'neutral' },
+] as const;
+
+function StatusSection() {
+  const { t } = useTranslation();
+
+  const bedLabels: Record<string, string> = {
+    empty: t.beds.statusEmpty,
+    occupied: t.beds.statusOccupied,
+    locked: t.beds.statusLocked,
+    cleaning: t.beds.statusCleaning,
+  };
+
+  const patientLabels: Record<string, string> = {
+    admitted: t.bedPanel.statusAdmitted,
+    treating: t.bedPanel.statusTreating,
+    waiting_discharge: t.bedPanel.statusWaiting,
+    discharged: t.bedPanel.statusDischarged,
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+      <div className="card">
+        <div className="card__header"><h3 className="card__title">{t.admin.bedStatuses}</h3></div>
+        <table className="data-table">
+          <thead><tr><th>{t.admin.statusKey}</th><th>{t.admin.statusLabel}</th><th>{t.admin.statusPreview}</th></tr></thead>
+          <tbody>
+            {BED_STATUSES.map(s => (
+              <tr key={s.key}>
+                <td><code>{s.key}</code></td>
+                <td>{bedLabels[s.key]}</td>
+                <td><span className={`badge badge--${s.badge}`}>{bedLabels[s.key]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="card">
+        <div className="card__header"><h3 className="card__title">{t.admin.patientStatuses}</h3></div>
+        <table className="data-table">
+          <thead><tr><th>{t.admin.statusKey}</th><th>{t.admin.statusLabel}</th><th>{t.admin.statusPreview}</th></tr></thead>
+          <tbody>
+            {PATIENT_STATUSES.map(s => (
+              <tr key={s.key}>
+                <td><code>{s.key}</code></td>
+                <td>{patientLabels[s.key]}</td>
+                <td><span className={`badge badge--${s.badge}`}>{patientLabels[s.key]}</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
