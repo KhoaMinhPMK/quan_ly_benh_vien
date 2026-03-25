@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchSystemConfig, updateSystemConfig, fetchChecklistTemplates, createChecklistTemplate, updateChecklistTemplate, fetchConfigDepartments, createDepartment, updateDepartment, fetchAuditLogs, type SystemConfig, type AuditLog } from '../../services/api/medboardApi';
+import { fetchSystemConfig, updateSystemConfig, fetchChecklistTemplates, createChecklistTemplate, fetchConfigDepartments, createDepartment, fetchAuditLogs, type SystemConfig, type AuditLog } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import Modal from '../../components/Modal/Modal';
 import './AdminPages.scss';
