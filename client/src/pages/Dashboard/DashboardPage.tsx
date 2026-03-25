@@ -80,33 +80,76 @@ export default function DashboardPage() {
       </div>
 
       {/* Alerts */}
-      {fullRooms.length > 0 && (
-        <div className="card" style={{ background: '#FEE2E2', border: '1px solid #EF4444', marginBottom: 12, padding: '12px 16px' }}>
-          <div style={{ fontWeight: 600, color: '#991B1B', marginBottom: 2 }}>
-            🔴 {lang === 'vi' ? `${fullRooms.length} phòng đã đầy` : `${fullRooms.length} rooms at full capacity`}
-          </div>
-          <div style={{ fontSize: 13, color: '#991B1B' }}>{fullRooms.map(r => `${r.name} (${r.room_code})`).join(', ')}</div>
-        </div>
-      )}
-      {nearFullRooms.length > 0 && (
-        <div className="card" style={{ background: '#FEF3C7', border: '1px solid #F59E0B', marginBottom: 12, padding: '12px 16px' }}>
-          <div style={{ fontWeight: 600, color: '#92400E', marginBottom: 2 }}>
-            ⚠️ {lang === 'vi' ? `${nearFullRooms.length} phòng sắp đầy (còn 1 giường)` : `${nearFullRooms.length} rooms nearly full (1 bed left)`}
-          </div>
-          <div style={{ fontSize: 13, color: '#92400E' }}>{nearFullRooms.map(r => `${r.name} (${r.room_code})`).join(', ')}</div>
-        </div>
-      )}
-      {waitingList.length > 0 && (
-        <div className="card" style={{ background: '#DBEAFE', border: '1px solid #3B82F6', marginBottom: 12, padding: '12px 16px' }}>
-          <div style={{ fontWeight: 600, color: '#1E40AF', marginBottom: 2 }}>
-            🛏️ {lang === 'vi' ? `${waitingList.length} bệnh nhân chờ xếp giường` : `${waitingList.length} patients waiting for bed assignment`}
-          </div>
-          <div style={{ fontSize: 13, color: '#1E40AF' }}>
-            {waitingList.slice(0, 5).map(p => `${p.full_name} (${p.patient_code})`).join(', ')}{waitingList.length > 5 ? '...' : ''}
-          </div>
-          <Link to="/patients" style={{ fontSize: 12, color: '#2563EB', marginTop: 4, display: 'inline-block' }}>
-            {lang === 'vi' ? 'Xem danh sách →' : 'View list →'}
-          </Link>
+      {(fullRooms.length > 0 || nearFullRooms.length > 0 || waitingList.length > 0) && (
+        <div className="dashboard__alerts">
+          {fullRooms.length > 0 && (
+            <div className="alert-banner alert-banner--error">
+              <div className="alert-banner__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+              <div className="alert-banner__content">
+                <div className="alert-banner__title">
+                  {lang === 'vi' ? `${fullRooms.length} phòng đã đầy` : `${fullRooms.length} room${fullRooms.length > 1 ? 's' : ''} at full capacity`}
+                </div>
+                <div className="alert-banner__tags">
+                  {fullRooms.map(r => (
+                    <Link to={`/rooms/${r.id}`} key={r.id} className="alert-banner__tag alert-banner__tag--error">
+                      {r.room_code} · {r.name}
+                      <span className="alert-banner__tag-detail">{r.occupied_beds}/{r.total_beds}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {nearFullRooms.length > 0 && (
+            <div className="alert-banner alert-banner--warning">
+              <div className="alert-banner__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div className="alert-banner__content">
+                <div className="alert-banner__title">
+                  {lang === 'vi' ? `${nearFullRooms.length} phòng sắp đầy` : `${nearFullRooms.length} room${nearFullRooms.length > 1 ? 's' : ''} nearly full`}
+                  <span className="alert-banner__subtitle">{lang === 'vi' ? ' — còn 1 giường trống' : ' — 1 bed remaining'}</span>
+                </div>
+                <div className="alert-banner__tags">
+                  {nearFullRooms.map(r => (
+                    <Link to={`/rooms/${r.id}`} key={r.id} className="alert-banner__tag alert-banner__tag--warning">
+                      {r.room_code} · {r.name}
+                      <span className="alert-banner__tag-detail">{r.occupied_beds}/{r.total_beds}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {waitingList.length > 0 && (
+            <div className="alert-banner alert-banner--info">
+              <div className="alert-banner__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div className="alert-banner__content">
+                <div className="alert-banner__title">
+                  {lang === 'vi' ? `${waitingList.length} bệnh nhân chờ xếp giường` : `${waitingList.length} patient${waitingList.length > 1 ? 's' : ''} awaiting bed assignment`}
+                </div>
+                <div className="alert-banner__tags">
+                  {waitingList.slice(0, 6).map(p => (
+                    <span key={p.id} className="alert-banner__tag alert-banner__tag--info">
+                      {p.full_name}
+                      <span className="alert-banner__tag-detail">{p.patient_code}</span>
+                    </span>
+                  ))}
+                  {waitingList.length > 6 && (
+                    <Link to="/patients" className="alert-banner__tag alert-banner__tag--info alert-banner__tag--more">
+                      +{waitingList.length - 6} {lang === 'vi' ? 'khác' : 'more'}
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

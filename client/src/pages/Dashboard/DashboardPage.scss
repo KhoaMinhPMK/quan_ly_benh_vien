@@ -72,6 +72,113 @@
       grid-template-columns: 1fr;
     }
   }
+
+  // Alert banners
+  &__alerts {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-3;
+    margin-bottom: v.$space-6;
+  }
+}
+
+// ── Alert Banner ──
+.alert-banner {
+  display: flex;
+  gap: v.$space-3;
+  padding: v.$space-3 v.$space-4;
+  border-radius: v.$radius;
+  border-left: 4px solid transparent;
+
+  &--error {
+    background: #FEF2F2;
+    border-left-color: #EF4444;
+  }
+  &--warning {
+    background: #FFFBEB;
+    border-left-color: #F59E0B;
+  }
+  &--info {
+    background: #EFF6FF;
+    border-left-color: #3B82F6;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: v.$radius-full;
+  }
+  &--error &__icon { color: #DC2626; background: rgba(#DC2626, 0.1); }
+  &--warning &__icon { color: #D97706; background: rgba(#D97706, 0.1); }
+  &--info &__icon { color: #2563EB; background: rgba(#2563EB, 0.1); }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-semibold;
+    margin-bottom: v.$space-2;
+  }
+  &--error &__title { color: #991B1B; }
+  &--warning &__title { color: #92400E; }
+  &--info &__title { color: #1E40AF; }
+
+  &__subtitle {
+    font-weight: v.$font-weight-normal;
+    opacity: 0.7;
+    font-size: v.$font-size-xs;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: v.$radius-full;
+    font-size: 12px;
+    font-weight: v.$font-weight-medium;
+    text-decoration: none;
+    transition: all v.$transition-fast;
+    cursor: pointer;
+
+    &--error {
+      background: rgba(#DC2626, 0.1);
+      color: #991B1B;
+      &:hover { background: rgba(#DC2626, 0.2); }
+    }
+    &--warning {
+      background: rgba(#D97706, 0.1);
+      color: #92400E;
+      &:hover { background: rgba(#D97706, 0.2); }
+    }
+    &--info {
+      background: rgba(#2563EB, 0.1);
+      color: #1E40AF;
+      &:hover { background: rgba(#2563EB, 0.2); }
+    }
+    &--more {
+      font-style: italic;
+    }
+  }
+
+  &__tag-detail {
+    font-size: 11px;
+    opacity: 0.65;
+    font-weight: v.$font-weight-normal;
+  }
 }
 
 // Room status card
