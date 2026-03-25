@@ -66,7 +66,7 @@ function ConfigRow({ cfg, onSave }: { cfg: SystemConfig; onSave: (k: string, v: 
 }
 
 function DepartmentSection() {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [depts, setDepts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -107,7 +107,7 @@ function DepartmentSection() {
         </table>
       </div>
       {showModal && (
-        <Modal title={editing ? (lang === 'vi' ? 'Sửa khoa' : 'Edit Department') : t.admin.addDeptTitle} onClose={() => setShowModal(false)}>
+        <Modal title={editing ? t.admin.editDeptTitle : t.admin.addDeptTitle} onClose={() => setShowModal(false)}>
           <div className="modal__body">
             <div className="form-field"><label className="form-field__label">{t.admin.deptName}</label><input className="form-field__input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
             <div className="form-field"><label className="form-field__label">{t.admin.deptCode}</label><input className="form-field__input" value={form.code} onChange={e => setForm({...form, code: e.target.value})} disabled={!!editing} style={editing ? { opacity: 0.6 } : {}} /></div>
@@ -115,7 +115,7 @@ function DepartmentSection() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setShowModal(false)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleSave}>{editing ? (lang === 'vi' ? 'Cập nhật' : 'Update') : t.common.create}</button>
+            <button className="btn btn--primary" onClick={handleSave}>{editing ? t.common.update : t.common.create}</button>
           </div>
         </Modal>
       )}
@@ -124,7 +124,7 @@ function DepartmentSection() {
 }
 
 function ChecklistSection() {
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -165,7 +165,7 @@ function ChecklistSection() {
         </table>
       </div>
       {showModal && (
-        <Modal title={editing ? (lang === 'vi' ? 'Sửa mục checklist' : 'Edit Checklist Item') : t.admin.addChecklistTitle} onClose={() => setShowModal(false)}>
+        <Modal title={editing ? t.admin.editChecklistTitle : t.admin.addChecklistTitle} onClose={() => setShowModal(false)}>
           <div className="modal__body">
             <div className="form-field"><label className="form-field__label">{t.admin.checklistName}</label><input className="form-field__input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} /></div>
             <div className="form-field"><label className="form-field__label">{t.admin.checklistDesc}</label><input className="form-field__input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
@@ -173,7 +173,7 @@ function ChecklistSection() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setShowModal(false)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleSave}>{editing ? (lang === 'vi' ? 'Cập nhật' : 'Update') : t.common.create}</button>
+            <button className="btn btn--primary" onClick={handleSave}>{editing ? t.common.update : t.common.create}</button>
           </div>
         </Modal>
       )}

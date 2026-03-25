@@ -13,7 +13,7 @@ const STATUS_ORDER: Record<string, number> = { occupied: 0, empty: 1, cleaning: 
 export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
   const [room, setRoom] = useState<Room | null>(null);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +39,7 @@ export default function RoomDetailPage() {
 
   const handleRelease = async () => {
     if (!selectedBed) return;
-    const msg = lang === 'vi' ? `Giải phóng giường ${selectedBed.bed_code}?` : `Release bed ${selectedBed.bed_code}?`;
+    const msg = `${t.rooms.confirmRelease} ${selectedBed.bed_code}?`;
     if (!window.confirm(msg)) return;
     try { await releaseBed(selectedBed.id); setSelectedBed(null); loadData(); } catch { /* ignore */ }
   };
@@ -78,8 +78,8 @@ export default function RoomDetailPage() {
     );
   }
 
-  const floorLabel = lang === 'vi' ? `Tầng ${room.floor}` : `Floor ${room.floor}`;
-  const capacityLabel = lang === 'vi' ? 'công suất' : 'capacity';
+  const floorLabel = `${t.rooms.floorN} ${room.floor}`;
+  const capacityLabel = t.rooms.detail.capacityLabel;
 
   return (
     <div className="room-detail">

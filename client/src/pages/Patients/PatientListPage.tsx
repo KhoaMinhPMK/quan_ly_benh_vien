@@ -72,7 +72,7 @@ export default function PatientListPage() {
     } catch (e: any) { setEditError(e.response?.data?.error?.message || t.common.error); }
   };
 
-  const subtitle = lang === 'vi' ? `${filteredPatients.length} bệnh nhân` : `${filteredPatients.length} patients`;
+  const subtitle = `${filteredPatients.length} ${t.patients.patientsCount}`;
 
   return (
     <div>
@@ -91,12 +91,20 @@ export default function PatientListPage() {
 
       {/* Waiting list warning */}
       {waitingList.length > 0 && (
-        <div className="card" style={{ background: '#FEF3C7', border: '1px solid #F59E0B', marginBottom: 16, padding: '12px 16px' }}>
-          <div style={{ fontWeight: 600, color: '#92400E', marginBottom: 4 }}>
-            ⚠️ {lang === 'vi' ? `${waitingList.length} bệnh nhân chưa xếp giường` : `${waitingList.length} patients waiting for bed`}
+        <div className="alert-banner alert-banner--warning" style={{ marginBottom: 16 }}>
+          <div className="alert-banner__icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
-          <div style={{ fontSize: 13, color: '#92400E' }}>
-            {waitingList.slice(0, 5).map(p => p.full_name).join(', ')}{waitingList.length > 5 ? '...' : ''}
+          <div className="alert-banner__content">
+            <div className="alert-banner__title">{`${waitingList.length} ${t.patients.waitingBedAlert}`}</div>
+            <div className="alert-banner__tags">
+              {waitingList.slice(0, 5).map(p => (
+                <span key={p.id} className="alert-banner__tag alert-banner__tag--warning">{p.full_name}</span>
+              ))}
+              {waitingList.length > 5 && (
+                <span className="alert-banner__tag alert-banner__tag--warning alert-banner__tag--more">+{waitingList.length - 5} {t.common.more}</span>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -117,7 +125,7 @@ export default function PatientListPage() {
         </select>
         <select className="form-field__input" value={filterDoctor}
           onChange={(e) => setFilterDoctor(e.target.value)} style={{ width: '200px' }}>
-          <option value="">{lang === 'vi' ? 'Tất cả bác sĩ' : 'All doctors'}</option>
+          <option value="">{t.patients.allDoctors}</option>
           {doctors.map(d => <option key={d} value={d!}>{d}</option>)}
         </select>
       </div>
@@ -142,8 +150,8 @@ export default function PatientListPage() {
                 <th>{t.patients.roomBed}</th>
                 <th>{t.patients.diagnosis}</th>
                 <th>{t.patients.doctor}</th>
-                <th>{lang === 'vi' ? 'Ngày nhập viện' : 'Admitted'}</th>
-                <th>{lang === 'vi' ? 'Dự kiến ra viện' : 'Expected DC'}</th>
+                <th>{t.patients.admitted}</th>
+                <th>{t.patients.expectedDC}</th>
                 <th>{t.patients.status}</th>
                 <th style={{ width: 70 }}></th>
               </tr>
@@ -177,7 +185,7 @@ export default function PatientListPage() {
 
       {/* Edit Patient Modal */}
       {editPatient && (
-        <Modal title={lang === 'vi' ? 'Cập nhật bệnh nhân' : 'Edit Patient'} onClose={() => setEditPatient(null)}>
+        <Modal title={t.patients.editPatient} onClose={() => setEditPatient(null)}>
           <div className="modal__body">
             {editError && <div className="modal__error">{editError}</div>}
             <div className="form-field"><label className="form-field__label">{t.patients.fullName}</label>
@@ -187,7 +195,7 @@ export default function PatientListPage() {
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.patients.doctor}</label>
                 <input className="form-field__input" value={editForm.doctor_name} onChange={e => setEditForm({...editForm, doctor_name: e.target.value})} /></div>
-              <div className="form-field"><label className="form-field__label">{lang === 'vi' ? 'Dự kiến ra viện' : 'Expected Discharge'}</label>
+              <div className="form-field"><label className="form-field__label">{t.patients.expectedDC}</label>
                 <input className="form-field__input" type="date" value={editForm.expected_discharge} onChange={e => setEditForm({...editForm, expected_discharge: e.target.value})} /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.patients.status}</label>
@@ -201,7 +209,7 @@ export default function PatientListPage() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setEditPatient(null)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleEditSave}>{lang === 'vi' ? 'Cập nhật' : 'Update'}</button>
+            <button className="btn btn--primary" onClick={handleEditSave}>{t.common.update}</button>
           </div>
         </Modal>
       )}

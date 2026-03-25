@@ -42,7 +42,7 @@ export default function UserListPage() {
       if (editing) {
         await updateUser(editing.id, { full_name: form.full_name, role: form.role as any, department_id: form.department_id ? Number(form.department_id) : null });
       } else {
-        if (!form.email || !form.password || !form.full_name) { setError(lang === 'vi' ? 'Vui lòng điền đầy đủ thông tin' : 'Please fill in all fields'); return; }
+        if (!form.email || !form.password || !form.full_name) { setError(t.common.fillAllFields); return; }
         await createUser({ email: form.email, password: form.password, full_name: form.full_name, role: form.role, department_id: form.department_id ? Number(form.department_id) : undefined });
       }
       setShowModal(false);
@@ -51,14 +51,14 @@ export default function UserListPage() {
   };
 
   const handleDelete = async (id: number) => {
-    const msg = lang === 'vi' ? 'Vô hiệu hoá tài khoản này?' : 'Disable this account?';
+    const msg = t.users.confirmDisable;
     if (confirm(msg)) { await deleteUser(id); load(); }
   };
   const handleResetPw = async () => { if (resetPwId && newPw.length >= 6) { await resetUserPassword(resetPwId, newPw); setResetPwId(null); setNewPw(''); } };
 
   if (me?.role !== 'admin') return <div className="card"><div className="empty-state"><div className="empty-state__title">{t.common.noPermission}</div></div></div>;
 
-  const subtitle = lang === 'vi' ? `${users.length} tài khoản` : `${users.length} accounts`;
+  const subtitle = `${users.length} ${t.users.accountsCount}`;
 
   return (
     <div>
@@ -90,7 +90,7 @@ export default function UserListPage() {
                 <td><span className={`badge badge--${u.is_active ? 'success' : 'error'}`}>{u.is_active ? t.users.active : t.users.locked}</span></td>
                 <td>
                   <button className="btn btn--ghost btn--sm" onClick={() => openEdit(u)}>{t.common.edit}</button>
-                  <button className="btn btn--ghost btn--sm" onClick={() => { setResetPwId(u.id); setNewPw(''); }}>{lang === 'vi' ? 'MK' : 'PW'}</button>
+                  <button className="btn btn--ghost btn--sm" onClick={() => { setResetPwId(u.id); setNewPw(''); }}>{t.users.pwButton}</button>
                   {u.id !== me?.id && <button className="btn btn--ghost btn--sm" onClick={() => handleDelete(u.id)}>{t.common.delete}</button>}
                 </td>
               </tr>
@@ -100,11 +100,11 @@ export default function UserListPage() {
       </div>
 
       {showModal && (
-        <Modal title={editing ? (lang === 'vi' ? 'Sửa người dùng' : 'Edit User') : (lang === 'vi' ? 'Thêm người dùng' : 'Add User')} onClose={() => setShowModal(false)}>
+        <Modal title={editing ? t.users.editUserTitle : t.users.addUserTitle} onClose={() => setShowModal(false)}>
           <div className="modal__body">
             {error && <div className="modal__error">{error}</div>}
             {!editing && <div className="form-field"><label className="form-field__label">Email</label><input className="form-field__input" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>}
-            {!editing && <div className="form-field"><label className="form-field__label">{lang === 'vi' ? 'Mật khẩu' : 'Password'}</label><input className="form-field__input" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>}
+            {!editing && <div className="form-field"><label className="form-field__label">{t.users.password}</label><input className="form-field__input" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>}
             <div className="form-field"><label className="form-field__label">{t.users.fullName}</label><input className="form-field__input" value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.users.role}</label>
@@ -114,7 +114,7 @@ export default function UserListPage() {
               </div>
               <div className="form-field"><label className="form-field__label">{t.users.department}</label>
                 <select className="form-field__input" value={form.department_id} onChange={e => setForm({...form, department_id: e.target.value})}>
-                  <option value="">{lang === 'vi' ? '-- Chọn khoa --' : '-- Select dept --'}</option>
+                  <option value="">{t.users.selectDept}</option>
                   {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
               </div>
@@ -122,19 +122,19 @@ export default function UserListPage() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setShowModal(false)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleSave}>{editing ? (lang === 'vi' ? 'Cập nhật' : 'Update') : t.common.create}</button>
+            <button className="btn btn--primary" onClick={handleSave}>{editing ? t.common.update : t.common.create}</button>
           </div>
         </Modal>
       )}
 
       {resetPwId && (
-        <Modal title={lang === 'vi' ? 'Đặt lại mật khẩu' : 'Reset Password'} onClose={() => setResetPwId(null)}>
+        <Modal title={t.users.resetPasswordTitle} onClose={() => setResetPwId(null)}>
           <div className="modal__body">
-            <div className="form-field"><label className="form-field__label">{lang === 'vi' ? 'Mật khẩu mới' : 'New Password'}</label><input className="form-field__input" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={lang === 'vi' ? 'Ít nhất 6 ký tự' : 'Minimum 6 characters'} /></div>
+            <div className="form-field"><label className="form-field__label">{t.users.newPassword}</label><input className="form-field__input" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder={t.users.minChars} /></div>
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setResetPwId(null)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleResetPw}>{lang === 'vi' ? 'Đổi mật khẩu' : 'Reset'}</button>
+            <button className="btn btn--primary" onClick={handleResetPw}>{t.users.changePassword}</button>
           </div>
         </Modal>
       )}

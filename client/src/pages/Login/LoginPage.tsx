@@ -13,7 +13,7 @@ import './LoginPage.scss';
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
-  const { t, lang } = useTranslation();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +26,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!email.trim()) { setError(lang === 'vi' ? 'Vui lòng nhập email' : 'Please enter email'); return; }
-    if (!password.trim()) { setError(lang === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password'); return; }
+    if (!email.trim()) { setError(t.login.emailRequired); return; }
+    if (!password.trim()) { setError(t.login.passwordRequired); return; }
     setIsSubmitting(true);
     try {
       await login(email, password);
@@ -35,8 +35,8 @@ export default function LoginPage() {
     } catch (err) {
       const axiosError = err as AxiosError<ApiResponse>;
       if (axiosError.response?.data?.error) { setError(axiosError.response.data.error.message); }
-      else if (axiosError.code === 'ERR_NETWORK') { setError(lang === 'vi' ? 'Không thể kết nối server. Vui lòng kiểm tra lại.' : 'Cannot connect to server. Please try again.'); }
-      else { setError(lang === 'vi' ? 'Đã xảy ra lỗi, vui lòng thử lại.' : 'An error occurred, please try again.'); }
+      else if (axiosError.code === 'ERR_NETWORK') { setError(t.login.networkError); }
+      else { setError(t.login.genericError); }
     } finally { setIsSubmitting(false); }
   };
 
@@ -59,19 +59,19 @@ export default function LoginPage() {
             <label htmlFor="login-password" className="login__label">{t.login.password}</label>
             <div className="login__password-wrap">
               <input id="login-password" type={showPassword ? 'text' : 'password'} className="login__input"
-                placeholder={lang === 'vi' ? 'Nhập mật khẩu' : 'Enter password'}
+                placeholder={t.login.passwordPlaceholder}
                 value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting} autoComplete="current-password" />
               <button type="button" className="login__toggle-pw" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}
-                aria-label={showPassword ? (lang === 'vi' ? 'Ẩn mật khẩu' : 'Hide password') : (lang === 'vi' ? 'Hiển thị mật khẩu' : 'Show password')}>
+                aria-label={showPassword ? t.login.hidePassword : t.login.showPassword}>
                 <img src={showPassword ? iconEyeOff : iconEye} alt="" className="login__toggle-pw-icon" />
               </button>
             </div>
           </div>
           <button type="submit" className={`login__submit ${isSubmitting ? 'login__submit--loading' : ''}`} disabled={isSubmitting}>
-            {isSubmitting ? (<><span className="login__spinner" />{lang === 'vi' ? 'Đang đăng nhập...' : 'Signing in...'}</>) : t.login.submit}
+            {isSubmitting ? (<><span className="login__spinner" />{t.login.submitting}</>) : t.login.submit}
           </button>
         </form>
-        <p className="login__footer">{lang === 'vi' ? 'MedBoard — Hệ thống quản lý y tế nội trú' : 'MedBoard — Inpatient Management System'}</p>
+        <p className="login__footer">{t.login.footer}</p>
       </div>
     </div>
   );

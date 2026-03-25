@@ -49,22 +49,18 @@ export default function DashboardPage() {
     return 'success';
   };
 
-  const greeting = lang === 'vi' ? 'Xin chào' : 'Hello';
+  const greeting = t.dashboard.greeting;
   const dateStr = new Date().toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
   });
 
-  const quickActions = lang === 'vi' ? [
-    { to: '/patients', icon: iconPlus, text: 'Tiếp nhận bệnh nhân', desc: 'Thêm bệnh nhân mới vào hệ thống' },
-    { to: '/rooms', icon: iconBed, text: 'Quản lý phòng giường', desc: 'Xem trạng thái và xếp giường' },
-    { to: '/discharge', icon: iconDoorExit, text: 'Ra viện hôm nay', desc: 'Kiểm tra hồ sơ và xác nhận' },
-  ] : [
-    { to: '/patients', icon: iconPlus, text: 'Admit Patient', desc: 'Add new patient to the system' },
-    { to: '/rooms', icon: iconBed, text: 'Rooms & Beds', desc: 'View status and assign beds' },
-    { to: '/discharge', icon: iconDoorExit, text: 'Discharge Today', desc: 'Check records and confirm' },
+  const quickActions = [
+    { to: '/patients', icon: iconPlus, text: t.dashboard.qaAdmit, desc: t.dashboard.qaAdmitDesc },
+    { to: '/rooms', icon: iconBed, text: t.dashboard.qaRooms, desc: t.dashboard.qaRoomsDesc },
+    { to: '/discharge', icon: iconDoorExit, text: t.dashboard.qaDischarge, desc: t.dashboard.qaDischargeDesc },
   ];
 
-  const bedLabel = lang === 'vi' ? 'giường' : 'beds';
+  const bedLabel = t.dashboard.beds;
 
   // Detect full rooms for alerts
   const fullRooms = stats?.rooms.filter(r => r.total_beds > 0 && r.occupied_beds >= r.total_beds) || [];
@@ -89,7 +85,7 @@ export default function DashboardPage() {
               </div>
               <div className="alert-banner__content">
                 <div className="alert-banner__title">
-                  {lang === 'vi' ? `${fullRooms.length} phòng đã đầy` : `${fullRooms.length} room${fullRooms.length > 1 ? 's' : ''} at full capacity`}
+                  {`${fullRooms.length} ${t.dashboard.roomsFull}`}
                 </div>
                 <div className="alert-banner__tags">
                   {fullRooms.map(r => (
@@ -110,8 +106,8 @@ export default function DashboardPage() {
               </div>
               <div className="alert-banner__content">
                 <div className="alert-banner__title">
-                  {lang === 'vi' ? `${nearFullRooms.length} phòng sắp đầy` : `${nearFullRooms.length} room${nearFullRooms.length > 1 ? 's' : ''} nearly full`}
-                  <span className="alert-banner__subtitle">{lang === 'vi' ? ' — còn 1 giường trống' : ' — 1 bed remaining'}</span>
+                  {`${nearFullRooms.length} ${t.dashboard.roomsNearFull}`}
+                  <span className="alert-banner__subtitle">{t.dashboard.oneBedRemaining}</span>
                 </div>
                 <div className="alert-banner__tags">
                   {nearFullRooms.map(r => (
@@ -132,7 +128,7 @@ export default function DashboardPage() {
               </div>
               <div className="alert-banner__content">
                 <div className="alert-banner__title">
-                  {lang === 'vi' ? `${waitingList.length} bệnh nhân chờ xếp giường` : `${waitingList.length} patient${waitingList.length > 1 ? 's' : ''} awaiting bed assignment`}
+                  {`${waitingList.length} ${t.dashboard.patientsWaitingBed}`}
                 </div>
                 <div className="alert-banner__tags">
                   {waitingList.slice(0, 6).map(p => (
@@ -143,7 +139,7 @@ export default function DashboardPage() {
                   ))}
                   {waitingList.length > 6 && (
                     <Link to="/patients" className="alert-banner__tag alert-banner__tag--info alert-banner__tag--more">
-                      +{waitingList.length - 6} {lang === 'vi' ? 'khác' : 'more'}
+                      +{waitingList.length - 6} {t.common.more}
                     </Link>
                   )}
                 </div>
@@ -189,7 +185,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <h3 className="dashboard__section-title">{lang === 'vi' ? 'Thao tác nhanh' : 'Quick Actions'}</h3>
+      <h3 className="dashboard__section-title">{t.dashboard.quickActions}</h3>
       <div className="dashboard__actions">
         {quickActions.map(a => (
           <Link to={a.to} className="action-card" key={a.to}>

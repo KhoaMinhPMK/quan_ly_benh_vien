@@ -52,9 +52,7 @@ export default function DischargeListPage() {
       alert(t.discharge.blockDischargeMsg);
       return;
     }
-    const msg = lang === 'vi'
-      ? `Xác nhận ra viện bệnh nhân ${selectedPatient.full_name}?`
-      : `Confirm discharge for patient ${selectedPatient.full_name}?`;
+    const msg = `${t.discharge.confirmDischargeMsg} ${selectedPatient.full_name}?`;
     if (!confirm(msg)) return;
     try {
       await dischargePatient(selectedPatient.id);
@@ -134,7 +132,7 @@ export default function DischargeListPage() {
           <div className="discharge__panel">
             <div className="card">
               <div className="card__header">
-                <h3 className="card__title">{lang === 'vi' ? 'Checklist ra viện' : 'Discharge Checklist'}: {selectedPatient.full_name}</h3>
+                <h3 className="card__title">{t.discharge.checklistTitle}: {selectedPatient.full_name}</h3>
               </div>
 
               {/* Progress bar */}

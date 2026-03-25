@@ -162,7 +162,7 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
                   <textarea className="bed-panel__notes-input" placeholder={t.bedPanel.notesPlaceholder}
                     rows={6} value={noteText} onChange={e => setNoteText(e.target.value)} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, justifyContent: 'flex-end' }}>
-                    {notesSaved && <span style={{ color: '#22C55E', fontSize: 13 }}>✓ {lang === 'vi' ? 'Đã lưu' : 'Saved'}</span>}
+                    {notesSaved && <span style={{ color: '#22C55E', fontSize: 13 }}>✓ {t.common.success}</span>}
                     <button className="btn btn--primary btn--sm" onClick={handleSaveNotes} disabled={savingNotes}>
                       {savingNotes ? t.common.processing : t.bedPanel.saveNote}
                     </button>

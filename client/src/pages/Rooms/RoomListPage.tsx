@@ -68,7 +68,7 @@ export default function RoomListPage() {
     } catch (e: any) { setEditError(e.response?.data?.error?.message || t.common.error); }
   };
 
-  const subtitle = lang === 'vi' ? `${rooms.length} phòng trong hệ thống` : `${rooms.length} rooms in system`;
+  const subtitle = `${rooms.length} ${t.rooms.roomsInSystem}`;
 
   return (
     <div>
@@ -129,7 +129,7 @@ export default function RoomListPage() {
                 <th>{t.dashboard.department}</th>
                 <th>{t.rooms.roomType}</th>
                 <th>{t.rooms.floor}</th>
-                <th>{lang === 'vi' ? 'Giường' : 'Beds'}</th>
+                <th>{t.rooms.bedsHeader}</th>
                 <th style={{ minWidth: '120px' }}>{t.rooms.occupancy}</th>
                 <th>{t.rooms.statusLabel}</th>
                 <th style={{ width: 70 }}></th>
@@ -177,7 +177,7 @@ export default function RoomListPage() {
 
       {/* Edit Room Modal */}
       {editRoom && (
-        <Modal title={lang === 'vi' ? 'Cập nhật phòng' : 'Edit Room'} onClose={() => setEditRoom(null)}>
+        <Modal title={t.rooms.editRoom} onClose={() => setEditRoom(null)}>
           <div className="modal__body">
             {editError && <div className="modal__error">{editError}</div>}
             <div className="form-field"><label className="form-field__label">{t.rooms.roomCode}</label>
@@ -192,7 +192,7 @@ export default function RoomListPage() {
                   <option value="icu">{typeLabels.icu}</option>
                   <option value="isolation">{typeLabels.isolation}</option>
                 </select></div>
-              <div className="form-field"><label className="form-field__label">{lang === 'vi' ? 'Số giường tối đa' : 'Max Beds'}</label>
+              <div className="form-field"><label className="form-field__label">{t.rooms.maxBedsLabel}</label>
                 <input className="form-field__input" type="number" min={1} max={20} value={editForm.max_beds} onChange={e => setEditForm({...editForm, max_beds: Number(e.target.value)})} /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.rooms.statusLabel}</label>
@@ -206,7 +206,7 @@ export default function RoomListPage() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setEditRoom(null)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleEditSave}>{lang === 'vi' ? 'Cập nhật' : 'Update'}</button>
+            <button className="btn btn--primary" onClick={handleEditSave}>{t.common.update}</button>
           </div>
         </Modal>
       )}
