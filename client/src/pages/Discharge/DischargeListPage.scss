@@ -62,4 +62,53 @@
     color: v.$color-text-secondary;
     margin-top: 2px;
   }
+
+  // Progress bar
+  &__progress-wrap {
+    margin-bottom: v.$space-4;
+  }
+
+  &__progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: v.$font-size-xs;
+    margin-bottom: 4px;
+  }
+
+  &__progress-value {
+    font-weight: v.$font-weight-semibold;
+
+    &--complete { color: #10B981; }
+    &--pending  { color: #F59E0B; }
+  }
+
+  &__progress-track {
+    height: 6px;
+    background: v.$color-border;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+
+    &--complete { background: #10B981; }
+    &--pending  { background: #F59E0B; }
+  }
+
+  // Action bar
+  &__actions {
+    margin-top: v.$space-6;
+    display: flex;
+    gap: v.$space-2;
+  }
+
+  // States
+  &__empty {
+    text-align: center;
+    padding: 48px;
+    color: v.$color-text-muted;
+  }
 }

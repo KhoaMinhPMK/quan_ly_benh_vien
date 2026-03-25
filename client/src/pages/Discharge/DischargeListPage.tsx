@@ -80,13 +80,13 @@ export default function DischargeListPage() {
         {/* Left: patient list */}
         <div className="discharge__list">
           {loading ? (
-            <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
+            <div className="card discharge__empty">
               <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-              <p style={{ color: '#6B7280' }}>{t.common.loading}</p>
+              <p>{t.common.loading}</p>
             </div>
           ) : patients.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
-              <p style={{ color: '#6B7280' }}>{t.discharge.noDischarge}</p>
+            <div className="card discharge__empty">
+              <p>{t.discharge.noDischarge}</p>
             </div>
           ) : (
             <div className="card" style={{ padding: 0 }}>
@@ -136,13 +136,13 @@ export default function DischargeListPage() {
               </div>
 
               {/* Progress bar */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+              <div className="discharge__progress-wrap">
+                <div className="discharge__progress-header">
                   <span>{t.discharge.checklistProgress}</span>
-                  <span style={{ fontWeight: 600, color: progressPct === 100 ? '#10B981' : '#F59E0B' }}>{completedCount}/{checklists.length} ({progressPct}%)</span>
+                  <span className={`discharge__progress-value discharge__progress-value--${progressPct === 100 ? 'complete' : 'pending'}`}>{completedCount}/{checklists.length} ({progressPct}%)</span>
                 </div>
-                <div style={{ height: 6, background: '#E5E7EB', borderRadius: 3 }}>
-                  <div style={{ height: '100%', width: `${progressPct}%`, background: progressPct === 100 ? '#10B981' : '#F59E0B', borderRadius: 3, transition: 'width 0.3s' }} />
+                <div className="discharge__progress-track">
+                  <div className={`discharge__progress-fill discharge__progress-fill--${progressPct === 100 ? 'complete' : 'pending'}`} style={{ width: `${progressPct}%` }} />
                 </div>
               </div>
 
@@ -162,7 +162,7 @@ export default function DischargeListPage() {
                 </div>
               )}
 
-              <div style={{ marginTop: '24px', display: 'flex', gap: '8px' }}>
+              <div className="discharge__actions">
                 <button className="btn btn--primary" disabled={!allChecked} onClick={handleDischarge}
                   title={!allChecked ? t.discharge.blockDischargeMsg : ''}>
                   {t.discharge.confirmDischarge}
