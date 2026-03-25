@@ -26,15 +26,22 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [waitingList, setWaitingList] = useState<Patient[]>([]);
 
-  useEffect(() => {
+  const loadData = () => {
     fetchDashboardStats()
       .then(setStats)
       .catch(() => {})
       .finally(() => setLoading(false));
-    // Also fetch patients without beds
     fetchPatients({ status: 'admitted' }).then(patients => {
       setWaitingList(patients.filter(p => !p.bed_id));
     }).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadData();
+    const interval = setInterval(loadData, 30000);
+    const handleFocus = () => loadData();
+    window.addEventListener('focus', handleFocus);
+    return () => { clearInterval(interval); window.removeEventListener('focus', handleFocus); };
   }, []);
 
   if (!user) return null;
@@ -212,6 +219,7 @@ export default function DashboardPage() {
                     <span className="room-card__name">{r.name}</span>
                     <span className="room-card__code">{r.room_code}</span>
                   </div>
+                  <div className="room-card__dept">{r.department_name}</div>
                   <div className="room-card__progress">
                     <div className="room-card__progress-bar">
                       <div

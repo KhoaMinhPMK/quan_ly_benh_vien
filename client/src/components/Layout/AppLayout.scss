@@ -15,4 +15,33 @@
   &--collapsed &__main {
     margin-left: v.$sidebar-collapsed-width;
   }
+
+  // Mobile overlay
+  &__overlay {
+    display: none;
+  }
+}
+
+// ── Mobile responsive ──
+@media (max-width: 768px) {
+  .layout {
+    &__main {
+      margin-left: 0 !important;
+      padding: v.$space-3;
+    }
+
+    &__overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 150;
+      animation: fadeIn 0.2s ease;
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 }

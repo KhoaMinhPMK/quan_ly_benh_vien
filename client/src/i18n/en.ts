@@ -42,6 +42,8 @@ const en: Translations = {
     update: 'Update',
     fillAllFields: 'Please fill in all fields',
     more: 'more',
+    expand: 'Expand',
+    collapse: 'Collapse',
   },
 
   // ── Sidebar / Navigation ──

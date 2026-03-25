@@ -8,7 +8,14 @@ import iconSearch from '../../assets/icons/outline/search.svg';
 import iconUser from '../../assets/icons/outline/user-circle.svg';
 import './Header.scss';
 
-export default function Header() {
+const ROLE_LABELS: Record<string, Record<string, string>> = {
+  vi: { admin: 'Quản trị viên', doctor: 'Bác sĩ', nurse: 'Điều dưỡng', records_staff: 'Nhân viên hồ sơ', receptionist: 'Lễ tân' },
+  en: { admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse', records_staff: 'Records Staff', receptionist: 'Receptionist' },
+};
+
+interface HeaderProps { onMenuToggle?: () => void; }
+
+export default function Header({ onMenuToggle }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -78,6 +85,11 @@ export default function Header() {
     <>
       <header className="header">
         <div className="header__left">
+          {onMenuToggle && (
+            <button className="header__menu-btn" onClick={onMenuToggle} aria-label="Menu">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          )}
           <h1 className="header__title">{pageTitle}</h1>
         </div>
 
@@ -167,7 +179,7 @@ export default function Header() {
                 <div className="header__user-dropdown-info">
                   <div style={{ fontWeight: 600 }}>{user?.fullName}</div>
                   <div style={{ fontSize: 12, color: '#9CA3AF' }}>{user?.email}</div>
-                  <div style={{ fontSize: 11, color: '#6366F1', textTransform: 'uppercase', marginTop: 4 }}>{user?.role}</div>
+                  <div style={{ fontSize: 11, color: '#6366F1', textTransform: 'uppercase', marginTop: 4 }}>{user?.role ? (ROLE_LABELS[lang]?.[user.role] || user.role) : ''}</div>
                 </div>
                 <div className="header__user-dropdown-divider" />
                 <button className="header__user-dropdown-item" onClick={(e) => { e.stopPropagation(); setShowPwModal(true); setShowUserMenu(false); }}>

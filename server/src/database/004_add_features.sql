@@ -66,9 +66,9 @@ CREATE TABLE IF NOT EXISTS system_config (
 
 -- Seed default config
 INSERT INTO system_config (config_key, config_value, description) VALUES
-  ('warning_threshold', '1', 'So giuong con lai de canh bao phong sap day'),
-  ('default_checklist_enabled', 'true', 'Bat checklist ho so ra vien mac dinh'),
-  ('session_timeout_minutes', '480', 'Thoi gian het han phien dang nhap (phut)')
+  ('warning_threshold', '1', 'Số giường còn lại để cảnh báo phòng sắp đầy'),
+  ('default_checklist_enabled', 'true', 'Bật checklist hồ sơ ra viện mặc định'),
+  ('session_timeout_minutes', '480', 'Thời gian hết hạn phiên đăng nhập (phút)')
 ON DUPLICATE KEY UPDATE config_value = VALUES(config_value);
 
 -- Tenants table (GD3 prep, created now for schema readiness)

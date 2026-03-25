@@ -27,6 +27,38 @@
   .form-field__input {
     padding-left: 34px;
   }
+
+  // Filter select defaults
+  > select.form-field__input {
+    width: auto;
+    min-width: 140px;
+    max-width: 200px;
+  }
+}
+
+// Mobile: filters stack
+@media (max-width: 768px) {
+  .room-filters {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__search {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    > select.form-field__input,
+    > .form-field__input {
+      max-width: 100%;
+      min-width: 0;
+      width: 100%;
+    }
+  }
+
+  .admin-filters {
+    flex-wrap: wrap;
+    .form-field__input { max-width: 100% !important; width: 100%; }
+  }
 }
 
 // Occupancy inline bar

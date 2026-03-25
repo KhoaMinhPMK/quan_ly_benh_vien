@@ -103,7 +103,7 @@ export default function UserListPage() {
         <Modal title={editing ? t.users.editUserTitle : t.users.addUserTitle} onClose={() => setShowModal(false)}>
           <div className="modal__body">
             {error && <div className="modal__error">{error}</div>}
-            {!editing && <div className="form-field"><label className="form-field__label">Email</label><input className="form-field__input" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>}
+            {!editing && <div className="form-field"><label className="form-field__label">{t.users.email}</label><input className="form-field__input" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>}
             {!editing && <div className="form-field"><label className="form-field__label">{t.users.password}</label><input className="form-field__input" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>}
             <div className="form-field"><label className="form-field__label">{t.users.fullName}</label><input className="form-field__input" value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} /></div>
             <div className="modal__row">

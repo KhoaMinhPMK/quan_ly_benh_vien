@@ -40,6 +40,8 @@ const vi = {
     update: 'Cập nhật',
     fillAllFields: 'Vui lòng điền đầy đủ thông tin',
     more: 'khác',
+    expand: 'Mở rộng',
+    collapse: 'Thu gọn',
   },
 
   // ── Sidebar / Navigation ──

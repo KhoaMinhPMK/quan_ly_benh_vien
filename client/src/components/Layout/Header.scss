@@ -248,15 +248,43 @@
       &:hover { background: #FEF2F2; }
     }
   }
+  // Hamburger — hidden on desktop
+  &__menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    padding: v.$space-1;
+    cursor: pointer;
+    color: v.$color-text-secondary;
+    border-radius: v.$radius;
+    margin-right: v.$space-2;
+    transition: background v.$transition-fast;
+    &:hover { background: v.$color-bg-surface; }
+  }
 }
 
-// Responsive
+// ── Mobile responsive ──
 @media (max-width: 768px) {
   .header {
     left: 0 !important;
     padding: 0 v.$space-3;
 
-    &__search { width: 160px; }
+    &__menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    &__search { width: 120px; }
+    &__search-input { font-size: 13px; }
     &__user-name { display: none; }
+    &__lang-btn { font-size: 12px; padding: 4px 6px; }
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    &__search { display: none; }
+    &__right { gap: v.$space-2; }
   }
 }

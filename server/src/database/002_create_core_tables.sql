@@ -123,19 +123,19 @@ CREATE TABLE IF NOT EXISTS bed_history (
 
 -- Seed departments
 INSERT INTO departments (name, code) VALUES
-  ('Noi khoa', 'NK'),
-  ('Ngoai khoa', 'NGK'),
+  ('Nội khoa', 'NK'),
+  ('Ngoại khoa', 'NGK'),
   ('Nhi khoa', 'NHK'),
-  ('San khoa', 'SK'),
-  ('Cap cuu', 'CC')
+  ('Sản khoa', 'SK'),
+  ('Cấp cứu', 'CC')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- Seed checklist templates
 INSERT INTO checklist_templates (name, description, sort_order) VALUES
-  ('Ho so benh an', 'Kiem tra ho so benh an day du', 1),
-  ('Phieu xet nghiem', 'Ket qua xet nghiem da co', 2),
-  ('Phieu chup X-quang', 'Ket qua X-quang/CT/MRI', 3),
-  ('Don thuoc ra vien', 'Bac si da ke don thuoc ra vien', 4),
-  ('Giay ra vien', 'Giay ra vien da ky', 5),
-  ('Thanh toan vien phi', 'Benh nhan da thanh toan day du', 6),
-  ('Huong dan tai kham', 'Da huong dan benh nhan tai kham', 7);
+  ('Hồ sơ bệnh án', 'Kiểm tra hồ sơ bệnh án đầy đủ', 1),
+  ('Phiếu xét nghiệm', 'Kết quả xét nghiệm đã có', 2),
+  ('Phiếu chụp X-quang', 'Kết quả X-quang/CT/MRI', 3),
+  ('Đơn thuốc ra viện', 'Bác sĩ đã kê đơn thuốc ra viện', 4),
+  ('Giấy ra viện', 'Giấy ra viện đã ký', 5),
+  ('Thanh toán viện phí', 'Bệnh nhân đã thanh toán đầy đủ', 6),
+  ('Hướng dẫn tái khám', 'Đã hướng dẫn bệnh nhân tái khám', 7);

@@ -27,16 +27,22 @@ const navItems: NavItem[] = [
   { path: '/admin', labelKey: 'admin', icon: iconSettings, adminOnly: true },
 ];
 
-interface SidebarProps { collapsed: boolean; onToggle: () => void; }
+const ROLE_LABELS: Record<string, Record<string, string>> = {
+  vi: { admin: 'Quản trị viên', doctor: 'Bác sĩ', nurse: 'Điều dưỡng', records_staff: 'Nhân viên hồ sơ', receptionist: 'Lễ tân' },
+  en: { admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse', records_staff: 'Records Staff', receptionist: 'Receptionist' },
+};
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+interface SidebarProps { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean; }
+
+export default function Sidebar({ collapsed, onToggle, mobileOpen }: SidebarProps) {
   const { user, logout } = useAuth();
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
 
   const visibleItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');
+  const roleLabel = user?.role ? (ROLE_LABELS[lang]?.[user.role] || user.role) : '';
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
+    <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} ${mobileOpen ? 'sidebar--mobile-open' : ''}`}>
       <div className="sidebar__brand">
         <img src={iconBuilding} alt="" className="sidebar__brand-icon" />
         {!collapsed && <span className="sidebar__brand-text">MedBoard</span>}
@@ -57,7 +63,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && user && (
           <div className="sidebar__user">
             <span className="sidebar__user-name">{user.fullName}</span>
-            <span className="sidebar__user-role">{user.role}</span>
+            <span className="sidebar__user-role">{roleLabel}</span>
           </div>
         )}
         <button className="sidebar__link sidebar__link--logout" onClick={logout} title={t.nav.logout}>
@@ -66,7 +72,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </button>
       </div>
 
-      <button className="sidebar__toggle" onClick={onToggle} title={collapsed ? 'Mở rộng' : 'Thu gọn'}>
+      <button className="sidebar__toggle" onClick={onToggle} title={collapsed ? t.common.expand : t.common.collapse}>
         <img src={collapsed ? iconChevronRight : iconChevronLeft} alt="" className="sidebar__toggle-icon" />
       </button>
     </aside>

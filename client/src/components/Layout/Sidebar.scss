@@ -160,3 +160,20 @@
     height: 14px;
   }
 }
+
+// ── Mobile: hide sidebar by default, slide-in on mobileOpen ──
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: v.$sidebar-width !important;
+    z-index: 200;
+
+    &--mobile-open {
+      transform: translateX(0);
+    }
+
+    &__toggle {
+      display: none;
+    }
+  }
+}

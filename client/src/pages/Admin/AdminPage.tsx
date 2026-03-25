@@ -242,7 +242,7 @@ function StatusSection() {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
       <div className="card">
         <div className="card__header"><h3 className="card__title">{t.admin.bedStatuses}</h3></div>
         <table className="data-table">

@@ -93,12 +93,12 @@ export default function RoomListPage() {
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <select className="form-field__input" value={filterDept || ''}
-          onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)} style={{ width: '200px' }}>
+          onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)}>
           <option value="">{t.rooms.filterDepartment}</option>
           {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
         <select className="form-field__input" value={filterStatus || ''}
-          onChange={(e) => setFilterStatus(e.target.value || undefined)} style={{ width: '160px' }}>
+          onChange={(e) => setFilterStatus(e.target.value || undefined)}>
           <option value="">{t.rooms.filterStatus}</option>
           <option value="active">{t.rooms.statusActive}</option>
           <option value="maintenance">{t.rooms.statusMaintenance}</option>
