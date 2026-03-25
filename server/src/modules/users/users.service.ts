@@ -80,10 +80,10 @@ export async function resetPassword(id: number, newPassword: string) {
 
 export async function changePassword(userId: number, currentPassword: string, newPassword: string) {
   const [rows] = await db.execute<RowDataPacket[]>('SELECT password_hash FROM users WHERE id = ?', [userId]);
-  if (rows.length === 0) throw Object.assign(new Error('User khong ton tai'), { statusCode: 404 });
+  if (rows.length === 0) throw Object.assign(new Error('Người dùng không tồn tại'), { statusCode: 404 });
 
   const valid = await bcrypt.compare(currentPassword, rows[0].password_hash);
-  if (!valid) throw Object.assign(new Error('Mat khau hien tai khong dung'), { statusCode: 400 });
+  if (!valid) throw Object.assign(new Error('Mật khẩu hiện tại không đúng'), { statusCode: 400 });
 
   const hash = await bcrypt.hash(newPassword, 10);
   await db.execute('UPDATE users SET password_hash = ? WHERE id = ?', [hash, userId]);

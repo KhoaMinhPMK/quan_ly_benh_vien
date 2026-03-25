@@ -18,7 +18,7 @@ export async function getById(req: Request, res: Response, next: NextFunction): 
   try {
     const room = await roomsService.getRoomById(Number(req.params.id));
     if (!room) {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Phong khong ton tai' } });
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Phòng không tồn tại' } });
       return;
     }
     res.json({ success: true, data: room });
@@ -32,7 +32,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
     res.status(201).json({ success: true, data: room });
   } catch (error) {
     if (error instanceof ZodError) {
-      res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Du lieu khong hop le', details: error.errors.map(e => ({ field: e.path.join('.'), message: e.message })) } });
+      res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ', details: error.errors.map(e => ({ field: e.path.join('.'), message: e.message })) } });
       return;
     }
     next(error);
@@ -44,13 +44,13 @@ export async function update(req: Request, res: Response, next: NextFunction): P
     const data = updateRoomSchema.parse(req.body);
     const room = await roomsService.updateRoom(Number(req.params.id), data);
     if (!room) {
-      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Phong khong ton tai' } });
+      res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Phòng không tồn tại' } });
       return;
     }
     res.json({ success: true, data: room });
   } catch (error) {
     if (error instanceof ZodError) {
-      res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Du lieu khong hop le', details: error.errors.map(e => ({ field: e.path.join('.'), message: e.message })) } });
+      res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ', details: error.errors.map(e => ({ field: e.path.join('.'), message: e.message })) } });
       return;
     }
     next(error);

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import { AxiosError } from 'axios';
 import type { ApiResponse } from '@shared/types/auth';
 import iconEye from '../../assets/icons/outline/eye.svg';
@@ -12,6 +13,7 @@ import './LoginPage.scss';
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
+  const { t, lang } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,126 +21,57 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // If already authenticated, redirect
-  if (isAuthenticated) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  if (isAuthenticated) { navigate('/', { replace: true }); return null; }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!email.trim()) {
-      setError('Vui long nhap email');
-      return;
-    }
-    if (!password.trim()) {
-      setError('Vui long nhap mat khau');
-      return;
-    }
-
+    if (!email.trim()) { setError(lang === 'vi' ? 'Vui lòng nhập email' : 'Please enter email'); return; }
+    if (!password.trim()) { setError(lang === 'vi' ? 'Vui lòng nhập mật khẩu' : 'Please enter password'); return; }
     setIsSubmitting(true);
-
     try {
       await login(email, password);
       navigate('/', { replace: true });
     } catch (err) {
       const axiosError = err as AxiosError<ApiResponse>;
-      if (axiosError.response?.data?.error) {
-        setError(axiosError.response.data.error.message);
-      } else if (axiosError.code === 'ERR_NETWORK') {
-        setError('Khong the ket noi server. Vui long kiem tra lai.');
-      } else {
-        setError('Da xay ra loi, vui long thu lai.');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+      if (axiosError.response?.data?.error) { setError(axiosError.response.data.error.message); }
+      else if (axiosError.code === 'ERR_NETWORK') { setError(lang === 'vi' ? 'Không thể kết nối server. Vui lòng kiểm tra lại.' : 'Cannot connect to server. Please try again.'); }
+      else { setError(lang === 'vi' ? 'Đã xảy ra lỗi, vui lòng thử lại.' : 'An error occurred, please try again.'); }
+    } finally { setIsSubmitting(false); }
   };
 
   return (
     <div className="login">
       <div className="login__card">
-        {/* Brand */}
         <div className="login__brand">
           <img src={iconBuildingHospital} alt="" className="login__logo-icon" />
           <h1 className="login__title">MedBoard</h1>
-          <p className="login__subtitle">He thong quan ly y te noi tru</p>
+          <p className="login__subtitle">{t.login.subtitle}</p>
         </div>
-
-        {/* Form */}
         <form className="login__form" onSubmit={handleSubmit} noValidate>
-          {error && (
-            <div className="login__error" role="alert">
-              <img src={iconAlertCircle} alt="" className="login__error-icon" />
-              <span>{error}</span>
-            </div>
-          )}
-
+          {error && <div className="login__error" role="alert"><img src={iconAlertCircle} alt="" className="login__error-icon" /><span>{error}</span></div>}
           <div className="login__field">
-            <label htmlFor="login-email" className="login__label">Email</label>
-            <input
-              id="login-email"
-              type="email"
-              className="login__input"
-              placeholder="admin@medboard.vn"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isSubmitting}
-              autoComplete="email"
-              autoFocus
-            />
+            <label htmlFor="login-email" className="login__label">{t.login.email}</label>
+            <input id="login-email" type="email" className="login__input" placeholder="admin@medboard.vn"
+              value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} autoComplete="email" autoFocus />
           </div>
-
           <div className="login__field">
-            <label htmlFor="login-password" className="login__label">Mat khau</label>
+            <label htmlFor="login-password" className="login__label">{t.login.password}</label>
             <div className="login__password-wrap">
-              <input
-                id="login-password"
-                type={showPassword ? 'text' : 'password'}
-                className="login__input"
-                placeholder="Nhap mat khau"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isSubmitting}
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                className="login__toggle-pw"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                aria-label={showPassword ? 'An mat khau' : 'Hien thi mat khau'}
-              >
-                <img
-                  src={showPassword ? iconEyeOff : iconEye}
-                  alt=""
-                  className="login__toggle-pw-icon"
-                />
+              <input id="login-password" type={showPassword ? 'text' : 'password'} className="login__input"
+                placeholder={lang === 'vi' ? 'Nhập mật khẩu' : 'Enter password'}
+                value={password} onChange={(e) => setPassword(e.target.value)} disabled={isSubmitting} autoComplete="current-password" />
+              <button type="button" className="login__toggle-pw" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}
+                aria-label={showPassword ? (lang === 'vi' ? 'Ẩn mật khẩu' : 'Hide password') : (lang === 'vi' ? 'Hiển thị mật khẩu' : 'Show password')}>
+                <img src={showPassword ? iconEyeOff : iconEye} alt="" className="login__toggle-pw-icon" />
               </button>
             </div>
           </div>
-
-          <button
-            type="submit"
-            className={`login__submit ${isSubmitting ? 'login__submit--loading' : ''}`}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <span className="login__spinner" />
-                Dang dang nhap...
-              </>
-            ) : (
-              'Dang nhap'
-            )}
+          <button type="submit" className={`login__submit ${isSubmitting ? 'login__submit--loading' : ''}`} disabled={isSubmitting}>
+            {isSubmitting ? (<><span className="login__spinner" />{lang === 'vi' ? 'Đang đăng nhập...' : 'Signing in...'}</>) : t.login.submit}
           </button>
         </form>
-
-        <p className="login__footer">
-          MedBoard -- He thong quan ly y te noi tru
-        </p>
+        <p className="login__footer">{lang === 'vi' ? 'MedBoard — Hệ thống quản lý y tế nội trú' : 'MedBoard — Inpatient Management System'}</p>
       </div>
     </div>
   );

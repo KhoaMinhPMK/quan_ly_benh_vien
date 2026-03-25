@@ -16,7 +16,7 @@ export async function list(req: Request, res: Response, next: NextFunction): Pro
 export async function getById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.getPatientById(Number(req.params.id));
-    if (!patient) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Benh nhan khong ton tai' } }); return; }
+    if (!patient) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Bệnh nhân không tồn tại' } }); return; }
     res.json({ success: true, data: patient });
   } catch (error) { next(error); }
 }
@@ -24,7 +24,7 @@ export async function getById(req: Request, res: Response, next: NextFunction): 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { patient_code, full_name } = req.body;
-    if (!patient_code || !full_name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Ma BN va ho ten bat buoc' } }); return; }
+    if (!patient_code || !full_name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Mã BN và họ tên bắt buộc' } }); return; }
     const patient = await patientsService.createPatient(req.body);
     res.status(201).json({ success: true, data: patient });
   } catch (error) { next(error); }
@@ -40,7 +40,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function discharge(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.dischargePatient(Number(req.params.id), req.user?.id);
-    res.json({ success: true, data: patient, message: 'Benh nhan da ra vien' });
+    res.json({ success: true, data: patient, message: 'Bệnh nhân đã ra viện' });
   } catch (error) { next(error); }
 }
 

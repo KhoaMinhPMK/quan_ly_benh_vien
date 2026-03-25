@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from '../../i18n/LanguageContext';
 import './Sidebar.scss';
 
 // Icons
@@ -14,22 +15,23 @@ import iconLogout from '../../assets/icons/outline/logout.svg';
 import iconChevronLeft from '../../assets/icons/outline/chevron-left.svg';
 import iconChevronRight from '../../assets/icons/outline/chevron-right.svg';
 
-interface NavItem { path: string; label: string; icon: string; adminOnly?: boolean; }
+interface NavItem { path: string; labelKey: keyof typeof import('../../i18n/vi').default.nav; icon: string; adminOnly?: boolean; }
 
 const navItems: NavItem[] = [
-  { path: '/', label: 'Dashboard', icon: iconDashboard },
-  { path: '/rooms', label: 'Phong - Giuong', icon: iconBed },
-  { path: '/patients', label: 'Benh nhan', icon: iconUsers },
-  { path: '/discharge', label: 'Ra vien', icon: iconDoorExit },
-  { path: '/reports', label: 'Bao cao', icon: iconReport },
-  { path: '/users', label: 'Nguoi dung', icon: iconUsers, adminOnly: true },
-  { path: '/admin', label: 'Quan tri', icon: iconSettings, adminOnly: true },
+  { path: '/', labelKey: 'dashboard', icon: iconDashboard },
+  { path: '/rooms', labelKey: 'rooms', icon: iconBed },
+  { path: '/patients', labelKey: 'patients', icon: iconUsers },
+  { path: '/discharge', labelKey: 'discharge', icon: iconDoorExit },
+  { path: '/reports', labelKey: 'reports', icon: iconReport },
+  { path: '/users', labelKey: 'users', icon: iconUsers, adminOnly: true },
+  { path: '/admin', labelKey: 'admin', icon: iconSettings, adminOnly: true },
 ];
 
 interface SidebarProps { collapsed: boolean; onToggle: () => void; }
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const visibleItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');
 
@@ -44,9 +46,9 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {visibleItems.map((item) => (
           <NavLink key={item.path} to={item.path} end={item.path === '/'}
             className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}
-            title={collapsed ? item.label : undefined}>
+            title={collapsed ? t.nav[item.labelKey] : undefined}>
             <img src={item.icon} alt="" className="sidebar__link-icon" />
-            {!collapsed && <span className="sidebar__link-text">{item.label}</span>}
+            {!collapsed && <span className="sidebar__link-text">{t.nav[item.labelKey]}</span>}
           </NavLink>
         ))}
       </nav>
@@ -58,13 +60,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <span className="sidebar__user-role">{user.role}</span>
           </div>
         )}
-        <button className="sidebar__link sidebar__link--logout" onClick={logout} title="Dang xuat">
+        <button className="sidebar__link sidebar__link--logout" onClick={logout} title={t.nav.logout}>
           <img src={iconLogout} alt="" className="sidebar__link-icon" />
-          {!collapsed && <span className="sidebar__link-text">Dang xuat</span>}
+          {!collapsed && <span className="sidebar__link-text">{t.nav.logout}</span>}
         </button>
       </div>
 
-      <button className="sidebar__toggle" onClick={onToggle} title="Thu gon">
+      <button className="sidebar__toggle" onClick={onToggle} title={collapsed ? 'Mở rộng' : 'Thu gọn'}>
         <img src={collapsed ? iconChevronRight : iconChevronLeft} alt="" className="sidebar__toggle-icon" />
       </button>
     </aside>

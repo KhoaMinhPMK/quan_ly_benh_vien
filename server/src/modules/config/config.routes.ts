@@ -20,7 +20,7 @@ router.put('/:key', rbacMiddleware(['admin']), async (req, res, next) => {
   try {
     const { value } = req.body;
     await db.execute('UPDATE system_config SET config_value = ? WHERE config_key = ?', [value, req.params.key]);
-    res.json({ success: true, message: 'Da cap nhat cau hinh' });
+    res.json({ success: true, message: 'Đã cập nhật cấu hình' });
   } catch (e) { next(e); }
 });
 
@@ -36,11 +36,11 @@ router.get('/departments', async (_req, res, next) => {
 router.post('/departments', rbacMiddleware(['admin']), async (req, res, next) => {
   try {
     const { name, code, description } = req.body;
-    if (!name || !code) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Ten va ma khoa bat buoc' } }); return; }
+    if (!name || !code) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Tên và mã khoa bắt buộc' } }); return; }
     const [result] = await db.execute<ResultSetHeader>('INSERT INTO departments (name, code, description) VALUES (?, ?, ?)', [name, code, description || null]);
     res.status(201).json({ success: true, data: { id: result.insertId, name, code } });
   } catch (e: any) {
-    if (e.code === 'ER_DUP_ENTRY') { res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Ma khoa da ton tai' } }); return; }
+    if (e.code === 'ER_DUP_ENTRY') { res.status(409).json({ success: false, error: { code: 'DUPLICATE', message: 'Mã khoa đã tồn tại' } }); return; }
     next(e);
   }
 });
@@ -56,7 +56,7 @@ router.put('/departments/:id', rbacMiddleware(['admin']), async (req, res, next)
     if (fields.length === 0) { res.json({ success: true }); return; }
     params.push(Number(req.params.id));
     await db.execute(`UPDATE departments SET ${fields.join(', ')} WHERE id = ?`, params);
-    res.json({ success: true, message: 'Da cap nhat' });
+    res.json({ success: true, message: 'Đã cập nhật' });
   } catch (e) { next(e); }
 });
 
@@ -71,7 +71,7 @@ router.get('/checklist-templates', async (_req, res, next) => {
 router.post('/checklist-templates', rbacMiddleware(['admin']), async (req, res, next) => {
   try {
     const { name, description, sort_order } = req.body;
-    if (!name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Ten muc bat buoc' } }); return; }
+    if (!name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Tên mục bắt buộc' } }); return; }
     const [result] = await db.execute<ResultSetHeader>(
       'INSERT INTO checklist_templates (name, description, sort_order) VALUES (?, ?, ?)',
       [name, description || null, sort_order || 0]
@@ -92,7 +92,7 @@ router.put('/checklist-templates/:id', rbacMiddleware(['admin']), async (req, re
     if (fields.length === 0) { res.json({ success: true }); return; }
     params.push(Number(req.params.id));
     await db.execute(`UPDATE checklist_templates SET ${fields.join(', ')} WHERE id = ?`, params);
-    res.json({ success: true, message: 'Da cap nhat' });
+    res.json({ success: true, message: 'Đã cập nhật' });
   } catch (e) { next(e); }
 });
 

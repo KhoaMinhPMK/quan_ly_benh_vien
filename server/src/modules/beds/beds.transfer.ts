@@ -17,15 +17,15 @@ export async function transferBed(
       'SELECT id, status, room_id FROM beds WHERE id = ?',
       [targetBedId]
     );
-    if (targetRows.length === 0) throw Object.assign(new Error('Giuong dich khong ton tai'), { statusCode: 404 });
-    if (targetRows[0].status !== 'empty') throw Object.assign(new Error('Giuong dich dang su dung hoac bi khoa'), { statusCode: 409 });
+    if (targetRows.length === 0) throw Object.assign(new Error('Giường đích không tồn tại'), { statusCode: 404 });
+    if (targetRows[0].status !== 'empty') throw Object.assign(new Error('Giường đích đang sử dụng hoặc bị khoá'), { statusCode: 409 });
 
     // Get current bed
     const [patientRows] = await conn.execute<RowDataPacket[]>(
       'SELECT bed_id FROM patients WHERE id = ? AND status IN (?, ?, ?)',
       [patientId, 'admitted', 'treating', 'waiting_discharge']
     );
-    if (patientRows.length === 0) throw Object.assign(new Error('Benh nhan khong ton tai hoac da ra vien'), { statusCode: 404 });
+    if (patientRows.length === 0) throw Object.assign(new Error('Bệnh nhân không tồn tại hoặc đã ra viện'), { statusCode: 404 });
 
     const oldBedId = patientRows[0].bed_id;
 
@@ -34,7 +34,7 @@ export async function transferBed(
       await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', oldBedId]);
       await conn.execute(
         'INSERT INTO bed_history (patient_id, bed_id, action, performed_by, notes) VALUES (?, ?, ?, ?, ?)',
-        [patientId, oldBedId, 'release', performedBy || null, notes || 'Chuyen giuong']
+        [patientId, oldBedId, 'release', performedBy || null, notes || 'Chuyển giường']
       );
     }
 

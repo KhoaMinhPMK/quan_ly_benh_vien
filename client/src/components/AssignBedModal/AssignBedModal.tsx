@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { fetchPatients, assignBed, type Patient } from '../../services/api/medboardApi';
+import { useTranslation } from '../../i18n/LanguageContext';
 
 interface AssignBedModalProps {
-  open: boolean;
-  bedId: number;
-  bedCode: string;
-  onClose: () => void;
-  onAssigned: () => void;
+  open: boolean; bedId: number; bedCode: string;
+  onClose: () => void; onAssigned: () => void;
 }
 
 export default function AssignBedModal({ open, bedId, bedCode, onClose, onAssigned }: AssignBedModalProps) {
+  const { t } = useTranslation();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
@@ -18,34 +17,19 @@ export default function AssignBedModal({ open, bedId, bedCode, onClose, onAssign
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (open) {
-      setLoading(true);
-      // Fetch patients without bed (status=admitted or those without bed_id)
-      fetchPatients({ status: 'admitted' })
-        .then(setPatients)
-        .catch(() => {})
-        .finally(() => setLoading(false));
-    }
+    if (open) { setLoading(true); fetchPatients({ status: 'admitted' }).then(setPatients).catch(() => {}).finally(() => setLoading(false)); }
   }, [open]);
 
   const filtered = patients.filter(p =>
-    p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.patient_code.toLowerCase().includes(searchTerm.toLowerCase())
+    p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || p.patient_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSubmit = async () => {
-    if (!selectedId) { setError('Chọn bệnh nhân'); return; }
-    setSubmitting(true);
-    setError('');
-    try {
-      await assignBed(bedId, selectedId);
-      onAssigned();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Lỗi xếp giường';
-      setError(msg);
-    } finally {
-      setSubmitting(false);
-    }
+    if (!selectedId) { setError(t.assign.selectPatientError); return; }
+    setSubmitting(true); setError('');
+    try { await assignBed(bedId, selectedId); onAssigned(); }
+    catch (err: unknown) { setError(err instanceof Error ? err.message : t.assign.assignError); }
+    finally { setSubmitting(false); }
   };
 
   if (!open) return null;
@@ -55,24 +39,19 @@ export default function AssignBedModal({ open, bedId, bedCode, onClose, onAssign
       <div className="modal-overlay" onClick={onClose} />
       <div className="transfer-modal">
         <div className="transfer-modal__header">
-          <h3>Xếp giường — {bedCode}</h3>
+          <h3>{t.assign.title} — {bedCode}</h3>
           <button className="transfer-modal__close" onClick={onClose}>&times;</button>
         </div>
-
         <div className="transfer-modal__body">
           <div className="transfer-modal__field">
-            <label>Tìm bệnh nhân chưa có giường</label>
-            <input type="text" className="form-field__input" placeholder="Tên hoặc mã BN..."
-              value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-              style={{ marginBottom: 8 }} />
+            <label>{t.assign.searchPatient}</label>
+            <input type="text" className="form-field__input" placeholder={t.assign.searchPlaceholder}
+              value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ marginBottom: 8 }} />
           </div>
-
           {loading ? (
-            <p style={{ textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>Đang tải...</p>
+            <p style={{ textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>{t.common.loading}</p>
           ) : filtered.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
-              Không có bệnh nhân chờ xếp giường
-            </p>
+            <p style={{ textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>{t.assign.noPatients}</p>
           ) : (
             <div style={{ maxHeight: 250, overflowY: 'auto' }}>
               {filtered.map(p => (
@@ -82,21 +61,19 @@ export default function AssignBedModal({ open, bedId, bedCode, onClose, onAssign
                   onClick={() => setSelectedId(p.id)}>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>{p.full_name}</div>
-                    <div style={{ fontSize: 11, color: '#64748B' }}>{p.patient_code} · {p.diagnosis || 'Chưa cập nhật'}</div>
+                    <div style={{ fontSize: 11, color: '#64748B' }}>{p.patient_code} · {p.diagnosis || t.assign.notUpdated}</div>
                   </div>
                   {selectedId === p.id && <span style={{ color: '#2563EB', fontWeight: 600 }}>✓</span>}
                 </div>
               ))}
             </div>
           )}
-
           {error && <div className="transfer-modal__error">{error}</div>}
         </div>
-
         <div className="transfer-modal__footer">
-          <button className="btn btn--secondary btn--sm" onClick={onClose}>Huỷ</button>
+          <button className="btn btn--secondary btn--sm" onClick={onClose}>{t.common.cancel}</button>
           <button className="btn btn--primary btn--sm" onClick={handleSubmit} disabled={submitting || !selectedId}>
-            {submitting ? 'Đang xử lý...' : 'Xếp giường'}
+            {submitting ? t.common.processing : t.assign.confirmAssign}
           </button>
         </div>
       </div>

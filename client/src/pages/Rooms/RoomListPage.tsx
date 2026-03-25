@@ -1,27 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchRooms, fetchDepartments, type Room, type Department } from '../../services/api/medboardApi';
+import { fetchRooms, fetchDepartments, updateRoom, type Room, type Department } from '../../services/api/medboardApi';
+import { useTranslation } from '../../i18n/LanguageContext';
 import AddRoomModal from './AddRoomModal';
+import Modal from '../../components/Modal/Modal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
 import './RoomListPage.scss';
 
-const TYPE_LABELS: Record<string, string> = {
-  normal: 'Thuong',
-  vip: 'VIP',
-  icu: 'ICU',
-  isolation: 'Cach ly',
-};
-
-const TYPE_BADGE: Record<string, string> = {
-  normal: 'badge--neutral',
-  vip: 'badge--warning',
-  icu: 'badge--error',
-  isolation: 'badge--info',
-};
+const TYPE_LABELS_VI: Record<string, string> = { normal: 'Thường', vip: 'VIP', icu: 'ICU', isolation: 'Cách ly' };
+const TYPE_LABELS_EN: Record<string, string> = { normal: 'Standard', vip: 'VIP', icu: 'ICU', isolation: 'Isolation' };
+const TYPE_BADGE: Record<string, string> = { normal: 'badge--neutral', vip: 'badge--warning', icu: 'badge--error', isolation: 'badge--info' };
 
 export default function RoomListPage() {
   const navigate = useNavigate();
+  const { t, lang } = useTranslation();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,10 +22,11 @@ export default function RoomListPage() {
   const [filterDept, setFilterDept] = useState<number | undefined>();
   const [filterStatus, setFilterStatus] = useState<string | undefined>();
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editRoom, setEditRoom] = useState<Room | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', room_type: '', max_beds: 0, status: '', notes: '' });
+  const [editError, setEditError] = useState('');
 
-  useEffect(() => {
-    fetchDepartments().then(setDepartments).catch(() => {});
-  }, []);
+  useEffect(() => { fetchDepartments().then(setDepartments).catch(() => {}); }, []);
 
   const loadRooms = () => {
     setLoading(true);
@@ -44,6 +38,8 @@ export default function RoomListPage() {
 
   useEffect(() => { loadRooms(); }, [filterDept, filterStatus, search]);
 
+  const typeLabels = lang === 'vi' ? TYPE_LABELS_VI : TYPE_LABELS_EN;
+
   const getOccupancyColor = (room: Room) => {
     if (room.total_beds === 0) return { cls: 'badge--neutral', fill: '#94A3B8' };
     const ratio = room.occupied_beds / room.total_beds;
@@ -52,17 +48,39 @@ export default function RoomListPage() {
     return { cls: 'badge--success', fill: '#10B981' };
   };
 
+  const statusLabel = (s: string) => s === 'active' ? t.rooms.statusActive : s === 'maintenance' ? t.rooms.statusMaintenance : t.rooms.statusClosed;
+  const statusBadge = (s: string) => s === 'active' ? 'badge--success' : s === 'maintenance' ? 'badge--warning' : 'badge--neutral';
+
+  const openEdit = (room: Room, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditRoom(room);
+    setEditForm({ name: room.name, room_type: room.room_type, max_beds: room.max_beds, status: room.status, notes: room.notes || '' });
+    setEditError('');
+  };
+
+  const handleEditSave = async () => {
+    if (!editRoom) return;
+    setEditError('');
+    try {
+      await updateRoom(editRoom.id, editForm as any);
+      setEditRoom(null);
+      loadRooms();
+    } catch (e: any) { setEditError(e.response?.data?.error?.message || t.common.error); }
+  };
+
+  const subtitle = lang === 'vi' ? `${rooms.length} phòng trong hệ thống` : `${rooms.length} rooms in system`;
+
   return (
     <div>
       <div className="page-header">
         <div>
-          <h2 className="page-header__title">Phong — Giuong</h2>
-          <p className="page-header__subtitle">{rooms.length} phong trong he thong</p>
+          <h2 className="page-header__title">{t.rooms.title}</h2>
+          <p className="page-header__subtitle">{subtitle}</p>
         </div>
         <div className="page-header__actions">
           <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
             <img src={iconPlus} alt="" className="btn__icon" style={{ filter: 'brightness(0) invert(1)' }} />
-            Them phong
+            {t.rooms.addRoom}
           </button>
         </div>
       </div>
@@ -71,35 +89,20 @@ export default function RoomListPage() {
       <div className="room-filters">
         <div className="room-filters__search">
           <img src={iconSearch} alt="" className="room-filters__search-icon" />
-          <input
-            type="text"
-            className="form-field__input"
-            placeholder="Tim kiem phong..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <input type="text" className="form-field__input" placeholder={t.rooms.searchPlaceholder}
+            value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select
-          className="form-field__input"
-          value={filterDept || ''}
-          onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)}
-          style={{ width: '200px' }}
-        >
-          <option value="">Tat ca khoa</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>{d.name}</option>
-          ))}
+        <select className="form-field__input" value={filterDept || ''}
+          onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)} style={{ width: '200px' }}>
+          <option value="">{t.rooms.filterDepartment}</option>
+          {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <select
-          className="form-field__input"
-          value={filterStatus || ''}
-          onChange={(e) => setFilterStatus(e.target.value || undefined)}
-          style={{ width: '160px' }}
-        >
-          <option value="">Tat ca trang thai</option>
-          <option value="active">Hoat dong</option>
-          <option value="maintenance">Bao tri</option>
-          <option value="closed">Dong</option>
+        <select className="form-field__input" value={filterStatus || ''}
+          onChange={(e) => setFilterStatus(e.target.value || undefined)} style={{ width: '160px' }}>
+          <option value="">{t.rooms.filterStatus}</option>
+          <option value="active">{t.rooms.statusActive}</option>
+          <option value="maintenance">{t.rooms.statusMaintenance}</option>
+          <option value="closed">{t.rooms.statusClosed}</option>
         </select>
       </div>
 
@@ -107,13 +110,13 @@ export default function RoomListPage() {
       {loading ? (
         <div className="card card--no-hover" style={{ textAlign: 'center', padding: '64px' }}>
           <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: '#94A3B8' }}>Dang tai du lieu...</p>
+          <p style={{ color: '#94A3B8' }}>{t.common.loadingData}</p>
         </div>
       ) : rooms.length === 0 ? (
         <div className="card card--no-hover">
           <div className="empty-state">
-            <div className="empty-state__title">Chua co phong nao</div>
-            <div className="empty-state__text">Hay tao phong moi de bat dau.</div>
+            <div className="empty-state__title">{t.rooms.noRooms}</div>
+            <div className="empty-state__text">{t.rooms.noRoomsDesc}</div>
           </div>
         </div>
       ) : (
@@ -121,14 +124,15 @@ export default function RoomListPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Ma phong</th>
-                <th>Ten phong</th>
-                <th>Khoa</th>
-                <th>Loai</th>
-                <th>Tang</th>
-                <th>Giuong</th>
-                <th style={{ minWidth: '120px' }}>Cong suat</th>
-                <th>Trang thai</th>
+                <th>{t.rooms.roomCode}</th>
+                <th>{t.rooms.roomName}</th>
+                <th>{t.dashboard.department}</th>
+                <th>{t.rooms.roomType}</th>
+                <th>{t.rooms.floor}</th>
+                <th>{lang === 'vi' ? 'Giường' : 'Beds'}</th>
+                <th style={{ minWidth: '120px' }}>{t.rooms.occupancy}</th>
+                <th>{t.rooms.statusLabel}</th>
+                <th style={{ width: 70 }}></th>
               </tr>
             </thead>
             <tbody>
@@ -142,7 +146,7 @@ export default function RoomListPage() {
                     <td>{room.department_name}</td>
                     <td>
                       <span className={`badge ${TYPE_BADGE[room.room_type] || 'badge--neutral'}`}>
-                        {TYPE_LABELS[room.room_type] || room.room_type}
+                        {typeLabels[room.room_type] || room.room_type}
                       </span>
                     </td>
                     <td>{room.floor}</td>
@@ -152,15 +156,14 @@ export default function RoomListPage() {
                         <div className="occupancy-bar__track">
                           <div className="occupancy-bar__fill" style={{ width: `${Math.min(ratio, 100)}%`, background: fill }} />
                         </div>
-                        <span className={`occupancy-bar__text`} style={{ color: fill }}>
-                          {Math.round(ratio)}%
-                        </span>
+                        <span className="occupancy-bar__text" style={{ color: fill }}>{Math.round(ratio)}%</span>
                       </div>
                     </td>
                     <td>
-                      <span className={`badge ${room.status === 'active' ? 'badge--success' : room.status === 'maintenance' ? 'badge--warning' : 'badge--neutral'}`}>
-                        {room.status === 'active' ? 'Hoat dong' : room.status === 'maintenance' ? 'Bao tri' : 'Dong'}
-                      </span>
+                      <span className={`badge ${statusBadge(room.status)}`}>{statusLabel(room.status)}</span>
+                    </td>
+                    <td>
+                      <button className="btn btn--ghost btn--sm" onClick={(e) => openEdit(room, e)}>{t.common.edit}</button>
                     </td>
                   </tr>
                 );
@@ -170,11 +173,43 @@ export default function RoomListPage() {
         </div>
       )}
 
-      <AddRoomModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onCreated={loadRooms}
-      />
+      <AddRoomModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={loadRooms} />
+
+      {/* Edit Room Modal */}
+      {editRoom && (
+        <Modal title={lang === 'vi' ? 'Cập nhật phòng' : 'Edit Room'} onClose={() => setEditRoom(null)}>
+          <div className="modal__body">
+            {editError && <div className="modal__error">{editError}</div>}
+            <div className="form-field"><label className="form-field__label">{t.rooms.roomCode}</label>
+              <input className="form-field__input" value={editRoom.room_code} disabled style={{ opacity: 0.6 }} /></div>
+            <div className="form-field"><label className="form-field__label">{t.rooms.roomName}</label>
+              <input className="form-field__input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+            <div className="modal__row">
+              <div className="form-field"><label className="form-field__label">{t.rooms.roomType}</label>
+                <select className="form-field__input" value={editForm.room_type} onChange={e => setEditForm({...editForm, room_type: e.target.value})}>
+                  <option value="normal">{typeLabels.normal}</option>
+                  <option value="vip">{typeLabels.vip}</option>
+                  <option value="icu">{typeLabels.icu}</option>
+                  <option value="isolation">{typeLabels.isolation}</option>
+                </select></div>
+              <div className="form-field"><label className="form-field__label">{lang === 'vi' ? 'Số giường tối đa' : 'Max Beds'}</label>
+                <input className="form-field__input" type="number" min={1} max={20} value={editForm.max_beds} onChange={e => setEditForm({...editForm, max_beds: Number(e.target.value)})} /></div>
+            </div>
+            <div className="form-field"><label className="form-field__label">{t.rooms.statusLabel}</label>
+              <select className="form-field__input" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+                <option value="active">{t.rooms.statusActive}</option>
+                <option value="maintenance">{t.rooms.statusMaintenance}</option>
+                <option value="closed">{t.rooms.statusClosed}</option>
+              </select></div>
+            <div className="form-field"><label className="form-field__label">{t.common.notes}</label>
+              <textarea className="form-field__input" value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} rows={2} /></div>
+          </div>
+          <div className="modal__footer">
+            <button className="btn btn--secondary" onClick={() => setEditRoom(null)}>{t.common.cancel}</button>
+            <button className="btn btn--primary" onClick={handleEditSave}>{lang === 'vi' ? 'Cập nhật' : 'Update'}</button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

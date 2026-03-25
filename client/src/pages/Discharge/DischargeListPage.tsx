@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import { fetchDischargeList, fetchChecklists, toggleChecklist, dischargePatient, type Patient, type ChecklistItem } from '../../services/api/medboardApi';
+import { useTranslation } from '../../i18n/LanguageContext';
 import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
 import './DischargeListPage.scss';
 
-const STATUS_LABELS: Record<string, string> = {
-  treating: 'Dang dieu tri',
-  waiting_discharge: 'Cho ra vien',
-};
-
 export default function DischargeListPage() {
+  const { t, lang } = useTranslation();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [checklistLoading, setChecklistLoading] = useState(false);
+
+  const statusLabels: Record<string, string> = {
+    treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
+  };
 
   const loadList = () => {
     setLoading(true);
@@ -43,26 +44,37 @@ export default function DischargeListPage() {
     } catch { /* ignore */ }
   };
 
+  const allChecked = checklists.length > 0 && checklists.every((c) => c.is_completed);
+
   const handleDischarge = async () => {
     if (!selectedPatient) return;
-    if (!confirm(`Xac nhan ra vien benh nhan ${selectedPatient.full_name}?`)) return;
+    if (!allChecked) {
+      alert(t.discharge.blockDischargeMsg);
+      return;
+    }
+    const msg = lang === 'vi'
+      ? `Xác nhận ra viện bệnh nhân ${selectedPatient.full_name}?`
+      : `Confirm discharge for patient ${selectedPatient.full_name}?`;
+    if (!confirm(msg)) return;
     try {
       await dischargePatient(selectedPatient.id);
       setSelectedPatient(null);
       loadList();
-    } catch { alert('Co loi xay ra'); }
+    } catch { alert(t.common.error); }
   };
 
-  const allChecked = checklists.length > 0 && checklists.every((c) => c.is_completed);
+  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US') : '--';
 
-  const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('vi-VN') : '--';
+  // Checklist progress
+  const completedCount = checklists.filter(c => c.is_completed).length;
+  const progressPct = checklists.length > 0 ? Math.round((completedCount / checklists.length) * 100) : 0;
 
   return (
     <div className="discharge">
       <div className="page-header">
         <div>
-          <h2 className="page-header__title">Ra vien</h2>
-          <p className="page-header__subtitle">Benh nhan du kien ra vien hom nay/ngay mai</p>
+          <h2 className="page-header__title">{t.discharge.title}</h2>
+          <p className="page-header__subtitle">{t.discharge.subtitle}</p>
         </div>
       </div>
 
@@ -72,22 +84,22 @@ export default function DischargeListPage() {
           {loading ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
               <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-              <p style={{ color: '#6B7280' }}>Dang tai...</p>
+              <p style={{ color: '#6B7280' }}>{t.common.loading}</p>
             </div>
           ) : patients.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
-              <p style={{ color: '#6B7280' }}>Khong co benh nhan du kien ra vien.</p>
+              <p style={{ color: '#6B7280' }}>{t.discharge.noDischarge}</p>
             </div>
           ) : (
             <div className="card" style={{ padding: 0 }}>
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Ma BN</th>
-                    <th>Ho ten</th>
-                    <th>Phong</th>
-                    <th>Du kien</th>
-                    <th>Trang thai</th>
+                    <th>{t.discharge.patientCode}</th>
+                    <th>{t.discharge.fullName}</th>
+                    <th>{t.discharge.room}</th>
+                    <th>{t.discharge.expectedDate}</th>
+                    <th>{t.common.status}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -100,13 +112,13 @@ export default function DischargeListPage() {
                       <td>{formatDate(p.expected_discharge)}</td>
                       <td>
                         <span className={`badge ${p.status === 'waiting_discharge' ? 'badge--warning' : 'badge--info'}`}>
-                          {STATUS_LABELS[p.status] || p.status}
+                          {statusLabels[p.status] || p.status}
                         </span>
                       </td>
                       <td>
                         <button className="btn btn--secondary btn--sm" onClick={() => openChecklist(p)}>
                           <img src={iconClipboardCheck} alt="" style={{ width: 14, height: 14 }} />
-                          Ho so
+                          {t.discharge.checklist}
                         </button>
                       </td>
                     </tr>
@@ -122,27 +134,30 @@ export default function DischargeListPage() {
           <div className="discharge__panel">
             <div className="card">
               <div className="card__header">
-                <h3 className="card__title">Checklist ra vien: {selectedPatient.full_name}</h3>
+                <h3 className="card__title">{lang === 'vi' ? 'Checklist ra viện' : 'Discharge Checklist'}: {selectedPatient.full_name}</h3>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                  <span>{t.discharge.checklistProgress}</span>
+                  <span style={{ fontWeight: 600, color: progressPct === 100 ? '#10B981' : '#F59E0B' }}>{completedCount}/{checklists.length} ({progressPct}%)</span>
+                </div>
+                <div style={{ height: 6, background: '#E5E7EB', borderRadius: 3 }}>
+                  <div style={{ height: '100%', width: `${progressPct}%`, background: progressPct === 100 ? '#10B981' : '#F59E0B', borderRadius: 3, transition: 'width 0.3s' }} />
+                </div>
               </div>
 
               {checklistLoading ? (
-                <p style={{ color: '#6B7280' }}>Dang tai checklist...</p>
+                <p style={{ color: '#6B7280' }}>{t.discharge.loadingChecklist}</p>
               ) : (
                 <div className="discharge__checklist">
                   {checklists.map((item) => (
                     <label key={item.template_id} className="discharge__check-item">
-                      <input
-                        type="checkbox"
-                        checked={item.is_completed}
-                        onChange={(e) => handleToggle(item.template_id, e.target.checked)}
-                      />
+                      <input type="checkbox" checked={item.is_completed} onChange={(e) => handleToggle(item.template_id, e.target.checked)} />
                       <div>
-                        <span className={`discharge__check-name ${item.is_completed ? 'discharge__check-name--done' : ''}`}>
-                          {item.name}
-                        </span>
-                        {item.description && (
-                          <span className="discharge__check-desc">{item.description}</span>
-                        )}
+                        <span className={`discharge__check-name ${item.is_completed ? 'discharge__check-name--done' : ''}`}>{item.name}</span>
+                        {item.description && <span className="discharge__check-desc">{item.description}</span>}
                       </div>
                     </label>
                   ))}
@@ -150,16 +165,11 @@ export default function DischargeListPage() {
               )}
 
               <div style={{ marginTop: '24px', display: 'flex', gap: '8px' }}>
-                <button
-                  className="btn btn--primary"
-                  disabled={!allChecked}
-                  onClick={handleDischarge}
-                >
-                  Xac nhan ra vien
+                <button className="btn btn--primary" disabled={!allChecked} onClick={handleDischarge}
+                  title={!allChecked ? t.discharge.blockDischargeMsg : ''}>
+                  {t.discharge.confirmDischarge}
                 </button>
-                <button className="btn btn--secondary" onClick={() => setSelectedPatient(null)}>
-                  Dong
-                </button>
+                <button className="btn btn--secondary" onClick={() => setSelectedPatient(null)}>{t.common.close}</button>
               </div>
             </div>
           </div>

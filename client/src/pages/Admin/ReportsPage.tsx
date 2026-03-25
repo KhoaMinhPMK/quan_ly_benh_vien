@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { fetchOccupancyReport, fetchDischargeReport, fetchMissingRecordsReport, fetchDepartmentReport, type OccupancyReport, type DischargeReport } from '../../services/api/medboardApi';
+import { useTranslation } from '../../i18n/LanguageContext';
 import './AdminPages.scss';
 
 type Tab = 'occupancy' | 'discharge' | 'missing' | 'department';
 
 export default function ReportsPage() {
+  const { t, lang } = useTranslation();
   const [tab, setTab] = useState<Tab>('occupancy');
   const [occupancy, setOccupancy] = useState<OccupancyReport[]>([]);
   const [discharge, setDischarge] = useState<DischargeReport[]>([]);
@@ -38,14 +40,25 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
+
+  const tabItems: [Tab, string][] = [
+    ['occupancy', t.reports.tabOccupancy], ['discharge', t.reports.tabDischarge],
+    ['missing', t.reports.tabMissing], ['department', t.reports.tabDepartment],
+  ];
+
   return (
     <div>
       <div className="page-header">
-        <div><h2 className="page-header__title">Bao cao</h2></div>
+        <div><h2 className="page-header__title">{t.reports.title}</h2></div>
       </div>
 
       <div className="tab-bar">
-        {([['occupancy', 'Cong suat'], ['discharge', 'Ra vien'], ['missing', 'Ho so thieu'], ['department', 'Theo khoa']] as [Tab, string][]).map(([k, v]) => (
+        {tabItems.map(([k, v]) => (
           <button key={k} className={`tab-bar__item ${tab === k ? 'tab-bar__item--active' : ''}`} onClick={() => setTab(k)}>{v}</button>
         ))}
       </div>
@@ -53,21 +66,24 @@ export default function ReportsPage() {
       {tab === 'discharge' && (
         <div className="admin-filters">
           <input type="date" className="form-field__input" value={dateFrom} onChange={e => setDateFrom(e.target.value)} style={{ maxWidth: 160 }} />
-          <span style={{ color: '#9CA3AF' }}>den</span>
+          <span style={{ color: '#9CA3AF' }}>{lang === 'vi' ? 'đến' : 'to'}</span>
           <input type="date" className="form-field__input" value={dateTo} onChange={e => setDateTo(e.target.value)} style={{ maxWidth: 160 }} />
         </div>
       )}
 
-      {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#9CA3AF' }}>Dang tai...</div> : (
+      {loading ? <div style={{ textAlign: 'center', padding: 48, color: '#9CA3AF' }}>{t.common.loading}</div> : (
         <>
           {tab === 'occupancy' && (
             <div className="card" style={{ padding: 0 }}>
               <div className="card__header" style={{ padding: '12px 20px' }}>
-                <span className="card__title">Cong suat giuong theo phong</span>
-                <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(occupancy, 'bao-cao-cong-suat')}>Xuat CSV</button>
+                <span className="card__title">{lang === 'vi' ? 'Công suất giường theo phòng' : 'Bed Occupancy by Room'}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn--secondary btn--sm" onClick={handlePrint}>{t.common.print}</button>
+                  <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(occupancy, 'occupancy-report')}>{t.reports.exportCSV}</button>
+                </div>
               </div>
               <table className="data-table">
-                <thead><tr><th>Phong</th><th>Khoa</th><th>Tong giuong</th><th>Da dung</th><th>Trong</th><th>Ty le</th></tr></thead>
+                <thead><tr><th>{t.reports.room}</th><th>{t.reports.department}</th><th>{t.reports.totalBeds}</th><th>{t.reports.used}</th><th>{t.reports.empty}</th><th>{t.reports.rate}</th></tr></thead>
                 <tbody>
                   {occupancy.map(r => (
                     <tr key={r.id}>
@@ -87,11 +103,14 @@ export default function ReportsPage() {
           {tab === 'discharge' && (
             <div className="card" style={{ padding: 0 }}>
               <div className="card__header" style={{ padding: '12px 20px' }}>
-                <span className="card__title">Danh sach da ra vien ({discharge.length})</span>
-                <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(discharge, 'bao-cao-ra-vien')}>Xuat CSV</button>
+                <span className="card__title">{lang === 'vi' ? `Danh sách đã ra viện (${discharge.length})` : `Discharged Patients (${discharge.length})`}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn--secondary btn--sm" onClick={handlePrint}>{t.common.print}</button>
+                  <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(discharge, 'discharge-report')}>{t.reports.exportCSV}</button>
+                </div>
               </div>
               <table className="data-table">
-                <thead><tr><th>Ma BN</th><th>Ho ten</th><th>Chan doan</th><th>BS phu trach</th><th>Ngay nhap</th><th>Ngay ra</th></tr></thead>
+                <thead><tr><th>{t.patients.patientCode}</th><th>{t.patients.fullName}</th><th>{t.patients.diagnosis}</th><th>{t.patients.doctor}</th><th>{lang === 'vi' ? 'Ngày nhập' : 'Admitted'}</th><th>{lang === 'vi' ? 'Ngày ra' : 'Discharged'}</th></tr></thead>
                 <tbody>
                   {discharge.map(r => (
                     <tr key={r.id}>
@@ -99,8 +118,8 @@ export default function ReportsPage() {
                       <td><strong>{r.full_name}</strong></td>
                       <td>{r.diagnosis}</td>
                       <td>{r.doctor_name}</td>
-                      <td>{r.admitted_at ? new Date(r.admitted_at).toLocaleDateString('vi-VN') : '—'}</td>
-                      <td>{r.discharged_at ? new Date(r.discharged_at).toLocaleDateString('vi-VN') : '—'}</td>
+                      <td>{r.admitted_at ? new Date(r.admitted_at).toLocaleDateString(locale) : '—'}</td>
+                      <td>{r.discharged_at ? new Date(r.discharged_at).toLocaleDateString(locale) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -111,11 +130,14 @@ export default function ReportsPage() {
           {tab === 'missing' && (
             <div className="card" style={{ padding: 0 }}>
               <div className="card__header" style={{ padding: '12px 20px' }}>
-                <span className="card__title">Ho so thieu ({missing.length} benh nhan)</span>
-                <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(missing, 'ho-so-thieu')}>Xuat CSV</button>
+                <span className="card__title">{lang === 'vi' ? `Hồ sơ thiếu (${missing.length} bệnh nhân)` : `Missing Records (${missing.length} patients)`}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn--secondary btn--sm" onClick={handlePrint}>{t.common.print}</button>
+                  <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(missing, 'missing-records')}>{t.reports.exportCSV}</button>
+                </div>
               </div>
               <table className="data-table">
-                <thead><tr><th>Ma BN</th><th>Ho ten</th><th>BS phu trach</th><th>Tong muc</th><th>Da xong</th><th>Con thieu</th></tr></thead>
+                <thead><tr><th>{t.patients.patientCode}</th><th>{t.patients.fullName}</th><th>{t.patients.doctor}</th><th>{lang === 'vi' ? 'Tổng mục' : 'Total'}</th><th>{lang === 'vi' ? 'Đã xong' : 'Done'}</th><th>{lang === 'vi' ? 'Còn thiếu' : 'Missing'}</th></tr></thead>
                 <tbody>
                   {missing.map((r: any) => (
                     <tr key={r.id}>
@@ -135,11 +157,14 @@ export default function ReportsPage() {
           {tab === 'department' && (
             <div className="card" style={{ padding: 0 }}>
               <div className="card__header" style={{ padding: '12px 20px' }}>
-                <span className="card__title">Thong ke theo khoa</span>
-                <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(department, 'thong-ke-khoa')}>Xuat CSV</button>
+                <span className="card__title">{lang === 'vi' ? 'Thống kê theo khoa' : 'Statistics by Department'}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn--secondary btn--sm" onClick={handlePrint}>{t.common.print}</button>
+                  <button className="btn btn--secondary btn--sm" onClick={() => exportCSV(department, 'department-stats')}>{t.reports.exportCSV}</button>
+                </div>
               </div>
               <table className="data-table">
-                <thead><tr><th>Khoa</th><th>Ma</th><th>So phong</th><th>Tong giuong</th><th>Dang dung</th><th>BN dang DTri</th></tr></thead>
+                <thead><tr><th>{t.reports.department}</th><th>{t.common.code}</th><th>{lang === 'vi' ? 'Số phòng' : 'Rooms'}</th><th>{t.reports.totalBeds}</th><th>{lang === 'vi' ? 'Đang dùng' : 'In Use'}</th><th>{lang === 'vi' ? 'BN đang ĐTrị' : 'Active Pts'}</th></tr></thead>
                 <tbody>
                   {department.map((r: any) => (
                     <tr key={r.id}>

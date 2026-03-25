@@ -12,7 +12,7 @@ export async function listByRoom(req: Request, res: Response, next: NextFunction
 export async function getById(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const bed = await bedsService.getBedById(Number(req.params.id));
-    if (!bed) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Giuong khong ton tai' } }); return; }
+    if (!bed) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Giường không tồn tại' } }); return; }
     res.json({ success: true, data: bed });
   } catch (error) { next(error); }
 }
@@ -20,7 +20,7 @@ export async function getById(req: Request, res: Response, next: NextFunction): 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { bed_code, room_id, notes } = req.body;
-    if (!bed_code || !room_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Ma giuong va phong bat buoc' } }); return; }
+    if (!bed_code || !room_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Mã giường và phòng bắt buộc' } }); return; }
     const bed = await bedsService.createBed({ bed_code, room_id, notes });
     res.status(201).json({ success: true, data: bed });
   } catch (error) { next(error); }
@@ -37,11 +37,11 @@ export async function updateStatus(req: Request, res: Response, next: NextFuncti
 export async function assign(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { patient_id } = req.body;
-    if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bat buoc' } }); return; }
+    if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bắt buộc' } }); return; }
     // Conflict check: verify bed is empty
     const bed = await bedsService.getBedById(Number(req.params.id));
-    if (!bed) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Giuong khong ton tai' } }); return; }
-    if (bed.status !== 'empty') { res.status(409).json({ success: false, error: { code: 'BED_OCCUPIED', message: 'Giuong dang su dung hoac bi khoa' } }); return; }
+    if (!bed) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Giường không tồn tại' } }); return; }
+    if (bed.status !== 'empty') { res.status(409).json({ success: false, error: { code: 'BED_OCCUPIED', message: 'Giường đang sử dụng hoặc bị khoá' } }); return; }
     const result = await bedsService.assignBed(Number(req.params.id), patient_id, req.user?.id);
     res.json({ success: true, data: result });
   } catch (error) { next(error); }
@@ -57,7 +57,7 @@ export async function release(req: Request, res: Response, next: NextFunction): 
 export async function transfer(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const { patient_id, target_bed_id, reason, notes } = req.body;
-    if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bat buoc' } }); return; }
+    if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bắt buộc' } }); return; }
     const targetBed = target_bed_id || Number(req.params.id);
     const result = await transferService.transferBed(patient_id, targetBed, req.user?.id, reason || notes);
     res.json({ success: true, data: result });

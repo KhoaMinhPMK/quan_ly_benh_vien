@@ -1,2 +1,28 @@
 @use 'base/reset';
 @use 'base/components';
+
+// ── Print Styles ──
+@media print {
+  .sidebar, .header, .page-header, .tab-bar, .admin-filters,
+  .btn, .modal-overlay, .header__user-dropdown {
+    display: none !important;
+  }
+
+  .layout__content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    break-inside: avoid;
+  }
+
+  .data-table {
+    font-size: 11px;
+    th, td { padding: 4px 8px !important; }
+  }
+
+  body { background: #fff !important; }
+}
