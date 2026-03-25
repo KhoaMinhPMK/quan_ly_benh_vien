@@ -1,0 +1,219 @@
+@use '../../styles/abstracts/variables' as v;
+
+// ========================================
+// BedVisual — Hospital Bed Card
+// ========================================
+.bed-visual {
+  display: flex;
+  flex-direction: column;
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius;
+  padding: v.$space-3;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+  min-height: 180px;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: #CBD5E1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid v.$color-primary;
+    outline-offset: 2px;
+  }
+
+  // ── Status variants ──
+
+  &--empty {
+    border-left: 4px solid #10B981;
+    background: #F0FDF4;
+
+    .bed-visual__frame { fill: #BBF7D0; stroke: #86EFAC; }
+    .bed-visual__mattress { fill: #DCFCE7; stroke: #BBF7D0; }
+    .bed-visual__pillow { fill: #D1FAE5; stroke: #A7F3D0; }
+    .bed-visual__headboard,
+    .bed-visual__footboard { fill: #86EFAC; }
+    .bed-visual__leg { fill: #6EE7B7; }
+  }
+
+  &--occupied {
+    border-left: 4px solid #2563EB;
+    background: #F8FAFF;
+
+    .bed-visual__frame { fill: #BFDBFE; stroke: #93C5FD; }
+    .bed-visual__mattress { fill: #DBEAFE; stroke: #BFDBFE; }
+    .bed-visual__pillow { fill: #C7D8F5; stroke: #93C5FD; }
+    .bed-visual__headboard,
+    .bed-visual__footboard { fill: #93C5FD; }
+    .bed-visual__leg { fill: #60A5FA; }
+    .bed-visual__person-head { fill: #3B82F6; opacity: 0.7; }
+    .bed-visual__person-body { fill: #3B82F6; opacity: 0.35; }
+  }
+
+  &--locked {
+    border-left: 4px solid #9CA3AF;
+    background: #F9FAFB;
+    opacity: 0.7;
+
+    .bed-visual__frame { fill: #E5E7EB; stroke: #D1D5DB; }
+    .bed-visual__mattress { fill: #F3F4F6; stroke: #E5E7EB; }
+    .bed-visual__pillow { fill: #E5E7EB; stroke: #D1D5DB; }
+    .bed-visual__headboard,
+    .bed-visual__footboard { fill: #D1D5DB; }
+    .bed-visual__leg { fill: #9CA3AF; }
+    .bed-visual__lock-icon { color: #6B7280; }
+  }
+
+  &--cleaning {
+    border-left: 4px solid #F59E0B;
+    background: #FFFBEB;
+
+    .bed-visual__frame { fill: #FEF3C7; stroke: #FDE68A; }
+    .bed-visual__mattress { fill: #FEF9C3; stroke: #FDE68A; }
+    .bed-visual__pillow { fill: #FDE68A; stroke: #FCD34D; }
+    .bed-visual__headboard,
+    .bed-visual__footboard { fill: #FBBF24; }
+    .bed-visual__leg { fill: #F59E0B; }
+  }
+
+  // ── Icon Area ──
+
+  &__icon-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: v.$space-2;
+  }
+
+  &__svg {
+    width: 80px;
+    height: 60px;
+
+    rect, ellipse {
+      stroke-width: 0.8;
+    }
+  }
+
+  // ── Info ──
+
+  &__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__code {
+    font-size: 13px;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-text-primary;
+    letter-spacing: 0.02em;
+  }
+
+  &__status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--empty { background: #10B981; }
+    &--occupied { background: #2563EB; }
+    &--locked { background: #9CA3AF; }
+    &--cleaning { background: #F59E0B; }
+  }
+
+  // ── Patient info ──
+
+  &__patient {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__patient-name {
+    font-size: 13px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  &__patient-meta {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    font-size: 11px;
+    color: v.$color-text-muted;
+  }
+
+  &__days {
+    color: #2563EB;
+    font-weight: v.$font-weight-medium;
+  }
+
+  &__diagnosis {
+    font-size: 11px;
+    color: v.$color-text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    margin-top: 1px;
+  }
+
+  &__doctor {
+    font-size: 11px;
+    color: v.$color-text-muted;
+  }
+
+  &__badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: v.$font-weight-semibold;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 4px;
+    width: fit-content;
+
+    &--admitted { background: #DBEAFE; color: #1D4ED8; }
+    &--treating { background: #D1FAE5; color: #065F46; }
+    &--waiting_discharge { background: #FEF3C7; color: #92400E; }
+  }
+
+  // ── Empty state ──
+
+  &__empty-label {
+    font-size: 13px;
+    font-weight: v.$font-weight-medium;
+    color: #6B7280;
+    text-align: center;
+    padding: v.$space-2 0;
+  }
+
+  &__action-hint {
+    font-size: 11px;
+    color: #10B981;
+    text-align: center;
+    margin-top: auto;
+    padding-top: v.$space-2;
+    border-top: 1px dashed #D1FAE5;
+    font-weight: v.$font-weight-medium;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover &__action-hint {
+    opacity: 1;
+  }
+}

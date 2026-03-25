@@ -12,17 +12,31 @@ interface BedRow extends RowDataPacket {
   patient_id: number | null;
   patient_name: string | null;
   patient_code: string | null;
+  diagnosis: string | null;
+  doctor_name: string | null;
+  admitted_at: string | null;
+  expected_discharge: string | null;
+  patient_status: string | null;
+  days_admitted: number | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  phone: string | null;
 }
+
+const BED_SELECT_SQL = `
+  SELECT b.*, r.room_code, r.name AS room_name,
+    p.id AS patient_id, p.full_name AS patient_name, p.patient_code,
+    p.diagnosis, p.doctor_name, p.admitted_at, p.expected_discharge,
+    p.status AS patient_status, p.date_of_birth, p.gender, p.phone,
+    DATEDIFF(NOW(), p.admitted_at) AS days_admitted
+  FROM beds b
+  JOIN rooms r ON b.room_id = r.id
+  LEFT JOIN patients p ON p.bed_id = b.id AND p.status IN ('admitted', 'treating', 'waiting_discharge')
+`;
 
 export async function getBedsByRoom(roomId: number) {
   const [rows] = await db.execute<BedRow[]>(
-    `SELECT b.*, r.room_code, r.name AS room_name,
-      p.id AS patient_id, p.full_name AS patient_name, p.patient_code
-    FROM beds b
-    JOIN rooms r ON b.room_id = r.id
-    LEFT JOIN patients p ON p.bed_id = b.id AND p.status IN ('admitted', 'treating', 'waiting_discharge')
-    WHERE b.room_id = ?
-    ORDER BY b.bed_code`,
+    `${BED_SELECT_SQL} WHERE b.room_id = ? ORDER BY b.bed_code`,
     [roomId]
   );
   return rows;
@@ -30,12 +44,7 @@ export async function getBedsByRoom(roomId: number) {
 
 export async function getBedById(id: number) {
   const [rows] = await db.execute<BedRow[]>(
-    `SELECT b.*, r.room_code, r.name AS room_name,
-      p.id AS patient_id, p.full_name AS patient_name, p.patient_code
-    FROM beds b
-    JOIN rooms r ON b.room_id = r.id
-    LEFT JOIN patients p ON p.bed_id = b.id AND p.status IN ('admitted', 'treating', 'waiting_discharge')
-    WHERE b.id = ?`,
+    `${BED_SELECT_SQL} WHERE b.id = ?`,
     [id]
   );
   return rows[0] || null;

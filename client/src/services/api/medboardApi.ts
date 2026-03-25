@@ -14,6 +14,10 @@ export interface Bed {
   id: number; bed_code: string; room_id: number; room_code: string;
   room_name: string; status: string; notes: string;
   patient_id: number | null; patient_name: string | null; patient_code: string | null;
+  diagnosis?: string | null; doctor_name?: string | null;
+  admitted_at?: string | null; expected_discharge?: string | null;
+  patient_status?: string | null; days_admitted?: number | null;
+  date_of_birth?: string | null; gender?: string | null; phone?: string | null;
 }
 
 export interface AvailableBed {
@@ -126,8 +130,8 @@ export const assignBed = async (bedId: number, patientId: number) =>
 export const releaseBed = async (bedId: number) =>
   (await httpClient.post<ApiRes<Bed>>(`/beds/${bedId}/release`)).data.data;
 
-export const transferBed = async (targetBedId: number, patientId: number, notes?: string) =>
-  (await httpClient.post<ApiRes<any>>(`/beds/${targetBedId}/transfer`, { patient_id: patientId, notes })).data.data;
+export const transferBed = async (currentBedId: number, data: { patient_id: number; target_bed_id: number; reason?: string }) =>
+  (await httpClient.post<ApiRes<any>>(`/beds/${currentBedId}/transfer`, data)).data.data;
 
 export const createBed = async (data: { bed_code: string; room_id: number }) =>
   (await httpClient.post<ApiRes<Bed>>('/beds', data)).data.data;

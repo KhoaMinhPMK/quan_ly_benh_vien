@@ -7,6 +7,8 @@
     align-items: flex-start;
     justify-content: space-between;
     margin-bottom: v.$space-5;
+    flex-wrap: wrap;
+    gap: v.$space-3;
   }
 
   &__header-stats {
@@ -17,13 +19,15 @@
   // Summary bar
   &__summary {
     display: flex;
+    align-items: center;
     gap: v.$space-6;
     padding: v.$space-4 v.$space-5;
     background: v.$color-bg-white;
     border: 1px solid v.$color-border;
     border-radius: v.$radius;
-    margin-bottom: v.$space-5;
+    margin-bottom: v.$space-4;
     box-shadow: v.$shadow-sm;
+    flex-wrap: wrap;
   }
 
   &__summary-item {
@@ -40,8 +44,8 @@
     color: v.$color-text-primary;
     line-height: 1;
 
-    &--success { color: v.$color-success; }
-    &--info { color: v.$color-info; }
+    &--success { color: #10B981; }
+    &--occupied { color: #2563EB; }
     &--muted { color: v.$color-text-muted; }
   }
 
@@ -51,85 +55,62 @@
     font-weight: v.$font-weight-medium;
   }
 
-  // Bed grid
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: v.$space-3;
-  }
-}
-
-// Bed Card — semantic left border, no gradient bg
-.bed-card {
-  @include m.card;
-  box-shadow: v.$shadow-sm;
-  cursor: default;
-
-  &--empty {
-    border-left: 3px solid v.$color-bed-empty;
+  &__summary-bar {
+    flex: 1;
+    min-width: 120px;
   }
 
-  &--occupied {
-    border-left: 3px solid v.$color-bed-occupied;
+  &__summary-bar-track {
+    height: 6px;
+    background: #F1F5F9;
+    border-radius: 3px;
+    overflow: hidden;
   }
 
-  &--locked {
-    border-left: 3px solid v.$color-bed-locked;
-    opacity: 0.6;
+  &__summary-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
   }
 
-  &--cleaning {
-    border-left: 3px solid v.$color-bed-cleaning;
+  // Legend
+  &__legend {
+    display: flex;
+    gap: v.$space-4;
+    margin-bottom: v.$space-4;
+    padding: 0 v.$space-1;
   }
 
-  &__header {
+  &__legend-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: v.$space-1;
+    gap: 6px;
+    font-size: 12px;
+    color: v.$color-text-muted;
+    font-weight: v.$font-weight-medium;
   }
 
-  &__code {
-    font-size: v.$font-size-base;
-    font-weight: v.$font-weight-semibold;
-    color: v.$color-text-primary;
-  }
-
-  &__status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+  &__legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
     flex-shrink: 0;
 
-    &--empty { background: v.$color-bed-empty; }
-    &--occupied { background: v.$color-bed-occupied; }
-    &--locked { background: v.$color-bed-locked; }
-    &--cleaning { background: v.$color-bed-cleaning; }
+    &--occupied { background: #DBEAFE; border: 1px solid #93C5FD; }
+    &--empty { background: #DCFCE7; border: 1px solid #86EFAC; }
+    &--cleaning { background: #FEF9C3; border: 1px solid #FDE68A; }
+    &--locked { background: #F3F4F6; border: 1px solid #D1D5DB; }
   }
 
-  &__status-text {
-    font-size: v.$font-size-xs;
-    color: v.$color-text-muted;
-    font-weight: v.$font-weight-medium;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: v.$space-2;
-  }
+  // Bed grid — wider cards for visual bed shapes
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: v.$space-4;
 
-  &__patient {
-    padding-top: v.$space-2;
-    border-top: 1px solid v.$color-border;
-  }
-
-  &__patient-name {
-    font-size: v.$font-size-sm;
-    font-weight: v.$font-weight-medium;
-    color: v.$color-text-primary;
-  }
-
-  &__patient-code {
-    font-size: v.$font-size-xs;
-    color: v.$color-text-muted;
-    margin-top: 1px;
+    @media (max-width: 640px) {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: v.$space-3;
+    }
   }
 }

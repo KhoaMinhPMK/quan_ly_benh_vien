@@ -1,0 +1,303 @@
+@use '../../styles/abstracts/variables' as v;
+
+// ========================================
+// Panel Overlay
+// ========================================
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 200;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+// ========================================
+// Bed Detail Panel (Drawer)
+// ========================================
+.bed-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 420px;
+  height: 100vh;
+  background: v.$color-bg-white;
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  animation: slideIn 0.2s ease;
+
+  @media (max-width: 520px) {
+    width: 100vw;
+  }
+
+  // ── Header ──
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: v.$space-4 v.$space-5;
+    border-bottom: 1px solid v.$color-border;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-text-primary;
+    margin: 0;
+  }
+
+  &__status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: v.$font-weight-semibold;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-top: 4px;
+
+    &--empty { background: #D1FAE5; color: #065F46; }
+    &--occupied { background: #DBEAFE; color: #1D4ED8; }
+    &--locked { background: #F3F4F6; color: #4B5563; }
+    &--cleaning { background: #FEF3C7; color: #92400E; }
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: v.$color-text-muted;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    &:hover { color: v.$color-text-primary; }
+  }
+
+  // ── Tabs ──
+  &__tabs {
+    display: flex;
+    border-bottom: 1px solid v.$color-border;
+    flex-shrink: 0;
+    padding: 0 v.$space-5;
+  }
+
+  &__tab {
+    padding: v.$space-2 v.$space-3;
+    font-size: v.$font-size-sm;
+    font-weight: v.$font-weight-medium;
+    color: v.$color-text-secondary;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: v.$font-family;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) { color: v.$color-text-primary; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    &--active { color: v.$color-primary; border-bottom-color: v.$color-primary; }
+  }
+
+  // ── Content ──
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    padding: v.$space-4 v.$space-5;
+  }
+
+  &__loading {
+    text-align: center;
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+    padding: v.$space-6 0;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: v.$space-3;
+    padding: v.$space-8 0;
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+
+  // ── Info tab ──
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: v.$space-2 0;
+    border-bottom: 1px solid #F3F4F6;
+
+    label {
+      font-size: 12px;
+      color: v.$color-text-muted;
+      font-weight: v.$font-weight-medium;
+      min-width: 100px;
+      flex-shrink: 0;
+    }
+
+    span {
+      font-size: 13px;
+      color: v.$color-text-primary;
+      text-align: right;
+    }
+  }
+
+  &__info-highlight {
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+
+  &__info-notes {
+    margin-top: v.$space-3;
+    label { font-size: 12px; color: v.$color-text-muted; display: block; margin-bottom: 4px; }
+    p { font-size: 13px; color: v.$color-text-primary; margin: 0; background: #F9FAFB; padding: v.$space-2; border-radius: 4px; }
+  }
+
+  &__badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: v.$font-weight-semibold;
+    padding: 2px 8px;
+    border-radius: 3px;
+
+    &--admitted { background: #DBEAFE; color: #1D4ED8; }
+    &--treating { background: #D1FAE5; color: #065F46; }
+    &--waiting_discharge { background: #FEF3C7; color: #92400E; }
+    &--discharged { background: #F3F4F6; color: #6B7280; }
+  }
+
+  // ── Checklist tab ──
+  &__checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$space-2;
+    padding: v.$space-2;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:hover { background: #F9FAFB; }
+
+    input[type='checkbox'] {
+      margin-top: 3px;
+      accent-color: v.$color-primary;
+    }
+
+    &--done {
+      .bed-panel__check-name { color: v.$color-text-muted; text-decoration: line-through; }
+    }
+  }
+
+  &__check-name {
+    font-size: 13px;
+    color: v.$color-text-primary;
+    font-weight: v.$font-weight-medium;
+  }
+
+  &__check-meta {
+    font-size: 11px;
+    color: v.$color-text-muted;
+    margin-top: 2px;
+  }
+
+  // ── History tab ──
+  &__history {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: #E5E7EB;
+    }
+  }
+
+  &__history-item {
+    display: flex;
+    gap: v.$space-3;
+    padding: v.$space-2 0;
+    position: relative;
+  }
+
+  &__history-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: v.$color-primary;
+    border: 2px solid v.$color-bg-white;
+    flex-shrink: 0;
+    z-index: 1;
+    margin-top: 2px;
+  }
+
+  &__history-action {
+    font-size: 13px;
+    color: v.$color-text-primary;
+  }
+
+  &__history-meta {
+    font-size: 11px;
+    color: v.$color-text-muted;
+    margin-top: 2px;
+  }
+
+  &__history-note {
+    font-size: 12px;
+    color: v.$color-text-secondary;
+    margin-top: 2px;
+    font-style: italic;
+  }
+
+  // ── Notes tab ──
+  &__notes-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__notes-input {
+    width: 100%;
+    font-family: v.$font-family;
+    font-size: 13px;
+    padding: v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    resize: vertical;
+    color: v.$color-text-primary;
+
+    &:focus { outline: none; border-color: v.$color-primary; }
+  }
+
+  // ── Actions ──
+  &__actions {
+    display: flex;
+    gap: v.$space-2;
+    padding: v.$space-3 v.$space-5;
+    border-top: 1px solid v.$color-border;
+    flex-shrink: 0;
+    background: #FAFBFC;
+  }
+}

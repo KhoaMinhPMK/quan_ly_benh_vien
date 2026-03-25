@@ -56,9 +56,10 @@ export async function release(req: Request, res: Response, next: NextFunction): 
 
 export async function transfer(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { patient_id, notes } = req.body;
+    const { patient_id, target_bed_id, reason, notes } = req.body;
     if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bat buoc' } }); return; }
-    const result = await transferService.transferBed(Number(req.params.id) /* target bed */, patient_id, req.user?.id, notes);
+    const targetBed = target_bed_id || Number(req.params.id);
+    const result = await transferService.transferBed(patient_id, targetBed, req.user?.id, reason || notes);
     res.json({ success: true, data: result });
   } catch (error) { next(error); }
 }
