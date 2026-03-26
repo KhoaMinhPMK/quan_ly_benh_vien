@@ -52,20 +52,26 @@ async function reseed() {
     // Split by semicolons and execute each statement
     const statements = seedSQL
       .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+      .map(s => s
+        .split('\n')
+        .filter(line => !line.trim().startsWith('--'))  // strip comment lines
+        .join('\n')
+        .trim()
+      )
+      .filter(s => s.length > 0);
 
+    let executed = 0;
     for (const stmt of statements) {
       try {
         await conn.execute(stmt);
+        executed++;
       } catch (err: any) {
-        // Skip comment-only lines or empty statements
         if (err.code === 'ER_EMPTY_QUERY') continue;
         console.error(`❌ Error executing statement:`, err.message);
-        console.error(`   Statement: ${stmt.substring(0, 80)}...`);
+        console.error(`   Statement: ${stmt.substring(0, 100)}...`);
       }
     }
-    console.log('✅ Seed data imported with correct Vietnamese diacritics');
+    console.log(`✅ Seed data imported (${executed} statements) with correct Vietnamese diacritics`);
 
     // 4. Verify — check one patient name to confirm diacritics
     const [rows] = await conn.execute(
