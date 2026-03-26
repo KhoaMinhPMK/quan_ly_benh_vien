@@ -56,9 +56,13 @@ export async function getDashboardStats(departmentId?: number) {
   // Room occupancy (scoped)
   const [roomRows] = await db.execute<RowDataPacket[]>(
     `SELECT r.id, r.room_code, r.name, r.max_beds,
+      d.name AS department_name,
       (SELECT COUNT(*) FROM beds WHERE room_id = r.id) AS total_beds,
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'empty') AS empty_beds,
       (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'occupied') AS occupied_beds
-    FROM rooms r WHERE r.status = 'active'${departmentId ? ' AND r.department_id = ?' : ''}
+    FROM rooms r
+    LEFT JOIN departments d ON d.id = r.department_id
+    WHERE r.status = 'active'${departmentId ? ' AND r.department_id = ?' : ''}
     ORDER BY r.room_code`,
     deptParam
   );
