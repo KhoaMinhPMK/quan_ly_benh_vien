@@ -12,6 +12,10 @@
     flex: 1;
     max-width: 280px;
     min-width: 180px;
+
+    .form-field__input {
+      padding-left: 34px;
+    }
   }
 
   &__search-icon {
@@ -24,40 +28,35 @@
     opacity: 0.35;
   }
 
-  .form-field__input {
-    padding-left: 34px;
-  }
-
-  // Filter select defaults
-  > select.form-field__input {
+  &__select {
     width: auto;
     min-width: 140px;
     max-width: 200px;
   }
 }
 
-// Mobile: filters stack
-@media (max-width: 768px) {
-  .room-filters {
-    flex-direction: column;
-    align-items: stretch;
-
-    &__search {
-      max-width: 100%;
-      min-width: 0;
-    }
-
-    > select.form-field__input,
-    > .form-field__input {
-      max-width: 100%;
-      min-width: 0;
-      width: 100%;
-    }
+// ── Room List states ──
+.room-list {
+  &__loading {
+    text-align: center;
+    padding: v.$space-10;
   }
 
-  .admin-filters {
-    flex-wrap: wrap;
-    .form-field__input { max-width: 100% !important; width: 100%; }
+  &__spinner {
+    margin: 0 auto v.$space-4;
+  }
+
+  &__loading-text {
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+
+  &__table-card {
+    padding: 0;
+  }
+
+  &__col-occupancy {
+    min-width: 120px;
   }
 }
 
@@ -87,5 +86,114 @@
     font-weight: v.$font-weight-medium;
     min-width: 32px;
     text-align: right;
+  }
+}
+
+// ── Mobile Cards (hidden on desktop) ──
+.room-cards {
+  display: none;
+}
+
+// ── Admin filters ──
+.admin-filters {
+  flex-wrap: wrap;
+}
+
+// ── Responsive ──
+@media (max-width: 768px) {
+  .room-filters {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__search {
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    &__select {
+      max-width: 100%;
+      min-width: 0;
+      width: 100%;
+    }
+  }
+
+  .admin-filters {
+    .form-field__input { max-width: 100% !important; width: 100%; }
+  }
+
+  // Hide table on mobile
+  .room-list__table-card {
+    display: none;
+  }
+
+  // Show cards on mobile
+  .room-cards {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-3;
+  }
+
+  .room-card {
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    padding: v.$space-4;
+    cursor: pointer;
+    transition: box-shadow v.$transition-fast, border-color v.$transition-fast;
+
+    &:active {
+      border-color: v.$color-primary;
+      box-shadow: v.$shadow-sm;
+    }
+
+    &__header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: v.$space-2;
+    }
+
+    &__code {
+      font-size: v.$font-size-sm;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-primary;
+      margin-right: v.$space-2;
+    }
+
+    &__name {
+      font-size: v.$font-size-base;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-text-primary;
+    }
+
+    &__meta {
+      display: flex;
+      align-items: center;
+      gap: v.$space-2;
+      font-size: v.$font-size-sm;
+      color: v.$color-text-secondary;
+      margin-bottom: v.$space-3;
+      flex-wrap: wrap;
+    }
+
+    &__occupancy {
+      display: flex;
+      align-items: center;
+      gap: v.$space-3;
+      margin-bottom: v.$space-2;
+    }
+
+    &__beds {
+      font-size: v.$font-size-sm;
+      color: v.$color-text-secondary;
+      flex-shrink: 0;
+    }
+
+    &__action {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: v.$space-3;
+      border-top: 1px solid v.$color-border;
+    }
   }
 }

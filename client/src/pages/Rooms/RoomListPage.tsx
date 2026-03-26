@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchRooms, fetchDepartments, updateRoom, type Room, type Department } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
 import AddRoomModal from './AddRoomModal';
 import Modal from '../../components/Modal/Modal';
 import iconSearch from '../../assets/icons/outline/search.svg';
@@ -15,6 +16,7 @@ const TYPE_BADGE: Record<string, string> = { normal: 'badge--neutral', vip: 'bad
 export default function RoomListPage() {
   const navigate = useNavigate();
   const { t, lang } = useTranslation();
+  const { showToast } = useToast();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,13 +28,13 @@ export default function RoomListPage() {
   const [editForm, setEditForm] = useState({ name: '', room_type: '', max_beds: 0, status: '', notes: '' });
   const [editError, setEditError] = useState('');
 
-  useEffect(() => { fetchDepartments().then(setDepartments).catch(() => {}); }, []);
+  useEffect(() => { fetchDepartments().then(setDepartments).catch(() => { showToast(t.common.error, 'error'); }); }, []);
 
   const loadRooms = () => {
     setLoading(true);
     fetchRooms({ department_id: filterDept, status: filterStatus, search: search || undefined })
       .then(setRooms)
-      .catch(() => {})
+      .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
@@ -62,10 +64,14 @@ export default function RoomListPage() {
     if (!editRoom) return;
     setEditError('');
     try {
-      await updateRoom(editRoom.id, editForm as any);
+      await updateRoom(editRoom.id, editForm as Record<string, unknown>);
       setEditRoom(null);
+      showToast(t.common.success, 'success');
       loadRooms();
-    } catch (e: any) { setEditError(e.response?.data?.error?.message || t.common.error); }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: { message?: string } } } };
+      setEditError(err.response?.data?.error?.message || t.common.error);
+    }
   };
 
   const subtitle = `${rooms.length} ${t.rooms.roomsInSystem}`;
@@ -79,7 +85,7 @@ export default function RoomListPage() {
         </div>
         <div className="page-header__actions">
           <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
-            <img src={iconPlus} alt="" className="btn__icon" style={{ filter: 'brightness(0) invert(1)' }} />
+            <img src={iconPlus} alt="" className="btn__icon btn__icon--inverted" />
             {t.rooms.addRoom}
           </button>
         </div>
@@ -92,12 +98,12 @@ export default function RoomListPage() {
           <input type="text" className="form-field__input" placeholder={t.rooms.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__input" value={filterDept || ''}
+        <select className="form-field__input room-filters__select" value={filterDept || ''}
           onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)}>
           <option value="">{t.rooms.filterDepartment}</option>
           {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <select className="form-field__input" value={filterStatus || ''}
+        <select className="form-field__input room-filters__select" value={filterStatus || ''}
           onChange={(e) => setFilterStatus(e.target.value || undefined)}>
           <option value="">{t.rooms.filterStatus}</option>
           <option value="active">{t.rooms.statusActive}</option>
@@ -106,11 +112,11 @@ export default function RoomListPage() {
         </select>
       </div>
 
-      {/* Table */}
+      {/* Content */}
       {loading ? (
-        <div className="card card--no-hover" style={{ textAlign: 'center', padding: '64px' }}>
-          <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: '#94A3B8' }}>{t.common.loadingData}</p>
+        <div className="card card--no-hover room-list__loading">
+          <div className="loading-screen__spinner room-list__spinner" />
+          <p className="room-list__loading-text">{t.common.loadingData}</p>
         </div>
       ) : rooms.length === 0 ? (
         <div className="card card--no-hover">
@@ -120,60 +126,103 @@ export default function RoomListPage() {
           </div>
         </div>
       ) : (
-        <div className="card card--no-hover" style={{ padding: 0 }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t.rooms.roomCode}</th>
-                <th>{t.rooms.roomName}</th>
-                <th>{t.dashboard.department}</th>
-                <th>{t.rooms.roomType}</th>
-                <th>{t.rooms.floor}</th>
-                <th>{t.rooms.bedsHeader}</th>
-                <th style={{ minWidth: '120px' }}>{t.rooms.occupancy}</th>
-                <th>{t.rooms.statusLabel}</th>
-                <th style={{ width: 70 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {rooms.map((room) => {
-                const { fill } = getOccupancyColor(room);
-                const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
-                return (
-                  <tr key={room.id} onClick={() => navigate(`/rooms/${room.id}`)}>
-                    <td><strong>{room.room_code}</strong></td>
-                    <td>{room.name}</td>
-                    <td>{room.department_name}</td>
-                    <td>
-                      <span className={`badge ${TYPE_BADGE[room.room_type] || 'badge--neutral'}`}>
-                        {typeLabels[room.room_type] || room.room_type}
-                      </span>
-                    </td>
-                    <td>{room.floor}</td>
-                    <td><strong>{room.occupied_beds}</strong>/{room.total_beds}</td>
-                    <td>
-                      <div className="occupancy-bar">
-                        <div className="occupancy-bar__track">
-                          <div className="occupancy-bar__fill" style={{ width: `${Math.min(ratio, 100)}%`, background: fill }} />
+        <>
+          {/* Desktop Table */}
+          <div className="card card--no-hover room-list__table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t.rooms.roomCode}</th>
+                  <th>{t.rooms.roomName}</th>
+                  <th>{t.dashboard.department}</th>
+                  <th>{t.rooms.roomType}</th>
+                  <th>{t.rooms.floor}</th>
+                  <th>{t.rooms.bedsHeader}</th>
+                  <th className="room-list__col-occupancy">{t.rooms.occupancy}</th>
+                  <th>{t.rooms.statusLabel}</th>
+                  <th className="data-table__col-action"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.map((room) => {
+                  const { fill } = getOccupancyColor(room);
+                  const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
+                  return (
+                    <tr key={room.id} onClick={() => navigate(`/rooms/${room.id}`)}>
+                      <td><strong>{room.room_code}</strong></td>
+                      <td>{room.name}</td>
+                      <td>{room.department_name}</td>
+                      <td>
+                        <span className={`badge ${TYPE_BADGE[room.room_type] || 'badge--neutral'}`}>
+                          {typeLabels[room.room_type] || room.room_type}
+                        </span>
+                      </td>
+                      <td>{room.floor}</td>
+                      <td><strong>{room.occupied_beds}</strong>/{room.total_beds}</td>
+                      <td>
+                        <div className="occupancy-bar">
+                          <div className="occupancy-bar__track">
+                            <div className="occupancy-bar__fill" style={{ width: `${Math.min(ratio, 100)}%`, background: fill }} />
+                          </div>
+                          <span className="occupancy-bar__text" style={{ color: fill }}>{Math.round(ratio)}%</span>
                         </div>
-                        <span className="occupancy-bar__text" style={{ color: fill }}>{Math.round(ratio)}%</span>
+                      </td>
+                      <td>
+                        <span className={`badge ${statusBadge(room.status)}`}>{statusLabel(room.status)}</span>
+                      </td>
+                      <td>
+                        <button className="btn btn--ghost btn--sm" onClick={(e) => openEdit(room, e)}>{t.common.edit}</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="room-cards">
+            {rooms.map((room) => {
+              const { fill } = getOccupancyColor(room);
+              const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
+              return (
+                <div key={room.id} className="room-card" onClick={() => navigate(`/rooms/${room.id}`)}>
+                  <div className="room-card__header">
+                    <div>
+                      <span className="room-card__code">{room.room_code}</span>
+                      <span className="room-card__name">{room.name}</span>
+                    </div>
+                    <span className={`badge ${statusBadge(room.status)}`}>{statusLabel(room.status)}</span>
+                  </div>
+                  <div className="room-card__meta">
+                    <span>{room.department_name}</span>
+                    <span>·</span>
+                    <span className={`badge badge--sm ${TYPE_BADGE[room.room_type] || 'badge--neutral'}`}>
+                      {typeLabels[room.room_type] || room.room_type}
+                    </span>
+                    <span>·</span>
+                    <span>{t.rooms.floorN} {room.floor}</span>
+                  </div>
+                  <div className="room-card__occupancy">
+                    <div className="occupancy-bar">
+                      <div className="occupancy-bar__track">
+                        <div className="occupancy-bar__fill" style={{ width: `${Math.min(ratio, 100)}%`, background: fill }} />
                       </div>
-                    </td>
-                    <td>
-                      <span className={`badge ${statusBadge(room.status)}`}>{statusLabel(room.status)}</span>
-                    </td>
-                    <td>
-                      <button className="btn btn--ghost btn--sm" onClick={(e) => openEdit(room, e)}>{t.common.edit}</button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <span className="occupancy-bar__text" style={{ color: fill }}>{Math.round(ratio)}%</span>
+                    </div>
+                    <span className="room-card__beds"><strong>{room.occupied_beds}</strong>/{room.total_beds} {t.dashboard.beds}</span>
+                  </div>
+                  <div className="room-card__action">
+                    <button className="btn btn--ghost btn--sm" onClick={(e) => openEdit(room, e)}>{t.common.edit}</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
-      <AddRoomModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={loadRooms} />
+      <AddRoomModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={() => { loadRooms(); showToast(t.common.success, 'success'); }} />
 
       {/* Edit Room Modal */}
       {editRoom && (
@@ -181,7 +230,7 @@ export default function RoomListPage() {
           <div className="modal__body">
             {editError && <div className="modal__error">{editError}</div>}
             <div className="form-field"><label className="form-field__label">{t.rooms.roomCode}</label>
-              <input className="form-field__input" value={editRoom.room_code} disabled style={{ opacity: 0.6 }} /></div>
+              <input className="form-field__input form-field__input--disabled" value={editRoom.room_code} disabled /></div>
             <div className="form-field"><label className="form-field__label">{t.rooms.roomName}</label>
               <input className="form-field__input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
             <div className="modal__row">

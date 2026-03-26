@@ -101,9 +101,18 @@
     cursor: pointer;
     transition: background v.$transition-fast;
     &:hover { background: v.$color-bg-surface; }
+
+    &--empty {
+      color: v.$color-text-muted;
+      cursor: default;
+      &:hover { background: transparent; }
+    }
   }
 
   // Notifications
+  &__notif-wrap {
+    position: relative;
+  }
   &__notif-btn {
     position: relative;
     background: none;
@@ -123,8 +132,8 @@
     min-width: 16px;
     height: 16px;
     padding: 0 4px;
-    background: #DC2626;
-    color: #fff;
+    background: v.$color-error;
+    color: v.$color-text-white;
     font-size: 10px;
     font-weight: v.$font-weight-bold;
     border-radius: 8px;
@@ -170,7 +179,7 @@
     border-bottom: 1px solid v.$color-border;
     transition: background v.$transition-fast;
     &:hover { background: v.$color-bg-surface; }
-    &--unread { background: #EFF6FF; }
+    &--unread { background: v.$color-info-bg; }
 
     &-title { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$color-text-primary; }
     &-msg { font-size: 12px; color: v.$color-text-secondary; margin-top: 2px; }
@@ -190,8 +199,8 @@
     &:hover { background: v.$color-bg-surface; border-color: v.$color-primary; color: v.$color-primary; }
   }
 
-  // User
   &__user {
+    position: relative;
     display: flex;
     align-items: center;
     gap: v.$space-2;
@@ -204,6 +213,7 @@
 
   &__user-avatar { width: 28px; height: 28px; opacity: 0.5; }
   &__user-name { font-size: v.$font-size-sm; font-weight: v.$font-weight-medium; color: v.$color-text-primary; }
+  &__user-caret { margin-left: 4px; }
 
   &__user-dropdown {
     position: absolute;
@@ -221,6 +231,26 @@
   &__user-dropdown-info {
     padding: v.$space-3;
     border-bottom: 1px solid v.$color-border;
+  }
+
+  &__user-dropdown-name {
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+    font-size: v.$font-size-sm;
+  }
+
+  &__user-dropdown-email {
+    font-size: 12px;
+    color: v.$color-text-muted;
+    margin-top: 2px;
+  }
+
+  &__user-dropdown-role {
+    font-size: 11px;
+    color: v.$color-primary;
+    text-transform: uppercase;
+    margin-top: 4px;
+    font-weight: v.$font-weight-medium;
   }
 
   &__user-dropdown-divider {
@@ -244,8 +274,8 @@
     &:hover { background: v.$color-bg-surface; }
 
     &--danger {
-      color: #DC2626;
-      &:hover { background: #FEF2F2; }
+      color: v.$color-error;
+      &:hover { background: v.$color-error-bg; }
     }
   }
   // Hamburger — hidden on desktop
@@ -275,16 +305,52 @@
       justify-content: center;
     }
 
-    &__search { width: 120px; }
+    &__search {
+      position: static;
+      width: 0;
+      overflow: hidden;
+      transition: width 0.3s ease;
+
+      &--expanded {
+        width: 100%;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        background: v.$color-bg-white;
+        z-index: 60;
+        padding: 0 v.$space-3;
+        display: flex;
+        align-items: center;
+      }
+    }
+
     &__search-input { font-size: 13px; }
     &__user-name { display: none; }
+    &__user-caret { display: none; }
     &__lang-btn { font-size: 12px; padding: 4px 6px; }
+
+    &__notif-dropdown {
+      position: fixed;
+      top: v.$header-height;
+      right: v.$space-3;
+      left: v.$space-3;
+      width: auto;
+    }
+
+    &__user-dropdown {
+      position: fixed;
+      top: v.$header-height;
+      right: v.$space-3;
+      width: 240px;
+    }
   }
 }
 
 @media (max-width: 480px) {
   .header {
-    &__search { display: none; }
+    &__search:not(&__search--expanded) { display: none; }
     &__right { gap: v.$space-2; }
   }
 }

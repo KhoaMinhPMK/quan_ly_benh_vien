@@ -8,16 +8,10 @@ import iconUsers from '../../assets/icons/outline/users.svg';
 import iconDoorExit from '../../assets/icons/outline/door-exit.svg';
 import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
+import { getRoleLabel } from '../../utils/roleLabels';
 import './DashboardPage.scss';
 
-const ROLE_LABELS_VI: Record<string, string> = {
-  admin: 'Quản trị viên', doctor: 'Bác sĩ', nurse: 'Điều dưỡng',
-  records_staff: 'Nhân viên hồ sơ', receptionist: 'Lễ tân',
-};
-const ROLE_LABELS_EN: Record<string, string> = {
-  admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse',
-  records_staff: 'Records Staff', receptionist: 'Receptionist',
-};
+
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -46,7 +40,7 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
-  const roleLabels = lang === 'vi' ? ROLE_LABELS_VI : ROLE_LABELS_EN;
+
 
   const getOccupancyLevel = (occupied: number, total: number) => {
     if (total === 0) return 'success';
@@ -78,7 +72,7 @@ export default function DashboardPage() {
       <div className="dashboard__welcome">
         <h2 className="dashboard__welcome-title">{greeting}, {user.fullName}</h2>
         <p className="dashboard__welcome-text">
-          {roleLabels[user.role] || user.role} — {dateStr}
+          {getRoleLabel(lang, user.role)} - {dateStr}
         </p>
       </div>
 

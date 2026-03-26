@@ -27,10 +27,7 @@ const navItems: NavItem[] = [
   { path: '/admin', labelKey: 'admin', icon: iconSettings, adminOnly: true },
 ];
 
-const ROLE_LABELS: Record<string, Record<string, string>> = {
-  vi: { admin: 'Quản trị viên', doctor: 'Bác sĩ', nurse: 'Điều dưỡng', records_staff: 'Nhân viên hồ sơ', receptionist: 'Lễ tân' },
-  en: { admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse', records_staff: 'Records Staff', receptionist: 'Receptionist' },
-};
+import { getRoleLabel } from '../../utils/roleLabels';
 
 interface SidebarProps { collapsed: boolean; onToggle: () => void; mobileOpen?: boolean; }
 
@@ -39,7 +36,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen }: SidebarProp
   const { t, lang } = useTranslation();
 
   const visibleItems = navItems.filter(item => !item.adminOnly || user?.role === 'admin');
-  const roleLabel = user?.role ? (ROLE_LABELS[lang]?.[user.role] || user.role) : '';
+  const roleLabel = user?.role ? getRoleLabel(lang, user.role) : '';
 
   return (
     <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} ${mobileOpen ? 'sidebar--mobile-open' : ''}`}>

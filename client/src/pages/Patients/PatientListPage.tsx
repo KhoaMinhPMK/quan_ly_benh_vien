@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { fetchPatients, updatePatient, type Patient } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
 import AddPatientModal from './AddPatientModal';
 import Modal from '../../components/Modal/Modal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
+import iconMapPin from '../../assets/icons/outline/map-pin.svg';
+import iconStethoscope from '../../assets/icons/outline/stethoscope.svg';
+import iconUserCircle from '../../assets/icons/outline/user-circle.svg';
+import iconCalendar from '../../assets/icons/outline/calendar.svg';
 import './PatientListPage.scss';
 
 const STATUS_BADGE: Record<string, string> = {
@@ -13,6 +18,7 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function PatientListPage() {
   const { t, lang } = useTranslation();
+  const { showToast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -32,7 +38,7 @@ export default function PatientListPage() {
     setLoading(true);
     fetchPatients({ status: filterStatus, search: search || undefined })
       .then(setPatients)
-      .catch(() => {})
+      .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
@@ -43,11 +49,8 @@ export default function PatientListPage() {
     return new Date(d).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US');
   };
 
-  // Get unique doctor list for filter
   const doctors = [...new Set(patients.map(p => p.doctor_name).filter(Boolean))];
   const filteredPatients = filterDoctor ? patients.filter(p => p.doctor_name === filterDoctor) : patients;
-
-  // Waiting list = admitted patients without beds
   const waitingList = patients.filter(p => !p.bed_id && p.status !== 'discharged');
 
   const openEdit = (p: Patient) => {
@@ -66,10 +69,14 @@ export default function PatientListPage() {
     if (!editPatient) return;
     setEditError('');
     try {
-      await updatePatient(editPatient.id, editForm as any);
+      await updatePatient(editPatient.id, editForm as Record<string, string>);
       setEditPatient(null);
+      showToast(t.common.success, 'success');
       loadPatients();
-    } catch (e: any) { setEditError(e.response?.data?.error?.message || t.common.error); }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { error?: { message?: string } } } };
+      setEditError(err.response?.data?.error?.message || t.common.error);
+    }
   };
 
   const subtitle = `${filteredPatients.length} ${t.patients.patientsCount}`;
@@ -83,15 +90,14 @@ export default function PatientListPage() {
         </div>
         <div className="page-header__actions">
           <button className="btn btn--primary" onClick={() => setShowAddModal(true)}>
-            <img src={iconPlus} alt="" className="btn__icon" style={{ filter: 'brightness(0) invert(1)' }} />
+            <img src={iconPlus} alt="" className="btn__icon btn__icon--inverted" />
             {t.patients.addPatient}
           </button>
         </div>
       </div>
 
-      {/* Waiting list warning */}
       {waitingList.length > 0 && (
-        <div className="alert-banner alert-banner--warning" style={{ marginBottom: 16 }}>
+        <div className="alert-banner alert-banner--warning patient-list__alert">
           <div className="alert-banner__icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </div>
@@ -110,78 +116,139 @@ export default function PatientListPage() {
       )}
 
       {/* Filters */}
-      <div className="room-filters">
-        <div className="room-filters__search">
-          <img src={iconSearch} alt="" className="room-filters__search-icon" />
+      <div className="patient-filters">
+        <div className="patient-filters__search">
+          <img src={iconSearch} alt="" className="patient-filters__search-icon" />
           <input type="text" className="form-field__input" placeholder={t.patients.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__input" value={filterStatus || ''}
-          onChange={(e) => setFilterStatus(e.target.value || undefined)} style={{ width: '200px' }}>
+        <select className="form-field__input patient-filters__select" value={filterStatus || ''}
+          onChange={(e) => setFilterStatus(e.target.value || undefined)}>
           <option value="">{t.patients.filterStatus}</option>
           <option value="admitted">{t.patients.statusAdmitted}</option>
           <option value="treating">{t.patients.statusTreating}</option>
           <option value="waiting_discharge">{t.patients.statusWaiting}</option>
         </select>
-        <select className="form-field__input" value={filterDoctor}
-          onChange={(e) => setFilterDoctor(e.target.value)} style={{ width: '200px' }}>
+        <select className="form-field__input patient-filters__select" value={filterDoctor}
+          onChange={(e) => setFilterDoctor(e.target.value)}>
           <option value="">{t.patients.allDoctors}</option>
           {doctors.map(d => <option key={d} value={d!}>{d}</option>)}
         </select>
       </div>
 
-      {/* Table */}
-      {loading ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
-          <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
-          <p style={{ color: '#6B7280' }}>{t.common.loadingData}</p>
-        </div>
-      ) : filteredPatients.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '48px' }}>
-          <p style={{ color: '#6B7280' }}>{t.patients.noPatients}</p>
-        </div>
-      ) : (
-        <div className="card" style={{ padding: 0 }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>{t.patients.patientCode}</th>
-                <th>{t.patients.fullName}</th>
-                <th>{t.patients.roomBed}</th>
-                <th>{t.patients.diagnosis}</th>
-                <th>{t.patients.doctor}</th>
-                <th>{t.patients.admitted}</th>
-                <th>{t.patients.expectedDC}</th>
-                <th>{t.patients.status}</th>
-                <th style={{ width: 70 }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPatients.map((p) => (
-                <tr key={p.id}>
-                  <td><strong>{p.patient_code}</strong></td>
-                  <td>{p.full_name}</td>
-                  <td>{p.room_code && p.bed_code ? `${p.room_code} / ${p.bed_code}` : <span style={{ color: '#9CA3AF' }}>{t.patients.noBed}</span>}</td>
-                  <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.diagnosis || '--'}</td>
-                  <td>{p.doctor_name || '--'}</td>
-                  <td>{formatDate(p.admitted_at)}</td>
-                  <td>{formatDate(p.expected_discharge)}</td>
-                  <td>
-                    <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
-                      {statusLabels[p.status] || p.status}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Summary Stats */}
+      {!loading && filteredPatients.length > 0 && (
+        <div className="patient-stats">
+          <div className="patient-stats__item">
+            <span className="patient-stats__value">{filteredPatients.length}</span>
+            <span className="patient-stats__label">{t.common.total}</span>
+          </div>
+          <div className="patient-stats__item patient-stats__item--success">
+            <span className="patient-stats__value">{filteredPatients.filter(p => p.status === 'treating').length}</span>
+            <span className="patient-stats__label">{t.patients.statusTreating}</span>
+          </div>
+          <div className="patient-stats__item patient-stats__item--info">
+            <span className="patient-stats__value">{filteredPatients.filter(p => p.status === 'admitted').length}</span>
+            <span className="patient-stats__label">{t.patients.statusAdmitted}</span>
+          </div>
+          <div className="patient-stats__item patient-stats__item--warning">
+            <span className="patient-stats__value">{filteredPatients.filter(p => p.status === 'waiting_discharge').length}</span>
+            <span className="patient-stats__label">{t.patients.statusWaiting}</span>
+          </div>
         </div>
       )}
 
-      <AddPatientModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={loadPatients} />
+      {/* Content */}
+      {loading ? (
+        <div className="card patient-list__loading">
+          <div className="loading-screen__spinner patient-list__spinner" />
+          <p className="patient-list__loading-text">{t.common.loadingData}</p>
+        </div>
+      ) : filteredPatients.length === 0 ? (
+        <div className="card patient-list__empty">
+          <p className="patient-list__empty-text">{t.patients.noPatients}</p>
+        </div>
+      ) : (
+        <>
+          {/* Desktop Table */}
+          <div className="card patient-list__table-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t.patients.patientCode}</th>
+                  <th>{t.patients.fullName}</th>
+                  <th>{t.patients.roomBed}</th>
+                  <th>{t.patients.diagnosis}</th>
+                  <th>{t.patients.doctor}</th>
+                  <th>{t.patients.admitted}</th>
+                  <th>{t.patients.expectedDC}</th>
+                  <th>{t.patients.status}</th>
+                  <th className="data-table__col-action"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPatients.map((p) => (
+                  <tr key={p.id}>
+                    <td><strong>{p.patient_code}</strong></td>
+                    <td>{p.full_name}</td>
+                    <td>{p.room_code && p.bed_code ? `${p.room_code} / ${p.bed_code}` : <span className="text-muted">{t.patients.noBed}</span>}</td>
+                    <td className="data-table__col-diagnosis">{p.diagnosis || '--'}</td>
+                    <td>{p.doctor_name || '--'}</td>
+                    <td>{formatDate(p.admitted_at)}</td>
+                    <td>{formatDate(p.expected_discharge)}</td>
+                    <td>
+                      <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
+                        {statusLabels[p.status] || p.status}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Cards */}
+          <div className="patient-cards">
+            {filteredPatients.map((p) => (
+              <div key={p.id} className="patient-card" onClick={() => openEdit(p)}>
+                <div className="patient-card__header">
+                  <span className="patient-card__code">{p.patient_code}</span>
+                  <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
+                    {statusLabels[p.status] || p.status}
+                  </span>
+                </div>
+                <div className="patient-card__name">{p.full_name}</div>
+                <div className="patient-card__details">
+                  <div className="patient-card__row">
+                    <img src={iconMapPin} alt="" className="patient-card__icon" />
+                    <span>{p.room_code && p.bed_code ? `${p.room_code} / ${p.bed_code}` : t.patients.noBed}</span>
+                  </div>
+                  <div className="patient-card__row">
+                    <img src={iconStethoscope} alt="" className="patient-card__icon" />
+                    <span className="patient-card__diagnosis">{p.diagnosis || '--'}</span>
+                  </div>
+                  <div className="patient-card__row">
+                    <img src={iconUserCircle} alt="" className="patient-card__icon" />
+                    <span>{p.doctor_name || '--'}</span>
+                  </div>
+                  <div className="patient-card__row">
+                    <img src={iconCalendar} alt="" className="patient-card__icon" />
+                    <span>{formatDate(p.admitted_at)} → {formatDate(p.expected_discharge)}</span>
+                  </div>
+                </div>
+                <div className="patient-card__action">
+                  <button className="btn btn--ghost btn--sm">{t.common.edit} ›</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <AddPatientModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={() => { loadPatients(); showToast(t.common.success, 'success'); }} />
 
       {/* Edit Patient Modal */}
       {editPatient && (
@@ -189,7 +256,7 @@ export default function PatientListPage() {
           <div className="modal__body">
             {editError && <div className="modal__error">{editError}</div>}
             <div className="form-field"><label className="form-field__label">{t.patients.fullName}</label>
-              <input className="form-field__input" value={editPatient.full_name} disabled style={{ opacity: 0.6 }} /></div>
+              <input className="form-field__input form-field__input--disabled" value={editPatient.full_name} disabled /></div>
             <div className="form-field"><label className="form-field__label">{t.patients.diagnosis}</label>
               <input className="form-field__input" value={editForm.diagnosis} onChange={e => setEditForm({...editForm, diagnosis: e.target.value})} /></div>
             <div className="modal__row">

@@ -4,14 +4,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
 import Modal from '../../components/Modal/Modal';
 import './AdminPages.scss';
-
-const ROLE_LABELS_VI: Record<string, string> = { admin: 'Quản trị', doctor: 'Bác sĩ', nurse: 'Điều dưỡng', records_staff: 'Hồ sơ', receptionist: 'Lễ tân' };
-const ROLE_LABELS_EN: Record<string, string> = { admin: 'Admin', doctor: 'Doctor', nurse: 'Nurse', records_staff: 'Records', receptionist: 'Reception' };
+import { ROLE_LABELS } from '../../utils/roleLabels';
 
 export default function UserListPage() {
   const { user: me } = useAuth();
   const { t, lang } = useTranslation();
-  const roleLabels = lang === 'vi' ? ROLE_LABELS_VI : ROLE_LABELS_EN;
+  const roleLabels = ROLE_LABELS[lang] || ROLE_LABELS['vi'];
   const [users, setUsers] = useState<User[]>([]);
   const [depts, setDepts] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);

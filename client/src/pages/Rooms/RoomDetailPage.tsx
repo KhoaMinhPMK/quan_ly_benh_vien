@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchRoom, fetchBedsByRoom, releaseBed, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
 import BedVisual from '../../components/BedVisual/BedVisual';
 import BedDetailPanel from '../../components/BedDetailPanel/BedDetailPanel';
 import TransferModal from '../../components/TransferModal/TransferModal';
 import AssignBedModal from '../../components/AssignBedModal/AssignBedModal';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import './RoomDetailPage.scss';
 
 const STATUS_ORDER: Record<string, number> = { occupied: 0, empty: 1, cleaning: 2, locked: 3 };
@@ -14,12 +16,15 @@ export default function RoomDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { showToast } = useToast();
   const [room, setRoom] = useState<Room | null>(null);
   const [beds, setBeds] = useState<Bed[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showAssign, setShowAssign] = useState<Bed | null>(null);
+  const [confirmRelease, setConfirmRelease] = useState(false);
+  const [releasing, setReleasing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -39,13 +44,27 @@ export default function RoomDetailPage() {
 
   const handleRelease = async () => {
     if (!selectedBed) return;
-    const msg = `${t.rooms.confirmRelease} ${selectedBed.bed_code}?`;
-    if (!window.confirm(msg)) return;
-    try { await releaseBed(selectedBed.id); setSelectedBed(null); loadData(); } catch { /* ignore */ }
+    setConfirmRelease(true);
   };
 
-  const handleTransferDone = () => { setShowTransfer(false); setSelectedBed(null); loadData(); };
-  const handleAssignDone = () => { setShowAssign(null); loadData(); };
+  const handleReleaseConfirm = async () => {
+    if (!selectedBed) return;
+    setReleasing(true);
+    try {
+      await releaseBed(selectedBed.id);
+      setSelectedBed(null);
+      setConfirmRelease(false);
+      showToast(t.common.success, 'success');
+      loadData();
+    } catch {
+      showToast(t.common.error, 'error');
+    } finally {
+      setReleasing(false);
+    }
+  };
+
+  const handleTransferDone = () => { setShowTransfer(false); setSelectedBed(null); showToast(t.common.success, 'success'); loadData(); };
+  const handleAssignDone = () => { setShowAssign(null); showToast(t.common.success, 'success'); loadData(); };
 
   const totalBeds = beds.length;
   const emptyBeds = beds.filter(b => b.status === 'empty').length;
@@ -177,6 +196,16 @@ export default function RoomDetailPage() {
         <AssignBedModal open bedId={showAssign.id} bedCode={showAssign.bed_code}
           onClose={() => setShowAssign(null)} onAssigned={handleAssignDone} />
       )}
+
+      <ConfirmDialog
+        open={confirmRelease}
+        title={t.rooms.confirmRelease}
+        message={`${t.rooms.confirmRelease} ${selectedBed?.bed_code || ''}?`}
+        variant="danger"
+        onConfirm={handleReleaseConfirm}
+        onCancel={() => setConfirmRelease(false)}
+        loading={releasing}
+      />
     </div>
   );
 }

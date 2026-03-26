@@ -1,0 +1,113 @@
+@use '../../styles/abstracts/variables' as v;
+
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: confirmFadeIn 0.15s ease;
+  padding: v.$space-4;
+}
+
+.confirm-dialog {
+  background: v.$color-bg-white;
+  border-radius: v.$radius-lg;
+  padding: v.$space-6;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  animation: confirmScaleIn 0.2s ease;
+  box-shadow: v.$shadow-lg;
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto v.$space-4;
+    font-size: 24px;
+
+    &--danger {
+      background: #FEE2E2;
+      color: v.$color-error;
+    }
+
+    &--warning {
+      background: #FEF3C7;
+      color: v.$color-warning;
+    }
+
+    &--info {
+      background: #DBEAFE;
+      color: v.$color-primary;
+    }
+  }
+
+  &__title {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+    margin-bottom: v.$space-2;
+  }
+
+  &__message {
+    font-size: v.$font-size-sm;
+    color: v.$color-text-secondary;
+    line-height: 1.5;
+    margin-bottom: v.$space-6;
+  }
+
+  &__actions {
+    display: flex;
+    gap: v.$space-3;
+    justify-content: center;
+
+    .btn {
+      min-width: 100px;
+    }
+  }
+}
+
+.btn--danger {
+  background: v.$color-error;
+  color: #fff;
+  border: none;
+  padding: v.$space-2 v.$space-4;
+  border-radius: v.$radius;
+  font-size: v.$font-size-sm;
+  font-weight: v.$font-weight-medium;
+  cursor: pointer;
+  transition: all v.$transition-fast;
+
+  &:hover {
+    background: darken(#DC2626, 8%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes confirmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes confirmScaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+// Mobile
+@media (max-width: 768px) {
+  .confirm-dialog {
+    padding: v.$space-5;
+    max-width: 340px;
+  }
+}

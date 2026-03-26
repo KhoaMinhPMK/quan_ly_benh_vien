@@ -8,10 +8,7 @@ import iconSearch from '../../assets/icons/outline/search.svg';
 import iconUser from '../../assets/icons/outline/user-circle.svg';
 import './Header.scss';
 
-const ROLE_LABELS: Record<string, Record<string, string>> = {
-  vi: { admin: 'Quản trị viên', doctor: 'Bác sĩ', nurse: 'Điều dưỡng', records_staff: 'Nhân viên hồ sơ', receptionist: 'Lễ tân' },
-  en: { admin: 'Administrator', doctor: 'Doctor', nurse: 'Nurse', records_staff: 'Records Staff', receptionist: 'Receptionist' },
-};
+import { ROLE_LABELS } from '../../utils/roleLabels';
 
 interface HeaderProps { onMenuToggle?: () => void; }
 
@@ -132,7 +129,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   </div>
                 )}
                 {searchResults.patients.length === 0 && searchResults.rooms.length === 0 && searchResults.beds.length === 0 && (
-                  <div className="header__search-item" style={{ color: '#9CA3AF' }}>{t.header.noResults}</div>
+                  <div className="header__search-item header__search-item--empty">{t.header.noResults}</div>
                 )}
               </div>
             )}
@@ -144,7 +141,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           </button>
 
           {/* Notification Bell */}
-          <div className="header__notif-wrap" style={{ position: 'relative' }}>
+          <div className="header__notif-wrap">
             <button className="header__notif-btn" onClick={openNotifications} title={t.header.notifications}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 5a2 2 0 1 1 4 0 7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></svg>
               {unread > 0 && <span className="header__notif-badge">{unread > 9 ? '9+' : unread}</span>}
@@ -169,17 +166,17 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           </div>
 
           {/* User Profile Dropdown */}
-          <div className="header__user" ref={userMenuRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => { setShowUserMenu(!showUserMenu); setShowNotif(false); }}>
+          <div className="header__user" ref={userMenuRef} onClick={() => { setShowUserMenu(!showUserMenu); setShowNotif(false); }}>
             <img src={iconUser} alt="" className="header__user-avatar" />
             <span className="header__user-name">{user?.fullName || 'Admin'}</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 4 }}><path d="M6 9l6 6 6-6"/></svg>
+            <svg className="header__user-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6"/></svg>
 
             {showUserMenu && (
               <div className="header__user-dropdown">
                 <div className="header__user-dropdown-info">
-                  <div style={{ fontWeight: 600 }}>{user?.fullName}</div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>{user?.email}</div>
-                  <div style={{ fontSize: 11, color: '#6366F1', textTransform: 'uppercase', marginTop: 4 }}>{user?.role ? (ROLE_LABELS[lang]?.[user.role] || user.role) : ''}</div>
+                  <div className="header__user-dropdown-name">{user?.fullName}</div>
+                  <div className="header__user-dropdown-email">{user?.email}</div>
+                  <div className="header__user-dropdown-role">{user?.role ? (ROLE_LABELS[lang]?.[user.role] || user.role) : ''}</div>
                 </div>
                 <div className="header__user-dropdown-divider" />
                 <button className="header__user-dropdown-item" onClick={(e) => { e.stopPropagation(); setShowPwModal(true); setShowUserMenu(false); }}>

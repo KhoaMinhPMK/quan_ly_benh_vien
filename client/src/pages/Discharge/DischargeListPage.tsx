@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
 import { fetchDischargeList, fetchChecklists, toggleChecklist, dischargePatient, type Patient, type ChecklistItem } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
+import iconMapPin from '../../assets/icons/outline/map-pin.svg';
+import iconCalendar from '../../assets/icons/outline/calendar.svg';
 import './DischargeListPage.scss';
 
 export default function DischargeListPage() {
   const { t, lang } = useTranslation();
+  const { showToast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [checklistLoading, setChecklistLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [discharging, setDischarging] = useState(false);
 
   const statusLabels: Record<string, string> = {
     treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
@@ -20,7 +27,7 @@ export default function DischargeListPage() {
     setLoading(true);
     fetchDischargeList()
       .then(setPatients)
-      .catch(() => {})
+      .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
@@ -32,7 +39,10 @@ export default function DischargeListPage() {
     try {
       const items = await fetchChecklists(patient.id);
       setChecklists(items);
-    } catch { setChecklists([]); }
+    } catch {
+      setChecklists([]);
+      showToast(t.common.error, 'error');
+    }
     finally { setChecklistLoading(false); }
   };
 
@@ -41,29 +51,40 @@ export default function DischargeListPage() {
     try {
       const updated = await toggleChecklist(selectedPatient.id, templateId, completed);
       setChecklists(updated);
-    } catch { /* ignore */ }
+    } catch {
+      showToast(t.common.error, 'error');
+    }
   };
 
   const allChecked = checklists.length > 0 && checklists.every((c) => c.is_completed);
 
-  const handleDischarge = async () => {
+  const handleDischargeClick = () => {
     if (!selectedPatient) return;
     if (!allChecked) {
-      alert(t.discharge.blockDischargeMsg);
+      showToast(t.discharge.blockDischargeMsg, 'warning');
       return;
     }
-    const msg = `${t.discharge.confirmDischargeMsg} ${selectedPatient.full_name}?`;
-    if (!confirm(msg)) return;
+    setConfirmOpen(true);
+  };
+
+  const handleDischargeConfirm = async () => {
+    if (!selectedPatient) return;
+    setDischarging(true);
     try {
       await dischargePatient(selectedPatient.id);
       setSelectedPatient(null);
+      setConfirmOpen(false);
+      showToast(t.common.success, 'success');
       loadList();
-    } catch { alert(t.common.error); }
+    } catch {
+      showToast(t.common.error, 'error');
+    } finally {
+      setDischarging(false);
+    }
   };
 
   const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US') : '--';
 
-  // Checklist progress
   const completedCount = checklists.filter(c => c.is_completed).length;
   const progressPct = checklists.length > 0 ? Math.round((completedCount / checklists.length) * 100) : 0;
 
@@ -81,7 +102,7 @@ export default function DischargeListPage() {
         <div className="discharge__list">
           {loading ? (
             <div className="card discharge__empty">
-              <div className="loading-screen__spinner" style={{ margin: '0 auto 16px' }} />
+              <div className="loading-screen__spinner discharge__spinner" />
               <p>{t.common.loading}</p>
             </div>
           ) : patients.length === 0 ? (
@@ -89,41 +110,67 @@ export default function DischargeListPage() {
               <p>{t.discharge.noDischarge}</p>
             </div>
           ) : (
-            <div className="card" style={{ padding: 0 }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{t.discharge.patientCode}</th>
-                    <th>{t.discharge.fullName}</th>
-                    <th>{t.discharge.room}</th>
-                    <th>{t.discharge.expectedDate}</th>
-                    <th>{t.common.status}</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.map((p) => (
-                    <tr key={p.id} className={selectedPatient?.id === p.id ? 'discharge__row--active' : ''}>
-                      <td><strong>{p.patient_code}</strong></td>
-                      <td>{p.full_name}</td>
-                      <td>{p.room_code || '--'}</td>
-                      <td>{formatDate(p.expected_discharge)}</td>
-                      <td>
-                        <span className={`badge ${p.status === 'waiting_discharge' ? 'badge--warning' : 'badge--info'}`}>
-                          {statusLabels[p.status] || p.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="btn btn--secondary btn--sm" onClick={() => openChecklist(p)}>
-                          <img src={iconClipboardCheck} alt="" style={{ width: 14, height: 14 }} />
-                          {t.discharge.checklist}
-                        </button>
-                      </td>
+            <>
+              {/* Desktop table */}
+              <div className="card discharge__table-card">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>{t.discharge.patientCode}</th>
+                      <th>{t.discharge.fullName}</th>
+                      <th>{t.discharge.room}</th>
+                      <th>{t.discharge.expectedDate}</th>
+                      <th>{t.common.status}</th>
+                      <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {patients.map((p) => (
+                      <tr key={p.id} className={selectedPatient?.id === p.id ? 'discharge__row--active' : ''}>
+                        <td><strong>{p.patient_code}</strong></td>
+                        <td>{p.full_name}</td>
+                        <td>{p.room_code || '--'}</td>
+                        <td>{formatDate(p.expected_discharge)}</td>
+                        <td>
+                          <span className={`badge ${p.status === 'waiting_discharge' ? 'badge--warning' : 'badge--info'}`}>
+                            {statusLabels[p.status] || p.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn--secondary btn--sm" onClick={() => openChecklist(p)}>
+                            <img src={iconClipboardCheck} alt="" className="discharge__check-icon" />
+                            {t.discharge.checklist}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile cards */}
+              <div className="discharge-cards">
+                {patients.map((p) => (
+                  <div
+                    key={p.id}
+                    className={`discharge-card ${selectedPatient?.id === p.id ? 'discharge-card--active' : ''}`}
+                    onClick={() => openChecklist(p)}
+                  >
+                    <div className="discharge-card__header">
+                      <span className="discharge-card__code">{p.patient_code}</span>
+                      <span className={`badge ${p.status === 'waiting_discharge' ? 'badge--warning' : 'badge--info'}`}>
+                        {statusLabels[p.status] || p.status}
+                      </span>
+                    </div>
+                    <div className="discharge-card__name">{p.full_name}</div>
+                    <div className="discharge-card__meta">
+                      <span><img src={iconMapPin} alt="" className="discharge-card__icon" /> {p.room_code || '--'}</span>
+                      <span><img src={iconCalendar} alt="" className="discharge-card__icon" /> {formatDate(p.expected_discharge)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
@@ -147,7 +194,7 @@ export default function DischargeListPage() {
               </div>
 
               {checklistLoading ? (
-                <p style={{ color: '#6B7280' }}>{t.discharge.loadingChecklist}</p>
+                <p className="discharge__loading-text">{t.discharge.loadingChecklist}</p>
               ) : (
                 <div className="discharge__checklist">
                   {checklists.map((item) => (
@@ -163,7 +210,7 @@ export default function DischargeListPage() {
               )}
 
               <div className="discharge__actions">
-                <button className="btn btn--primary" disabled={!allChecked} onClick={handleDischarge}
+                <button className="btn btn--primary" disabled={!allChecked} onClick={handleDischargeClick}
                   title={!allChecked ? t.discharge.blockDischargeMsg : ''}>
                   {t.discharge.confirmDischarge}
                 </button>
@@ -173,6 +220,18 @@ export default function DischargeListPage() {
           </div>
         )}
       </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={confirmOpen}
+        title={t.discharge.confirmDischarge}
+        message={`${t.discharge.confirmDischargeMsg} ${selectedPatient?.full_name || ''}?`}
+        confirmLabel={t.discharge.confirmDischarge}
+        variant="warning"
+        onConfirm={handleDischargeConfirm}
+        onCancel={() => setConfirmOpen(false)}
+        loading={discharging}
+      />
     </div>
   );
 }

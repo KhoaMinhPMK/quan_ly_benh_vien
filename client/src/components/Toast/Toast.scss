@@ -1,0 +1,107 @@
+@use '../../styles/abstracts/variables' as v;
+
+.toast-container {
+  position: fixed;
+  top: calc(v.$header-height + v.$space-4);
+  right: v.$space-4;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: v.$space-2;
+  pointer-events: none;
+  max-width: 400px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  padding: v.$space-3 v.$space-4;
+  border-radius: v.$radius;
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  box-shadow: v.$shadow-md;
+  font-size: v.$font-size-sm;
+  font-family: v.$font-family;
+  color: v.$color-text-primary;
+  pointer-events: auto;
+  animation: toastSlideIn 0.3s ease, toastFadeOut 0.3s ease 3.7s forwards;
+
+  &--success {
+    border-left: 4px solid v.$color-success;
+    .toast__icon { color: v.$color-success; }
+  }
+
+  &--error {
+    border-left: 4px solid v.$color-error;
+    .toast__icon { color: v.$color-error; }
+  }
+
+  &--warning {
+    border-left: 4px solid v.$color-warning;
+    .toast__icon { color: v.$color-warning; }
+  }
+
+  &--info {
+    border-left: 4px solid v.$color-primary;
+    .toast__icon { color: v.$color-primary; }
+  }
+
+  &__icon {
+    font-size: v.$font-size-md;
+    font-weight: v.$font-weight-bold;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  &__message {
+    flex: 1;
+    line-height: 1.4;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: v.$color-text-muted;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: color v.$transition-fast;
+
+    &:hover {
+      color: v.$color-text-primary;
+    }
+  }
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; transform: translateX(40px); }
+}
+
+// Mobile
+@media (max-width: 768px) {
+  .toast-container {
+    left: v.$space-3;
+    right: v.$space-3;
+    max-width: none;
+  }
+}

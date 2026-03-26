@@ -1,3 +1,259 @@
 @use '../../styles/abstracts/variables' as v;
-// Uses shared .room-filters from RoomListPage
-// No additional styles needed — uses shared classes
+
+// ── Patient Filters (standalone, not borrowing Room styles) ──
+.patient-filters {
+  display: flex;
+  align-items: center;
+  gap: v.$space-3;
+  margin-bottom: v.$space-4;
+  flex-wrap: wrap;
+
+  &__search {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+
+    .form-field__input {
+      padding-left: 36px;
+    }
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: v.$space-3;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    opacity: 0.35;
+    z-index: 1;
+  }
+
+  &__select {
+    width: 200px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Summary Stats Bar ──
+.patient-stats {
+  display: flex;
+  gap: v.$space-3;
+  margin-bottom: v.$space-4;
+  flex-wrap: wrap;
+
+  &__item {
+    flex: 1;
+    min-width: 120px;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    padding: v.$space-3 v.$space-4;
+    border-left: 3px solid v.$color-border-dark;
+    transition: box-shadow v.$transition-fast;
+
+    &:hover {
+      box-shadow: v.$shadow-sm;
+    }
+
+    &--success { border-left-color: v.$color-success; }
+    &--info { border-left-color: v.$color-primary; }
+    &--warning { border-left-color: v.$color-warning; }
+    &--error { border-left-color: v.$color-error; }
+  }
+
+  &__value {
+    display: block;
+    font-size: v.$font-size-xl;
+    font-weight: v.$font-weight-bold;
+    color: v.$color-text-primary;
+    line-height: 1.2;
+  }
+
+  &__label {
+    font-size: v.$font-size-xs;
+    color: v.$color-text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-top: 2px;
+  }
+}
+
+// ── Patient List states ──
+.patient-list {
+  &__alert {
+    margin-bottom: v.$space-4;
+  }
+
+  &__loading {
+    text-align: center;
+    padding: v.$space-10;
+  }
+
+  &__spinner {
+    margin: 0 auto v.$space-4;
+  }
+
+  &__loading-text {
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: v.$space-10;
+  }
+
+  &__empty-text {
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+
+  &__table-card {
+    padding: 0;
+  }
+}
+
+// ── Table extras ──
+.data-table__col-action {
+  width: 70px;
+}
+
+.data-table__col-diagnosis {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: v.$color-text-muted;
+}
+
+.btn__icon--inverted {
+  filter: brightness(0) invert(1);
+}
+
+.form-field__input--disabled {
+  opacity: 0.6;
+}
+
+// ── Mobile Cards (hidden on desktop) ──
+.patient-cards {
+  display: none;
+}
+
+// ── Responsive ──
+@media (max-width: 768px) {
+  .patient-filters {
+    flex-direction: column;
+
+    &__search {
+      width: 100%;
+    }
+
+    &__select {
+      width: 100%;
+    }
+  }
+
+  // Hide table on mobile
+  .patient-list__table-card {
+    display: none;
+  }
+
+  // Show cards on mobile
+  .patient-cards {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-3;
+  }
+
+  .patient-card {
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    padding: v.$space-4;
+    cursor: pointer;
+    transition: box-shadow v.$transition-fast, border-color v.$transition-fast;
+
+    &:active {
+      border-color: v.$color-primary;
+      box-shadow: v.$shadow-sm;
+    }
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: v.$space-2;
+    }
+
+    &__code {
+      font-size: v.$font-size-xs;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-primary;
+      text-transform: uppercase;
+    }
+
+    &__name {
+      font-size: v.$font-size-base;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-text-primary;
+      margin-bottom: v.$space-3;
+    }
+
+    &__details {
+      display: flex;
+      flex-direction: column;
+      gap: v.$space-1;
+    }
+
+    &__row {
+      display: flex;
+      align-items: flex-start;
+      gap: v.$space-2;
+      font-size: v.$font-size-sm;
+      color: v.$color-text-secondary;
+    }
+
+    &__icon {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      opacity: 0.5;
+    }
+
+    &__diagnosis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__action {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: v.$space-3;
+      padding-top: v.$space-3;
+      border-top: 1px solid v.$color-border;
+    }
+  }
+}
+
+// ── Mobile responsive ──
+@media (max-width: 768px) {
+  .patient-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: v.$space-2;
+
+    &__item {
+      min-width: unset;
+      padding: v.$space-2 v.$space-3;
+    }
+
+    &__value {
+      font-size: v.$font-size-lg;
+    }
+  }
+}

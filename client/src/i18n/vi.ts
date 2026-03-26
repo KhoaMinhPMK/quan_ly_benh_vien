@@ -298,7 +298,7 @@ const vi = {
     expectedDC: 'Dự kiến ra viện',
     editPatient: 'Cập nhật bệnh nhân',
     statusAdmitted: 'Mới nhập',
-    statusTreating: 'Đang ĐTrị',
+    statusTreating: 'Đang điều trị',
     statusWaiting: 'Chờ ra viện',
     statusDischarged: 'Đã ra viện',
     patientsCount: 'bệnh nhân',

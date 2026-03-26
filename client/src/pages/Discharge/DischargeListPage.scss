@@ -15,6 +15,10 @@
     background: v.$color-primary-bg !important;
   }
 
+  &__table-card {
+    padding: 0;
+  }
+
   &__checklist {
     display: flex;
     flex-direction: column;
@@ -42,6 +46,11 @@
       height: 16px;
       accent-color: v.$color-primary;
     }
+  }
+
+  &__check-icon {
+    width: 14px;
+    height: 14px;
   }
 
   &__check-name {
@@ -108,7 +117,117 @@
   // States
   &__empty {
     text-align: center;
-    padding: 48px;
+    padding: v.$space-10;
     color: v.$color-text-muted;
   }
+
+  &__spinner {
+    margin: 0 auto v.$space-4;
+  }
+
+  &__loading-text {
+    color: v.$color-text-muted;
+    font-size: v.$font-size-sm;
+  }
+}
+
+// ── Mobile cards (hidden on desktop) ──
+.discharge-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  // Hide table on mobile
+  .discharge__table-card {
+    display: none;
+  }
+
+  // Show cards on mobile
+  .discharge-cards {
+    display: flex;
+    flex-direction: column;
+    gap: v.$space-3;
+  }
+
+  .discharge-card {
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    padding: v.$space-4;
+    cursor: pointer;
+    transition: all v.$transition-fast;
+
+    &:active {
+      border-color: v.$color-primary;
+    }
+
+    &--active {
+      border-color: v.$color-primary;
+      background: v.$color-primary-bg;
+    }
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: v.$space-2;
+    }
+
+    &__code {
+      font-size: v.$font-size-xs;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-primary;
+    }
+
+    &__name {
+      font-size: v.$font-size-base;
+      font-weight: v.$font-weight-semibold;
+      color: v.$color-text-primary;
+      margin-bottom: v.$space-2;
+    }
+
+    &__meta {
+      display: flex;
+      gap: v.$space-4;
+      font-size: v.$font-size-sm;
+      color: v.$color-text-secondary;
+
+      span {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+    }
+
+    &__icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+      flex-shrink: 0;
+    }
+  }
+
+  // Checklist panel: full-width on mobile
+  .discharge__panel {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    > .card {
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      border-radius: v.$radius-lg v.$radius-lg 0 0;
+      animation: slideUp 0.25s ease;
+    }
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
