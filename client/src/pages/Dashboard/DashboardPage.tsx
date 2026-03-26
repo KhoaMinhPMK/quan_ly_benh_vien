@@ -205,8 +205,11 @@ export default function DashboardPage() {
           <h3 className="dashboard__section-title">{t.dashboard.occupancyByRoom}</h3>
           <div className="dashboard__room-grid">
             {stats.rooms.map((r) => {
-              const ratio = r.total_beds > 0 ? ((r.total_beds - r.empty_beds) / r.total_beds) * 100 : 0;
-              const level = getOccupancyLevel(r.empty_beds, r.total_beds);
+              const totalBeds = Number(r.total_beds) || 0;
+              const emptyBeds = Number(r.empty_beds) || 0;
+              const usedBeds = totalBeds - emptyBeds;
+              const ratio = totalBeds > 0 ? (usedBeds / totalBeds) * 100 : 0;
+              const level = getOccupancyLevel(emptyBeds, totalBeds);
               return (
                 <Link to={`/rooms/${r.id}`} key={r.id} className="room-card" style={{ textDecoration: 'none' }}>
                   <div className="room-card__header">
@@ -223,7 +226,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="room-card__stats">
-                    <span><span className="room-card__stat-value">{r.total_beds - r.empty_beds}</span>/{r.total_beds} {bedLabel}</span>
+                    <span><span className="room-card__stat-value">{usedBeds}</span>/{totalBeds} {bedLabel}</span>
                     <span className={`badge badge--${level}`}>{Math.round(ratio)}%</span>
                   </div>
                 </Link>

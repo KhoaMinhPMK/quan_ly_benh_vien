@@ -68,10 +68,21 @@ export async function getDashboardStats(departmentId?: number) {
   );
 
   return {
-    total_patients: patientRows[0]?.total || 0,
-    beds: bedRows[0] || { total_beds: 0, empty_beds: 0, occupied_beds: 0, locked_beds: 0, cleaning_beds: 0 },
-    discharge_pending: dischargeRows[0]?.total || 0,
-    patients_missing_checklist: checklistRows[0]?.total || 0,
-    rooms: roomRows,
+    total_patients: Number(patientRows[0]?.total) || 0,
+    beds: {
+      total_beds: Number(bedRows[0]?.total_beds) || 0,
+      empty_beds: Number(bedRows[0]?.empty_beds) || 0,
+      occupied_beds: Number(bedRows[0]?.occupied_beds) || 0,
+      locked_beds: Number(bedRows[0]?.locked_beds) || 0,
+      cleaning_beds: Number(bedRows[0]?.cleaning_beds) || 0,
+    },
+    discharge_pending: Number(dischargeRows[0]?.total) || 0,
+    patients_missing_checklist: Number(checklistRows[0]?.total) || 0,
+    rooms: (roomRows as RowDataPacket[]).map(r => ({
+      ...r,
+      total_beds: Number(r.total_beds) || 0,
+      empty_beds: Number(r.empty_beds) ?? 0,
+      occupied_beds: Number(r.occupied_beds) || 0,
+    })),
   };
 }
