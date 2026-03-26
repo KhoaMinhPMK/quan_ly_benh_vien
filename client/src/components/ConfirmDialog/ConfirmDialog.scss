@@ -75,7 +75,7 @@
 
 .btn--danger {
   background: v.$color-error;
-  color: #fff;
+  color: v.$color-text-white;
   border: none;
   padding: v.$space-2 v.$space-4;
   border-radius: v.$radius;
@@ -85,7 +85,7 @@
   transition: all v.$transition-fast;
 
   &:hover {
-    background: darken(#DC2626, 8%);
+    background: #c92222; // darken($color-error, 8%)
   }
 
   &:disabled {
