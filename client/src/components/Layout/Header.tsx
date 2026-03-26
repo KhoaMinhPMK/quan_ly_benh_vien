@@ -102,7 +102,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   <div className="header__search-group">
                     <div className="header__search-group-title">{t.header.searchGroupPatient}</div>
                     {searchResults.patients.map(p => (
-                      <div key={p.id} className="header__search-item" onClick={() => { navigate('/patients'); setShowSearch(false); setSearchQuery(''); }}>
+                      <div key={p.id} className="header__search-item" onClick={() => { navigate(`/patients?edit=${p.id}`); setShowSearch(false); setSearchQuery(''); }}>
                         <strong>{p.full_name}</strong> — {p.patient_code}
                       </div>
                     ))}
@@ -122,7 +122,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                   <div className="header__search-group">
                     <div className="header__search-group-title">{t.header.searchGroupBed}</div>
                     {searchResults.beds.map(b => (
-                      <div key={b.id} className="header__search-item">
+                      <div key={b.id} className="header__search-item" onClick={() => { navigate(`/rooms/${b.room_id}`); setShowSearch(false); setSearchQuery(''); }}>
                         <strong>{b.bed_code}</strong> — {b.room_name}
                       </div>
                     ))}

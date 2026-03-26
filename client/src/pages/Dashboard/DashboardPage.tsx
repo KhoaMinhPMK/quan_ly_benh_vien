@@ -42,9 +42,9 @@ export default function DashboardPage() {
 
 
 
-  const getOccupancyLevel = (occupied: number, total: number) => {
+  const getOccupancyLevel = (empty: number, total: number) => {
     if (total === 0) return 'success';
-    const ratio = occupied / total;
+    const ratio = (total - empty) / total;
     if (ratio >= 1) return 'error';
     if (ratio >= 0.8) return 'warning';
     return 'success';
@@ -64,8 +64,8 @@ export default function DashboardPage() {
   const bedLabel = t.dashboard.beds;
 
   // Detect full rooms for alerts
-  const fullRooms = stats?.rooms.filter(r => r.total_beds > 0 && r.occupied_beds >= r.total_beds) || [];
-  const nearFullRooms = stats?.rooms.filter(r => r.total_beds > 0 && r.occupied_beds >= r.total_beds - 1 && r.occupied_beds < r.total_beds) || [];
+  const fullRooms = stats?.rooms.filter(r => r.total_beds > 0 && r.empty_beds === 0) || [];
+  const nearFullRooms = stats?.rooms.filter(r => r.total_beds > 0 && r.empty_beds === 1) || [];
 
   return (
     <div className="dashboard">
@@ -92,7 +92,7 @@ export default function DashboardPage() {
                   {fullRooms.map(r => (
                     <Link to={`/rooms/${r.id}`} key={r.id} className="alert-banner__tag alert-banner__tag--error">
                       {r.room_code} · {r.name}
-                      <span className="alert-banner__tag-detail">{r.occupied_beds}/{r.total_beds}</span>
+                      <span className="alert-banner__tag-detail">{r.total_beds - r.empty_beds}/{r.total_beds}</span>
                     </Link>
                   ))}
                 </div>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
                   {nearFullRooms.map(r => (
                     <Link to={`/rooms/${r.id}`} key={r.id} className="alert-banner__tag alert-banner__tag--warning">
                       {r.room_code} · {r.name}
-                      <span className="alert-banner__tag-detail">{r.occupied_beds}/{r.total_beds}</span>
+                      <span className="alert-banner__tag-detail">{r.total_beds - r.empty_beds}/{r.total_beds}</span>
                     </Link>
                   ))}
                 </div>
@@ -205,8 +205,8 @@ export default function DashboardPage() {
           <h3 className="dashboard__section-title">{t.dashboard.occupancyByRoom}</h3>
           <div className="dashboard__room-grid">
             {stats.rooms.map((r) => {
-              const ratio = r.total_beds > 0 ? (r.occupied_beds / r.total_beds) * 100 : 0;
-              const level = getOccupancyLevel(r.occupied_beds, r.total_beds);
+              const ratio = r.total_beds > 0 ? ((r.total_beds - r.empty_beds) / r.total_beds) * 100 : 0;
+              const level = getOccupancyLevel(r.empty_beds, r.total_beds);
               return (
                 <Link to={`/rooms/${r.id}`} key={r.id} className="room-card" style={{ textDecoration: 'none' }}>
                   <div className="room-card__header">
@@ -223,7 +223,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="room-card__stats">
-                    <span><span className="room-card__stat-value">{r.occupied_beds}</span>/{r.total_beds} {bedLabel}</span>
+                    <span><span className="room-card__stat-value">{r.total_beds - r.empty_beds}</span>/{r.total_beds} {bedLabel}</span>
                     <span className={`badge badge--${level}`}>{Math.round(ratio)}%</span>
                   </div>
                 </Link>

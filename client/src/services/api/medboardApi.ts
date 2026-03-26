@@ -7,7 +7,7 @@ export interface Room {
   id: number; room_code: string; name: string; department_id: number;
   department_name: string; room_type: string; max_beds: number;
   status: string; floor: number; notes: string;
-  total_beds: number; occupied_beds: number;
+  total_beds: number; occupied_beds: number; empty_beds: number;
 }
 
 export interface Bed {
@@ -70,7 +70,7 @@ export interface BedHistoryEntry {
 export interface SearchResults {
   patients: { id: number; patient_code: string; full_name: string; status: string }[];
   rooms: { id: number; room_code: string; name: string }[];
-  beds: { id: number; bed_code: string; room_code: string; room_name: string }[];
+  beds: { id: number; room_id: number; bed_code: string; room_code: string; room_name: string }[];
 }
 
 export interface AuditLog {

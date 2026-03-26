@@ -21,7 +21,8 @@ export async function getAllRooms(filters: { department_id?: number; status?: st
   let sql = `
     SELECT r.*, d.name AS department_name,
       (SELECT COUNT(*) FROM beds WHERE room_id = r.id) AS total_beds,
-      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'occupied') AS occupied_beds
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'occupied') AS occupied_beds,
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'empty') AS empty_beds
     FROM rooms r
     JOIN departments d ON r.department_id = d.id
     WHERE 1=1
@@ -50,7 +51,8 @@ export async function getRoomById(id: number) {
   const [rows] = await db.execute<RoomRow[]>(
     `SELECT r.*, d.name AS department_name,
       (SELECT COUNT(*) FROM beds WHERE room_id = r.id) AS total_beds,
-      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'occupied') AS occupied_beds
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'occupied') AS occupied_beds,
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'empty') AS empty_beds
     FROM rooms r
     JOIN departments d ON r.department_id = d.id
     WHERE r.id = ?`,

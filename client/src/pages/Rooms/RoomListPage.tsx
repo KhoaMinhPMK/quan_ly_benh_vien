@@ -44,7 +44,7 @@ export default function RoomListPage() {
 
   const getOccupancyColor = (room: Room) => {
     if (room.total_beds === 0) return { cls: 'badge--neutral', fill: '#94A3B8' };
-    const ratio = room.occupied_beds / room.total_beds;
+    const ratio = (room.total_beds - room.empty_beds) / room.total_beds;
     if (ratio >= 1) return { cls: 'badge--error', fill: '#EF4444' };
     if (ratio >= 0.8) return { cls: 'badge--warning', fill: '#F59E0B' };
     return { cls: 'badge--success', fill: '#10B981' };
@@ -146,7 +146,7 @@ export default function RoomListPage() {
               <tbody>
                 {rooms.map((room) => {
                   const { fill } = getOccupancyColor(room);
-                  const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
+                  const ratio = room.total_beds > 0 ? ((room.total_beds - room.empty_beds) / room.total_beds) * 100 : 0;
                   return (
                     <tr key={room.id} onClick={() => navigate(`/rooms/${room.id}`)}>
                       <td><strong>{room.room_code}</strong></td>
@@ -184,7 +184,7 @@ export default function RoomListPage() {
           <div className="room-cards">
             {rooms.map((room) => {
               const { fill } = getOccupancyColor(room);
-              const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
+              const ratio = room.total_beds > 0 ? ((room.total_beds - room.empty_beds) / room.total_beds) * 100 : 0;
               return (
                 <div key={room.id} className="room-card" onClick={() => navigate(`/rooms/${room.id}`)}>
                   <div className="room-card__header">

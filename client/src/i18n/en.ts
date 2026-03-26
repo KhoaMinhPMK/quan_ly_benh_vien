@@ -246,6 +246,7 @@ const en: Translations = {
     statusWaiting: 'Pending Discharge',
     statusDischarged: 'Discharged',
     confirmRelease: 'Release bed',
+    requestDischarge: 'Request Discharge',
   },
 
   // ── Transfer Modal ──

@@ -12,11 +12,12 @@ interface PatientInfo {
 interface BedDetailPanelProps {
   bedId: number; bedCode: string; bedStatus: string; patient: PatientInfo | null;
   onClose: () => void; onTransfer: () => void; onRelease: () => void; onAssign: () => void;
+  onRequestDischarge?: () => void;
 }
 
 type Tab = 'info' | 'checklist' | 'history' | 'notes';
 
-export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onClose, onTransfer, onRelease, onAssign }: BedDetailPanelProps) {
+export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onClose, onTransfer, onRelease, onAssign, onRequestDischarge }: BedDetailPanelProps) {
   const { t, lang } = useTranslation();
   const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
   const [tab, setTab] = useState<Tab>('info');
@@ -173,12 +174,19 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
           )}
         </div>
 
-        {patient && (
-          <div className="bed-panel__actions">
-            <button className="btn btn--secondary btn--sm" onClick={onTransfer}>{t.bedPanel.transferBed}</button>
+        <div className="bed-panel__actions">
+          {patient && (
+            <>
+              <button className="btn btn--secondary btn--sm" onClick={onTransfer}>{t.bedPanel.transferBed}</button>
+              {patient.status !== 'waiting_discharge' && patient.status !== 'discharged' && onRequestDischarge && (
+                <button className="btn btn--primary btn--sm" onClick={onRequestDischarge}>{t.bedPanel.requestDischarge || 'Cho xuất viện'}</button>
+              )}
+            </>
+          )}
+          {(bedStatus === 'cleaning' || bedStatus === 'locked' || (!patient && bedStatus !== 'empty')) && (
             <button className="btn btn--secondary btn--sm" onClick={onRelease}>{t.bedPanel.releaseBed}</button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

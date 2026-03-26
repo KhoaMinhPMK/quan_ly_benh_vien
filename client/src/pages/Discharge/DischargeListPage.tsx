@@ -18,6 +18,7 @@ export default function DischargeListPage() {
   const [checklistLoading, setChecklistLoading] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [discharging, setDischarging] = useState(false);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const statusLabels: Record<string, string> = {
     treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
@@ -48,11 +49,14 @@ export default function DischargeListPage() {
 
   const handleToggle = async (templateId: number, completed: boolean) => {
     if (!selectedPatient) return;
+    setTogglingId(templateId);
     try {
       const updated = await toggleChecklist(selectedPatient.id, templateId, completed);
       setChecklists(updated);
     } catch {
       showToast(t.common.error, 'error');
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -199,7 +203,7 @@ export default function DischargeListPage() {
                 <div className="discharge__checklist">
                   {checklists.map((item) => (
                     <label key={item.template_id} className="discharge__check-item">
-                      <input type="checkbox" checked={item.is_completed} onChange={(e) => handleToggle(item.template_id, e.target.checked)} />
+                      <input type="checkbox" checked={item.is_completed} disabled={togglingId === item.template_id} onChange={(e) => handleToggle(item.template_id, e.target.checked)} />
                       <div>
                         <span className={`discharge__check-name ${item.is_completed ? 'discharge__check-name--done' : ''}`}>{item.name}</span>
                         {item.description && <span className="discharge__check-desc">{item.description}</span>}

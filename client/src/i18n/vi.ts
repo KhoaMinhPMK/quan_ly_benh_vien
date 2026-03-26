@@ -244,6 +244,7 @@ const vi = {
     statusWaiting: 'Chờ ra viện',
     statusDischarged: 'Đã ra viện',
     confirmRelease: 'Giải phóng giường',
+    requestDischarge: 'Yêu cầu ra viện',
   },
 
   // ── Transfer Modal ──

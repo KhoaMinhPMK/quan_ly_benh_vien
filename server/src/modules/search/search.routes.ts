@@ -21,7 +21,7 @@ router.get('/', async (req, res, next) => {
       [like, like]
     );
     const [beds] = await db.execute<RowDataPacket[]>(
-      `SELECT b.id, b.bed_code, r.room_code, r.name AS room_name FROM beds b JOIN rooms r ON b.room_id = r.id WHERE b.bed_code LIKE ? LIMIT 10`,
+      `SELECT b.id, b.room_id, b.bed_code, r.room_code, r.name AS room_name FROM beds b JOIN rooms r ON b.room_id = r.id WHERE b.bed_code LIKE ? LIMIT 10`,
       [like]
     );
 

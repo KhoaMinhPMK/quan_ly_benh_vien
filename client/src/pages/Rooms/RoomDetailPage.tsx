@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchRoom, fetchBedsByRoom, releaseBed, type Room, type Bed } from '../../services/api/medboardApi';
+import { fetchRoom, fetchBedsByRoom, releaseBed, updatePatient, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import BedVisual from '../../components/BedVisual/BedVisual';
@@ -63,6 +63,17 @@ export default function RoomDetailPage() {
     }
   };
 
+  const handleRequestDischarge = async () => {
+    if (!selectedBed || !selectedBed.patient_id) return;
+    try {
+      await updatePatient(selectedBed.patient_id, { status: 'waiting_discharge' });
+      showToast(t.common.success, 'success');
+      loadData();
+    } catch {
+      showToast(t.common.error, 'error');
+    }
+  };
+
   const handleTransferDone = () => { setShowTransfer(false); setSelectedBed(null); showToast(t.common.success, 'success'); loadData(); };
   const handleAssignDone = () => { setShowAssign(null); showToast(t.common.success, 'success'); loadData(); };
 
@@ -70,7 +81,7 @@ export default function RoomDetailPage() {
   const emptyBeds = beds.filter(b => b.status === 'empty').length;
   const occupiedBeds = beds.filter(b => b.status === 'occupied').length;
   const otherBeds = totalBeds - emptyBeds - occupiedBeds;
-  const ratio = totalBeds > 0 ? (occupiedBeds / totalBeds) * 100 : 0;
+  const ratio = totalBeds > 0 ? ((totalBeds - emptyBeds) / totalBeds) * 100 : 0;
   const isFull = ratio >= 100;
   const isNearFull = ratio >= 80;
 
@@ -183,7 +194,7 @@ export default function RoomDetailPage() {
             notes: selectedBed.notes || undefined,
           } : null}
           onClose={() => setSelectedBed(null)} onTransfer={() => setShowTransfer(true)}
-          onRelease={handleRelease} onAssign={() => setShowAssign(selectedBed)} />
+          onRelease={handleRelease} onAssign={() => setShowAssign(selectedBed)} onRequestDischarge={handleRequestDischarge} />
       )}
 
       {showTransfer && selectedBed && selectedBed.patient_id && (

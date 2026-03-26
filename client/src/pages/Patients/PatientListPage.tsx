@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { fetchPatients, updatePatient, type Patient } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import AddPatientModal from './AddPatientModal';
+import PatientAssignBedModal from './PatientAssignBedModal';
 import Modal from '../../components/Modal/Modal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
@@ -19,12 +21,14 @@ const STATUS_BADGE: Record<string, string> = {
 export default function PatientListPage() {
   const { t, lang } = useTranslation();
   const { showToast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string | undefined>();
   const [filterDoctor, setFilterDoctor] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState({ diagnosis: '', doctor_name: '', expected_discharge: '', status: '', notes: '' });
   const [editError, setEditError] = useState('');
@@ -44,13 +48,21 @@ export default function PatientListPage() {
 
   useEffect(() => { loadPatients(); }, [filterStatus, search]);
 
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && patients.length > 0) {
+      const p = patients.find(x => x.id.toString() === editId);
+      if (p) openEdit(p);
+      setSearchParams(new URLSearchParams());
+    }
+  }, [searchParams, patients, setSearchParams]);
+
   const formatDate = (d: string | null) => {
     if (!d) return '--';
     return new Date(d).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US');
   };
 
-  const doctors = [...new Set(patients.map(p => p.doctor_name).filter(Boolean))];
-  const filteredPatients = filterDoctor ? patients.filter(p => p.doctor_name === filterDoctor) : patients;
+  const filteredPatients = filterDoctor ? patients.filter(p => p.doctor_name?.toLowerCase().includes(filterDoctor.toLowerCase())) : patients;
   const waitingList = patients.filter(p => !p.bed_id && p.status !== 'discharged');
 
   const openEdit = (p: Patient) => {
@@ -105,7 +117,9 @@ export default function PatientListPage() {
             <div className="alert-banner__title">{`${waitingList.length} ${t.patients.waitingBedAlert}`}</div>
             <div className="alert-banner__tags">
               {waitingList.slice(0, 5).map(p => (
-                <span key={p.id} className="alert-banner__tag alert-banner__tag--warning">{p.full_name}</span>
+                <span key={p.id} className="alert-banner__tag alert-banner__tag--warning" onClick={() => setAssignBedPatientId(p.id)} style={{ cursor: 'pointer' }}>
+                  {p.full_name} <span style={{fontSize:11, opacity:0.8}}> + Xếp</span>
+                </span>
               ))}
               {waitingList.length > 5 && (
                 <span className="alert-banner__tag alert-banner__tag--warning alert-banner__tag--more">+{waitingList.length - 5} {t.common.more}</span>
@@ -129,11 +143,8 @@ export default function PatientListPage() {
           <option value="treating">{t.patients.statusTreating}</option>
           <option value="waiting_discharge">{t.patients.statusWaiting}</option>
         </select>
-        <select className="form-field__input patient-filters__select" value={filterDoctor}
-          onChange={(e) => setFilterDoctor(e.target.value)}>
-          <option value="">{t.patients.allDoctors}</option>
-          {doctors.map(d => <option key={d} value={d!}>{d}</option>)}
-        </select>
+        <input type="text" className="form-field__input patient-filters__select" placeholder={t.patients.allDoctors || 'Bác sĩ phụ trách...'}
+          value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} />
       </div>
 
       {/* Summary Stats */}
@@ -202,7 +213,12 @@ export default function PatientListPage() {
                       </span>
                     </td>
                     <td>
-                      <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
+                      <div className="data-table__actions" style={{ display: 'flex', gap: 4 }}>
+                        {!p.bed_id && p.status !== 'discharged' && (
+                          <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ Xếp giường</button>
+                        )}
+                        <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -249,6 +265,7 @@ export default function PatientListPage() {
       )}
 
       <AddPatientModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={() => { loadPatients(); showToast(t.common.success, 'success'); }} />
+      <PatientAssignBedModal open={!!assignBedPatientId} patientId={assignBedPatientId} onClose={() => setAssignBedPatientId(null)} onAssigned={() => { setAssignBedPatientId(null); loadPatients(); showToast(t.common.success, 'success'); }} />
 
       {/* Edit Patient Modal */}
       {editPatient && (
