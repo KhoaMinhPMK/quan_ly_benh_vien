@@ -34,6 +34,8 @@ async function reseed() {
       'patients',
       'beds',
       'rooms',
+      'checklist_templates',
+      'departments',
     ];
 
     for (const table of tablesToClean) {
@@ -45,7 +47,23 @@ async function reseed() {
     await conn.execute('SET FOREIGN_KEY_CHECKS = 1');
     console.log('✅ Old data cleaned');
 
-    // 3. Run seed SQL file (003_seed_data.sql)
+    // 3. Re-seed departments & checklists (from 002 migration, with correct encoding)
+    await conn.execute(`INSERT INTO departments (name, code) VALUES
+      ('Nội khoa', 'NK'), ('Ngoại khoa', 'NGK'), ('Nhi khoa', 'NHK'),
+      ('Sản khoa', 'SK'), ('Cấp cứu', 'CC')`);
+    console.log('✅ Departments re-seeded');
+
+    await conn.execute(`INSERT INTO checklist_templates (name, description, sort_order) VALUES
+      ('Hồ sơ bệnh án', 'Kiểm tra hồ sơ bệnh án đầy đủ', 1),
+      ('Phiếu xét nghiệm', 'Kết quả xét nghiệm đã có', 2),
+      ('Phiếu chụp X-quang', 'Kết quả X-quang/CT/MRI', 3),
+      ('Đơn thuốc ra viện', 'Bác sĩ đã kê đơn thuốc ra viện', 4),
+      ('Giấy ra viện', 'Giấy ra viện đã ký', 5),
+      ('Thanh toán viện phí', 'Bệnh nhân đã thanh toán đầy đủ', 6),
+      ('Hướng dẫn tái khám', 'Đã hướng dẫn bệnh nhân tái khám', 7)`);
+    console.log('✅ Checklist templates re-seeded');
+
+    // 4. Run seed SQL file (003_seed_data.sql)
     const seedPath = path.resolve(__dirname, '003_seed_data.sql');
     const seedSQL = fs.readFileSync(seedPath, 'utf-8');
 
