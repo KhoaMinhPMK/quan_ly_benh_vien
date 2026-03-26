@@ -207,7 +207,10 @@ export default function DashboardPage() {
             {stats.rooms.map((r) => {
               const totalBeds = Number(r.total_beds) || 0;
               const emptyBeds = Number(r.empty_beds) || 0;
-              const usedBeds = totalBeds - emptyBeds;
+              // Use occupied_beds if available, otherwise fallback to total-empty
+              const usedBeds = r.occupied_beds !== undefined
+                ? Number(r.occupied_beds) || 0
+                : totalBeds - emptyBeds;
               const ratio = totalBeds > 0 ? (usedBeds / totalBeds) * 100 : 0;
               const level = getOccupancyLevel(emptyBeds, totalBeds);
               return (
