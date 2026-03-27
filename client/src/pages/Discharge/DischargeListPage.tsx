@@ -214,8 +214,7 @@ export default function DischargeListPage() {
               )}
 
               <div className="discharge__actions">
-                <button className="btn btn--primary" disabled={!allChecked} onClick={handleDischargeClick}
-                  title={!allChecked ? t.discharge.blockDischargeMsg : ''}>
+                <button className="btn btn--primary" onClick={handleDischargeClick}>
                   {t.discharge.confirmDischarge}
                 </button>
                 <button className="btn btn--secondary" onClick={() => setSelectedPatient(null)}>{t.common.close}</button>

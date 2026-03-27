@@ -356,14 +356,17 @@ export async function getPatientChecklists(admissionId: number) {
   return rows;
 }
 
-export async function toggleChecklist(admissionId: number, templateId: number, completed: boolean, userId?: number) {
+export async function toggleChecklist(admissionId: number, templateId: number, completed: boolean | string | number, userId?: number) {
+  // Ensure strict MySQL TinyInt(1) type handling and avoid JS Date parser issues
+  const isCompletedInt = (completed === true || completed === 'true' || completed === 1) ? 1 : 0;
+  const completedBy = isCompletedInt ? (userId || null) : null;
+
   // Upsert
   await db.execute(
     `INSERT INTO admission_checklists (admission_id, checklist_template_id, is_completed, completed_by, completed_at)
-     VALUES (?, ?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE is_completed = ?, completed_by = ?, completed_at = ?`,
-    [admissionId, templateId, completed, completed ? userId || null : null, completed ? new Date() : null,
-     completed, completed ? userId || null : null, completed ? new Date() : null]
+     VALUES (?, ?, ?, ?, CASE WHEN ? = 1 THEN NOW() ELSE NULL END)
+     ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed), completed_by = VALUES(completed_by), completed_at = VALUES(completed_at)`,
+    [admissionId, templateId, isCompletedInt, completedBy, isCompletedInt]
   );
   return getPatientChecklists(admissionId);
 }
