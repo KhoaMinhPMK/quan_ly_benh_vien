@@ -32,6 +32,7 @@ export default function PatientListPage() {
   const [editPatient, setEditPatient] = useState<Patient | null>(null);
   const [editForm, setEditForm] = useState({ diagnosis: '', doctor_name: '', expected_discharge: '', status: '', notes: '' });
   const [editError, setEditError] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   const statusLabels: Record<string, string> = {
     admitted: t.patients.statusAdmitted, treating: t.patients.statusTreating,
@@ -78,8 +79,9 @@ export default function PatientListPage() {
   };
 
   const handleEditSave = async () => {
-    if (!editPatient) return;
+    if (!editPatient || editSaving) return;
     setEditError('');
+    setEditSaving(true);
     try {
       await updatePatient(editPatient.id, editForm as Record<string, string>);
       setEditPatient(null);
@@ -88,6 +90,8 @@ export default function PatientListPage() {
     } catch (e: unknown) {
       const err = e as { response?: { data?: { error?: { message?: string } } } };
       setEditError(err.response?.data?.error?.message || t.common.error);
+    } finally {
+      setEditSaving(false);
     }
   };
 
@@ -118,7 +122,7 @@ export default function PatientListPage() {
             <div className="alert-banner__tags">
               {waitingList.slice(0, 5).map(p => (
                 <span key={p.id} className="alert-banner__tag alert-banner__tag--warning" onClick={() => setAssignBedPatientId(p.id)} style={{ cursor: 'pointer' }}>
-                  {p.full_name} <span style={{fontSize:11, opacity:0.8}}> + Xếp</span>
+                  {p.full_name} <span style={{fontSize:11, opacity:0.8}}>+ {t.patients.assignBed || 'Xếp'}</span>
                 </span>
               ))}
               {waitingList.length > 5 && (
@@ -215,7 +219,7 @@ export default function PatientListPage() {
                     <td>
                       <div className="data-table__actions" style={{ display: 'flex', gap: 4 }}>
                         {!p.bed_id && p.status !== 'discharged' && (
-                          <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ Xếp giường</button>
+                          <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ {t.patients.assignBed || 'Xếp giường'}</button>
                         )}
                         <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
                       </div>
@@ -293,7 +297,7 @@ export default function PatientListPage() {
           </div>
           <div className="modal__footer">
             <button className="btn btn--secondary" onClick={() => setEditPatient(null)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleEditSave}>{t.common.update}</button>
+            <button className="btn btn--primary" onClick={handleEditSave} disabled={editSaving}>{editSaving ? t.common.processing : t.common.update}</button>
           </div>
         </Modal>
       )}

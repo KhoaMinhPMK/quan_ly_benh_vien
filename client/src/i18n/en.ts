@@ -308,6 +308,7 @@ const en: Translations = {
     waitingBedAlert: 'patients waiting for bed',
     waitingList: 'Waiting for Bed',
     waitingListDesc: 'Admitted patients not yet assigned to a bed',
+    assignBed: 'Assign Bed',
   },
 
   // ── Add Patient Modal ──

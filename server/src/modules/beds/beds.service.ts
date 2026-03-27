@@ -68,8 +68,26 @@ export async function assignBed(bedId: number, patientId: number, performedBy?: 
   try {
     await conn.beginTransaction();
 
-    // Release patient from current bed
-    await conn.execute('UPDATE beds SET status = ? WHERE id IN (SELECT bed_id FROM patients WHERE id = ? AND bed_id IS NOT NULL)', ['empty', patientId]);
+    // Lock the target bed row and verify it's still empty
+    const [lockedBeds] = await conn.execute<RowDataPacket[]>(
+      'SELECT id, status FROM beds WHERE id = ? FOR UPDATE',
+      [bedId]
+    );
+    if (lockedBeds.length === 0) {
+      throw Object.assign(new Error('Giường không tồn tại'), { statusCode: 404, code: 'NOT_FOUND' });
+    }
+    if (lockedBeds[0].status !== 'empty') {
+      throw Object.assign(new Error('Giường đã được sử dụng hoặc bị khoá'), { statusCode: 409, code: 'BED_OCCUPIED' });
+    }
+
+    // Release patient from current bed (if any)
+    const [currentPatient] = await conn.execute<RowDataPacket[]>(
+      'SELECT bed_id FROM patients WHERE id = ? FOR UPDATE',
+      [patientId]
+    );
+    if (currentPatient.length > 0 && currentPatient[0].bed_id) {
+      await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', currentPatient[0].bed_id]);
+    }
 
     // Assign new bed
     await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['occupied', bedId]);
@@ -96,9 +114,12 @@ export async function releaseBed(bedId: number, performedBy?: number) {
   try {
     await conn.beginTransaction();
 
-    // Get patient on this bed
+    // Lock bed row
+    await conn.execute<RowDataPacket[]>('SELECT id FROM beds WHERE id = ? FOR UPDATE', [bedId]);
+
+    // Get patient on this bed (lock patient row too)
     const [patients] = await conn.execute<RowDataPacket[]>(
-      'SELECT id FROM patients WHERE bed_id = ? AND status IN (?, ?, ?)',
+      'SELECT id FROM patients WHERE bed_id = ? AND status IN (?, ?, ?) FOR UPDATE',
       [bedId, 'admitted', 'treating', 'waiting_discharge']
     );
 

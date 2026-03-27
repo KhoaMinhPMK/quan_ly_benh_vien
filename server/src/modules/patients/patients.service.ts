@@ -19,6 +19,45 @@ interface PatientRow extends RowDataPacket {
   expected_discharge: string;
 }
 
+// ---- Status State Machine ----
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  admitted: ['treating', 'waiting_discharge'],
+  treating: ['waiting_discharge'],
+  waiting_discharge: ['discharged'],
+  discharged: [], // No reverse transitions allowed
+};
+
+function validateStatusTransition(currentStatus: string, newStatus: string): void {
+  const allowed = VALID_TRANSITIONS[currentStatus];
+  if (!allowed || !allowed.includes(newStatus)) {
+    const error = new Error(`Không thể chuyển trạng thái từ "${currentStatus}" sang "${newStatus}"`) as Error & { statusCode: number; code: string };
+    error.statusCode = 422;
+    error.code = 'INVALID_STATUS_TRANSITION';
+    throw error;
+  }
+}
+
+// ---- Auto-generate patient code ----
+async function generatePatientCode(): Promise<string> {
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const prefix = `BN-${dateStr}-`;
+
+  const [rows] = await db.execute<RowDataPacket[]>(
+    'SELECT patient_code FROM patients WHERE patient_code LIKE ? ORDER BY patient_code DESC LIMIT 1',
+    [`${prefix}%`]
+  );
+
+  let seq = 1;
+  if (rows.length > 0) {
+    const lastCode = rows[0].patient_code as string;
+    const lastSeq = parseInt(lastCode.replace(prefix, ''), 10);
+    if (!isNaN(lastSeq)) seq = lastSeq + 1;
+  }
+
+  return `${prefix}${String(seq).padStart(4, '0')}`;
+}
+
 export async function getAllPatients(filters: { status?: string; search?: string; room_id?: number; doctor_name?: string; department_id?: number }) {
   let sql = `
     SELECT p.*, b.bed_code, r.room_code, r.name AS room_name
@@ -65,14 +104,17 @@ export async function getPatientById(id: number) {
 }
 
 export async function createPatient(data: {
-  patient_code: string; full_name: string; date_of_birth?: string; gender?: string;
+  patient_code?: string; full_name: string; date_of_birth?: string; gender?: string;
   phone?: string; address?: string; id_number?: string; insurance_number?: string;
   diagnosis?: string; doctor_name?: string; bed_id?: number; expected_discharge?: string; notes?: string;
 }) {
+  // Auto-generate patient_code if not provided
+  const patientCode = data.patient_code || await generatePatientCode();
+
   const [result] = await db.execute<ResultSetHeader>(
     `INSERT INTO patients (patient_code, full_name, date_of_birth, gender, phone, address, id_number, insurance_number, diagnosis, doctor_name, bed_id, expected_discharge, notes)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [data.patient_code, data.full_name, data.date_of_birth || null, data.gender || 'male',
+    [patientCode, data.full_name, data.date_of_birth || null, data.gender || 'male',
      data.phone || null, data.address || null, data.id_number || null, data.insurance_number || null,
      data.diagnosis || null, data.doctor_name || null, data.bed_id || null, data.expected_discharge || null, data.notes || null]
   );
@@ -90,6 +132,19 @@ export async function createPatient(data: {
 }
 
 export async function updatePatient(id: number, data: Record<string, string | number | null>) {
+  // If status is being changed, validate the transition
+  if (data.status !== undefined) {
+    const current = await getPatientById(id);
+    if (!current) {
+      throw Object.assign(new Error('Bệnh nhân không tồn tại'), { statusCode: 404, code: 'NOT_FOUND' });
+    }
+    // 'discharged' status change is only allowed through the discharge endpoint
+    if (data.status === 'discharged') {
+      throw Object.assign(new Error('Vui lòng sử dụng chức năng Xuất viện'), { statusCode: 422, code: 'USE_DISCHARGE_ENDPOINT' });
+    }
+    validateStatusTransition(current.status, data.status as string);
+  }
+
   const fields: string[] = [];
   const params: (string | number | null)[] = [];
   const allowed = ['full_name', 'date_of_birth', 'gender', 'phone', 'address', 'id_number',
@@ -113,12 +168,50 @@ export async function dischargePatient(id: number, performedBy?: number) {
   try {
     await conn.beginTransaction();
 
-    // Get patient bed
-    const [patients] = await conn.execute<RowDataPacket[]>('SELECT bed_id FROM patients WHERE id = ?', [id]);
-    const bedId = patients[0]?.bed_id;
+    // Lock and verify patient status
+    const [patients] = await conn.execute<RowDataPacket[]>(
+      'SELECT id, bed_id, status FROM patients WHERE id = ? FOR UPDATE',
+      [id]
+    );
+    if (patients.length === 0) {
+      throw Object.assign(new Error('Bệnh nhân không tồn tại'), { statusCode: 404, code: 'NOT_FOUND' });
+    }
 
-    // Update patient status
-    await conn.execute('UPDATE patients SET status = ?, discharged_at = NOW() WHERE id = ?', ['discharged', id]);
+    const patient = patients[0];
+
+    // Only allow discharge from treating or waiting_discharge
+    if (!['treating', 'waiting_discharge'].includes(patient.status)) {
+      throw Object.assign(
+        new Error(`Không thể xuất viện bệnh nhân có trạng thái "${patient.status}". Chỉ chấp nhận "Đang điều trị" hoặc "Chờ xuất viện".`),
+        { statusCode: 422, code: 'INVALID_STATUS_FOR_DISCHARGE' }
+      );
+    }
+
+    // Verify checklist completion
+    const [checklistStatus] = await conn.execute<RowDataPacket[]>(
+      `SELECT
+        (SELECT COUNT(*) FROM checklist_templates WHERE is_active = TRUE) AS total_items,
+        (SELECT COUNT(*) FROM patient_checklists pc
+         JOIN checklist_templates ct ON pc.checklist_template_id = ct.id
+         WHERE pc.patient_id = ? AND pc.is_completed = TRUE AND ct.is_active = TRUE) AS completed_items`,
+      [id]
+    );
+    const totalItems = Number(checklistStatus[0]?.total_items || 0);
+    const completedItems = Number(checklistStatus[0]?.completed_items || 0);
+    if (totalItems > 0 && completedItems < totalItems) {
+      throw Object.assign(
+        new Error(`Chưa hoàn thành checklist xuất viện (${completedItems}/${totalItems}). Vui lòng hoàn tất trước khi xuất viện.`),
+        { statusCode: 422, code: 'CHECKLIST_INCOMPLETE' }
+      );
+    }
+
+    const bedId = patient.bed_id;
+
+    // Update patient: set discharged, clear bed_id
+    await conn.execute(
+      'UPDATE patients SET status = ?, discharged_at = NOW(), bed_id = NULL WHERE id = ?',
+      ['discharged', id]
+    );
 
     // Release bed
     if (bedId) {
@@ -193,3 +286,4 @@ export async function toggleChecklist(patientId: number, templateId: number, com
   );
   return getPatientChecklists(patientId);
 }
+

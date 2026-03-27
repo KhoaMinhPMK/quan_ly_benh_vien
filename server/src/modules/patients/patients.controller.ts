@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as patientsService from './patients.service';
+import { logAudit } from '../../middleware/auditLogger';
 
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -25,9 +26,10 @@ export async function getById(req: Request, res: Response, next: NextFunction): 
 
 export async function create(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { patient_code, full_name } = req.body;
-    if (!patient_code || !full_name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Mã BN và họ tên bắt buộc' } }); return; }
+    const { full_name } = req.body;
+    if (!full_name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Họ tên bệnh nhân bắt buộc' } }); return; }
     const patient = await patientsService.createPatient(req.body);
+    logAudit(req.user?.id, 'CREATE', 'patient', patient.id, { patient_code: patient.patient_code, full_name: patient.full_name });
     res.status(201).json({ success: true, data: patient });
   } catch (error) { next(error); }
 }
@@ -35,6 +37,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.updatePatient(Number(req.params.id), req.body);
+    logAudit(req.user?.id, 'UPDATE', 'patient', Number(req.params.id), { fields: Object.keys(req.body) });
     res.json({ success: true, data: patient });
   } catch (error) { next(error); }
 }
@@ -42,6 +45,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function discharge(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.dischargePatient(Number(req.params.id), req.user?.id);
+    logAudit(req.user?.id, 'DISCHARGE', 'patient', Number(req.params.id), { performed_by: req.user?.fullName });
     res.json({ success: true, data: patient, message: 'Bệnh nhân đã ra viện' });
   } catch (error) { next(error); }
 }

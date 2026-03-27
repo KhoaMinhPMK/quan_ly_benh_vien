@@ -710,6 +710,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"express-rate-limit@npm:^8.3.1":
+  version: 8.3.1
+  resolution: "express-rate-limit@npm:8.3.1"
+  dependencies:
+    ip-address: 10.1.0
+  peerDependencies:
+    express: ">= 4.11"
+  checksum: 90cb4163c22690ba4288a1bf031fa7427c40c80e0c0cb4029d5b82aac0551510946cbbf97209a3c1248428c54cf84cc0cb4ad6da9d7c8d07fc4b65dd720cd033
+  languageName: node
+  linkType: hard
+
 "express@npm:^4.21.2":
   version: 4.22.1
   resolution: "express@npm:4.22.1"
@@ -1027,7 +1038,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ip-address@npm:^10.0.1":
+"ip-address@npm:10.1.0, ip-address@npm:^10.0.1":
   version: 10.1.0
   resolution: "ip-address@npm:10.1.0"
   checksum: 76b1abcdf52a32e2e05ca1f202f3a8ab8547e5651a9233781b330271bd7f1a741067748d71c4cbb9d9906d9f1fa69e7ddc8b4a11130db4534fdab0e908c84e0d
@@ -1252,6 +1263,7 @@ __metadata:
     cors: ^2.8.5
     dotenv: ^16.4.7
     express: ^4.21.2
+    express-rate-limit: ^8.3.1
     jsonwebtoken: ^9.0.2
     mysql2: ^3.12.0
     ts-node: ^10.9.2

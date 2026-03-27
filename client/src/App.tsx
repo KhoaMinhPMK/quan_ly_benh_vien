@@ -36,9 +36,9 @@ export default function App() {
             <Route path="/rooms/:id" element={<RoomDetailPage />} />
             <Route path="/patients" element={<PatientListPage />} />
             <Route path="/discharge" element={<DischargeListPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/users" element={<UserListPage />} />
-            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><ReportsPage /></ProtectedRoute>} />
+            <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><UserListPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

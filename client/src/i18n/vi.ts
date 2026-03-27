@@ -306,6 +306,7 @@ const vi = {
     waitingBedAlert: 'bệnh nhân chưa xếp giường',
     waitingList: 'Chờ xếp giường',
     waitingListDesc: 'Bệnh nhân đã nhập viện nhưng chưa được phân giường',
+    assignBed: 'Xếp giường',
   },
 
   // ── Add Patient Modal ──
