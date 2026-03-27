@@ -20,22 +20,27 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [waitingList, setWaitingList] = useState<Patient[]>([]);
 
-  const loadData = () => {
-    fetchDashboardStats()
-      .then(setStats)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-    fetchPatients({ status: 'admitted' }).then(patients => {
-      setWaitingList(patients.filter(p => !p.bed_id));
-    }).catch(() => {});
-  };
-
   useEffect(() => {
+    let isMounted = true;
+    const loadData = () => {
+      fetchDashboardStats()
+        .then(data => { if (isMounted) setStats(data); })
+        .catch(() => {})
+        .finally(() => { if (isMounted) setLoading(false); });
+      fetchPatients().then(patients => {
+        if (isMounted) setWaitingList(patients.filter(p => !p.bed_id));
+      }).catch(() => {});
+    };
+
     loadData();
     const interval = setInterval(loadData, 30000);
     const handleFocus = () => loadData();
     window.addEventListener('focus', handleFocus);
-    return () => { clearInterval(interval); window.removeEventListener('focus', handleFocus); };
+    return () => { 
+      isMounted = false;
+      clearInterval(interval); 
+      window.removeEventListener('focus', handleFocus); 
+    };
   }, []);
 
   if (!user) return null;

@@ -330,6 +330,7 @@ const vi = {
     selectRoom: 'Chọn phòng...',
     bed: 'Giường',
     selectBed: 'Chọn giường...',
+    outOfBeds: 'Phòng này hiện đã hết giường trống.',
     expectedDischarge: 'Dự kiến ra viện',
     notes: 'Ghi chú',
     notesPlaceholder: 'Ghi chú bổ sung...',

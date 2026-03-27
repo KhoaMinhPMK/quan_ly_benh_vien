@@ -17,7 +17,7 @@ export default function AssignBedModal({ open, bedId, bedCode, onClose, onAssign
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    if (open) { setLoading(true); fetchPatients({ status: 'admitted' }).then(all => setPatients(all.filter(p => !p.bed_id))).catch(() => {}).finally(() => setLoading(false)); }
+    if (open) { setLoading(true); fetchPatients().then(all => setPatients(all.filter(p => !p.bed_id))).catch(() => {}).finally(() => setLoading(false)); }
   }, [open]);
 
   const filtered = patients.filter(p =>

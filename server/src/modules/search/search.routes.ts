@@ -12,9 +12,15 @@ router.get('/', async (req, res, next) => {
     if (!q || q.length < 2) { res.json({ success: true, data: { patients: [], rooms: [], beds: [] } }); return; }
     const like = `%${q}%`;
 
+    // Search patients by demographics + active admissions
     const [patients] = await db.execute<RowDataPacket[]>(
-      `SELECT id, patient_code, full_name, status FROM patients WHERE full_name LIKE ? OR patient_code LIKE ? LIMIT 10`,
-      [like, like]
+      `SELECT a.id, p.patient_code, p.full_name, a.admission_code, a.status
+       FROM admissions a
+       JOIN patients p ON a.patient_id = p.id
+       WHERE (p.full_name LIKE ? OR p.patient_code LIKE ? OR a.admission_code LIKE ?)
+       AND a.status IN ('admitted', 'treating', 'waiting_discharge')
+       LIMIT 10`,
+      [like, like, like]
     );
     const [rooms] = await db.execute<RowDataPacket[]>(
       `SELECT id, room_code, name FROM rooms WHERE name LIKE ? OR room_code LIKE ? LIMIT 10`,

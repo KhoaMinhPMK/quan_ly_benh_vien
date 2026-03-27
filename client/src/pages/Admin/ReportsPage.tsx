@@ -33,7 +33,13 @@ export default function ReportsPage() {
   const exportCSV = (data: any[], filename: string) => {
     if (data.length === 0) return;
     const headers = Object.keys(data[0]);
-    const csv = [headers.join(','), ...data.map(r => headers.map(h => `"${r[h] ?? ''}"`).join(','))].join('\n');
+    const csv = [
+      headers.join(','), 
+      ...data.map(r => headers.map(h => {
+        const val = String(r[h] ?? '');
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `${filename}.csv`; a.click();

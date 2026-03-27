@@ -43,7 +43,7 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!bedId || !patientId) { setError(t.addPatient?.selectBed || 'Vui lòng chọn giường'); return; }
+    if (!bedId || !patientId) { setError(t.addPatient?.selectBed); return; }
     setSubmitting(true);
     try {
       await assignBed(Number(bedId), patientId);
@@ -62,7 +62,7 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
-          <h3 className="modal__title">{t.beds?.assignHint || 'Xếp giường'} - {patient.full_name}</h3>
+          <h3 className="modal__title">{t.beds?.assignHint || t.assign?.title} - {patient.full_name}</h3>
           <button className="modal__close" onClick={onClose}>&times;</button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -70,34 +70,34 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
             {error && <div className="modal__error">{error}</div>}
             
             <div className="form-field">
-              <label className="form-field__label">{t.dashboard?.department || 'Khoa'}</label>
+              <label className="form-field__label">{t.dashboard?.department}</label>
               <input className="form-field__input form-field__input--disabled" value={patient.diagnosis || '--'} disabled />
             </div>
 
             <div className="modal__row">
               <div className="form-field">
-                <label className="form-field__label">{t.addPatient?.room || 'Phòng'}</label>
+                <label className="form-field__label">{t.addPatient?.room}</label>
                 <select className="form-field__input" value={roomId} onChange={e => setRoomId(e.target.value)}>
-                  <option value="">{t.addPatient?.selectRoom || 'Chọn phòng...'}</option>
+                  <option value="">{t.addPatient?.selectRoom}</option>
                   {rooms.map(r => <option key={r.id} value={r.id}>{r.room_code} - {r.name}</option>)}
                 </select>
               </div>
               <div className="form-field">
-                <label className="form-field__label">{t.addPatient?.bed || 'Giường'}</label>
+                <label className="form-field__label">{t.addPatient?.bed}</label>
                 <select className="form-field__input" value={bedId} onChange={e => setBedId(e.target.value)} disabled={!roomId}>
-                  <option value="">{t.addPatient?.selectBed || 'Chọn giường...'}</option>
+                  <option value="">{t.addPatient?.selectBed}</option>
                   {beds.map(b => <option key={b.id} value={b.id}>{b.bed_code}</option>)}
                 </select>
               </div>
             </div>
             {beds.length === 0 && roomId && (
-              <p style={{ fontSize: 12, color: '#EF4444', marginTop: -8 }}>Phòng này hiện đã hết giường trống.</p>
+              <p style={{ fontSize: 12, color: '#EF4444', marginTop: -8 }}>{t.addPatient?.outOfBeds}</p>
             )}
           </div>
           <div className="modal__footer">
             <button type="button" className="btn btn--secondary" onClick={onClose}>{t.common.cancel}</button>
             <button type="submit" className="btn btn--primary" disabled={submitting || !bedId}>
-              {submitting ? t.common.processing : (t.beds?.assignHint || 'Xếp giường')}
+              {submitting ? t.common.processing : (t.beds?.assignHint || t.assign?.confirmAssign)}
             </button>
           </div>
         </form>

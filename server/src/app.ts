@@ -31,28 +31,15 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Rate limiting for login
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // max 10 login attempts per IP per window
-  message: {
-    success: false,
-    error: { code: 'TOO_MANY_REQUESTS', message: 'Quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.' },
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, message: 'MedBoard API is running', timestamp: new Date().toISOString() });
 });
 
 // Routes
-app.use('/api/auth', loginLimiter, authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomsRoutes);
 app.use('/api/beds', bedsRoutes);
 app.use('/api/patients', patientsRoutes);

@@ -28,3 +28,8 @@ export const env = {
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
   },
 };
+
+if (env.nodeEnv === 'production' && env.jwt.secret === 'medboard-jwt-secret-change-in-production') {
+  console.warn('\n⚠️ [WARNING] Dùng JWT secret MẶC ĐỊNH trong môi trường PRODUCTION! ⚠️');
+  console.warn('Vui lòng cấu hình biến môi trường JWT_SECRET để đảm bảo an toàn.\n');
+}

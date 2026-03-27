@@ -332,6 +332,7 @@ const en: Translations = {
     selectRoom: 'Select room...',
     bed: 'Bed',
     selectBed: 'Select bed...',
+    outOfBeds: 'There are no empty beds in this room.',
     expectedDischarge: 'Expected Discharge',
     notes: 'Notes',
     notesPlaceholder: 'Additional notes...',

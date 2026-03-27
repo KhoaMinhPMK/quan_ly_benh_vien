@@ -44,7 +44,7 @@ export async function assign(req: Request, res: Response, next: NextFunction): P
     if (!bed) { res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Giường không tồn tại' } }); return; }
     if (bed.status !== 'empty') { res.status(409).json({ success: false, error: { code: 'BED_OCCUPIED', message: 'Giường đang sử dụng hoặc bị khoá' } }); return; }
     const result = await bedsService.assignBed(Number(req.params.id), patient_id, req.user?.id);
-    logAudit(req.user?.id, 'ASSIGN_BED', 'bed', Number(req.params.id), { patient_id });
+    logAudit(req, 'ASSIGN_BED', 'bed', Number(req.params.id), { patient_id });
     res.json({ success: true, data: result });
   } catch (error) { next(error); }
 }
@@ -52,7 +52,7 @@ export async function assign(req: Request, res: Response, next: NextFunction): P
 export async function release(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const bed = await bedsService.releaseBed(Number(req.params.id), req.user?.id);
-    logAudit(req.user?.id, 'RELEASE_BED', 'bed', Number(req.params.id));
+    logAudit(req, 'RELEASE_BED', 'bed', Number(req.params.id));
     res.json({ success: true, data: bed });
   } catch (error) { next(error); }
 }
@@ -63,7 +63,7 @@ export async function transfer(req: Request, res: Response, next: NextFunction):
     if (!patient_id) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'patient_id bắt buộc' } }); return; }
     const targetBed = target_bed_id || Number(req.params.id);
     const result = await transferService.transferBed(patient_id, targetBed, req.user?.id, reason || notes);
-    logAudit(req.user?.id, 'TRANSFER_BED', 'bed', targetBed, { patient_id, from_bed: req.params.id });
+    logAudit(req, 'TRANSFER_BED', 'bed', targetBed, { patient_id, from_bed: req.params.id });
     res.json({ success: true, data: result });
   } catch (error) { next(error); }
 }

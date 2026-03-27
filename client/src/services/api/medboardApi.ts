@@ -66,7 +66,7 @@ export interface Notification {
 }
 
 export interface BedHistoryEntry {
-  id: number; patient_id: number; bed_id: number; action: string;
+  id: number; admission_id: number; bed_id: number; action: string;
   notes: string; created_at: string; patient_name: string;
   patient_code: string; bed_code: string; performed_by_name: string;
 }

@@ -29,7 +29,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
     const { full_name } = req.body;
     if (!full_name) { res.status(422).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Họ tên bệnh nhân bắt buộc' } }); return; }
     const patient = await patientsService.createPatient(req.body);
-    logAudit(req.user?.id, 'CREATE', 'patient', patient.id, { patient_code: patient.patient_code, full_name: patient.full_name });
+    logAudit(req, 'CREATE', 'patient', patient.id, { patient_code: patient.patient_code, full_name: patient.full_name });
     res.status(201).json({ success: true, data: patient });
   } catch (error) { next(error); }
 }
@@ -37,7 +37,7 @@ export async function create(req: Request, res: Response, next: NextFunction): P
 export async function update(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.updatePatient(Number(req.params.id), req.body);
-    logAudit(req.user?.id, 'UPDATE', 'patient', Number(req.params.id), { fields: Object.keys(req.body) });
+    logAudit(req, 'UPDATE', 'patient', Number(req.params.id), { fields: Object.keys(req.body) });
     res.json({ success: true, data: patient });
   } catch (error) { next(error); }
 }
@@ -45,7 +45,7 @@ export async function update(req: Request, res: Response, next: NextFunction): P
 export async function discharge(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const patient = await patientsService.dischargePatient(Number(req.params.id), req.user?.id);
-    logAudit(req.user?.id, 'DISCHARGE', 'patient', Number(req.params.id), { performed_by: req.user?.fullName });
+    logAudit(req, 'DISCHARGE', 'patient', Number(req.params.id), { performed_by: req.user?.fullName });
     res.json({ success: true, data: patient, message: 'Bệnh nhân đã ra viện' });
   } catch (error) { next(error); }
 }
