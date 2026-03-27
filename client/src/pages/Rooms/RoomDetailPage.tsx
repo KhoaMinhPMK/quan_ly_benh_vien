@@ -37,8 +37,24 @@ export default function RoomDetailPage() {
     finally { setLoading(false); }
   }, [id]);
 
-  useEffect(() => { loadData(); }, [loadData]);
-  useEffect(() => { const timer = setInterval(loadData, 30000); return () => clearInterval(timer); }, [loadData]);
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!id) return;
+      setLoading(true);
+      try {
+        const [roomData, bedData] = await Promise.all([fetchRoom(Number(id)), fetchBedsByRoom(Number(id))]);
+        if (active) {
+          setRoom(roomData);
+          setBeds([...bedData].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9)));
+        }
+      } catch { /* empty state */ }
+      finally { if (active) setLoading(false); }
+    };
+    load();
+    const timer = setInterval(load, 30000);
+    return () => { active = false; clearInterval(timer); };
+  }, [id]);
 
   const handleBedClick = (bed: Bed) => { bed.status === 'empty' ? setShowAssign(bed) : setSelectedBed(bed); };
 

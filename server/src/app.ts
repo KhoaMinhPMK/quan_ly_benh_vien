@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { testConnection } from './config/database';
 import authRoutes from './modules/auth/auth.routes';
