@@ -3,7 +3,7 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 // ---- Transfer bed (same room or cross-room) ----
 export async function transferBed(
-  patientId: number,
+  admissionId: number,
   targetBedId: number,
   performedBy?: number,
   notes?: string
@@ -21,29 +21,29 @@ export async function transferBed(
     if (targetRows[0].status !== 'empty') throw Object.assign(new Error('Giường đích đang sử dụng hoặc bị khoá'), { statusCode: 409 });
 
     // Get current bed
-    const [patientRows] = await conn.execute<RowDataPacket[]>(
-      'SELECT bed_id FROM patients WHERE id = ? AND status IN (?, ?, ?)',
-      [patientId, 'admitted', 'treating', 'waiting_discharge']
+    const [admissionRows] = await conn.execute<RowDataPacket[]>(
+      'SELECT bed_id FROM admissions WHERE id = ? AND status IN (?, ?, ?)',
+      [admissionId, 'admitted', 'treating', 'waiting_discharge']
     );
-    if (patientRows.length === 0) throw Object.assign(new Error('Bệnh nhân không tồn tại hoặc đã ra viện'), { statusCode: 404 });
+    if (admissionRows.length === 0) throw Object.assign(new Error('Bệnh án không tồn tại hoặc đã ra viện'), { statusCode: 404 });
 
-    const oldBedId = patientRows[0].bed_id;
+    const oldBedId = admissionRows[0].bed_id;
 
     // Release old bed
     if (oldBedId) {
       await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', oldBedId]);
       await conn.execute(
-        'INSERT INTO bed_history (patient_id, bed_id, action, performed_by, notes) VALUES (?, ?, ?, ?, ?)',
-        [patientId, oldBedId, 'release', performedBy || null, notes || 'Chuyển giường']
+        'INSERT INTO admission_bed_history (admission_id, bed_id, action, performed_by, notes) VALUES (?, ?, ?, ?, ?)',
+        [admissionId, oldBedId, 'release', performedBy || null, notes || 'Chuyển giường']
       );
     }
 
     // Assign new bed
     await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['occupied', targetBedId]);
-    await conn.execute('UPDATE patients SET bed_id = ? WHERE id = ?', [targetBedId, patientId]);
+    await conn.execute('UPDATE admissions SET bed_id = ? WHERE id = ?', [targetBedId, admissionId]);
     await conn.execute(
-      'INSERT INTO bed_history (patient_id, bed_id, action, performed_by, notes) VALUES (?, ?, ?, ?, ?)',
-      [patientId, targetBedId, 'transfer', performedBy || null, notes || null]
+      'INSERT INTO admission_bed_history (admission_id, bed_id, action, performed_by, notes) VALUES (?, ?, ?, ?, ?)',
+      [admissionId, targetBedId, 'transfer', performedBy || null, notes || null]
     );
 
     await conn.commit();
@@ -85,32 +85,33 @@ export async function getAvailableBeds(filters?: { department_id?: number; room_
 // ---- Get bed history ----
 export async function getBedHistory(bedId: number) {
   const [rows] = await db.execute<RowDataPacket[]>(
-    `SELECT bh.*, p.full_name AS patient_name, p.patient_code,
+    `SELECT abh.*, p.full_name AS patient_name, p.patient_code, a.admission_code,
        b.bed_code, u.full_name AS performed_by_name
-     FROM bed_history bh
-     JOIN patients p ON bh.patient_id = p.id
-     JOIN beds b ON bh.bed_id = b.id
-     LEFT JOIN users u ON bh.performed_by = u.id
-     WHERE bh.bed_id = ?
-     ORDER BY bh.created_at DESC
+     FROM admission_bed_history abh
+     JOIN admissions a ON abh.admission_id = a.id
+     JOIN patients p ON a.patient_id = p.id
+     JOIN beds b ON abh.bed_id = b.id
+     LEFT JOIN users u ON abh.performed_by = u.id
+     WHERE abh.bed_id = ?
+     ORDER BY abh.created_at DESC
      LIMIT 50`,
     [bedId]
   );
   return rows;
 }
 
-// ---- Get patient move history ----
-export async function getPatientHistory(patientId: number) {
+// ---- Get patient (actually admission) move history ----
+export async function getPatientHistory(admissionId: number) {
   const [rows] = await db.execute<RowDataPacket[]>(
-    `SELECT bh.*, b.bed_code, r.room_code, r.name AS room_name,
+    `SELECT abh.*, b.bed_code, r.room_code, r.name AS room_name,
        u.full_name AS performed_by_name
-     FROM bed_history bh
-     JOIN beds b ON bh.bed_id = b.id
+     FROM admission_bed_history abh
+     JOIN beds b ON abh.bed_id = b.id
      JOIN rooms r ON b.room_id = r.id
-     LEFT JOIN users u ON bh.performed_by = u.id
-     WHERE bh.patient_id = ?
-     ORDER BY bh.created_at DESC`,
-    [patientId]
+     LEFT JOIN users u ON abh.performed_by = u.id
+     WHERE abh.admission_id = ?
+     ORDER BY abh.created_at DESC`,
+    [admissionId]
   );
   return rows;
 }

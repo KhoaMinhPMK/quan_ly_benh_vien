@@ -26,8 +26,12 @@ export interface AvailableBed {
 }
 
 export interface Patient {
-  id: number; patient_code: string; full_name: string; date_of_birth: string;
-  gender: string; phone: string; diagnosis: string; doctor_name: string;
+  id: number; // maps to admission_id
+  patient_id: number;
+  patient_code: string; admission_code: string;
+  full_name: string; date_of_birth: string;
+  gender: string; phone: string; id_number?: string; insurance_number?: string;
+  diagnosis: string; doctor_name: string;
   bed_id: number | null; bed_code: string | null; room_code: string | null;
   room_name: string | null; status: string; admitted_at: string;
   expected_discharge: string; discharged_at: string | null; notes: string;

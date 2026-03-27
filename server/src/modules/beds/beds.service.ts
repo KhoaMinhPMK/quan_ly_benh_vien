@@ -9,7 +9,7 @@ interface BedRow extends RowDataPacket {
   room_name: string;
   status: string;
   notes: string;
-  patient_id: number | null;
+  patient_id: number | null; // This is now admission_id to frontend
   patient_name: string | null;
   patient_code: string | null;
   diagnosis: string | null;
@@ -25,13 +25,14 @@ interface BedRow extends RowDataPacket {
 
 const BED_SELECT_SQL = `
   SELECT b.*, r.room_code, r.name AS room_name,
-    p.id AS patient_id, p.full_name AS patient_name, p.patient_code,
-    p.diagnosis, p.doctor_name, p.admitted_at, p.expected_discharge,
-    p.status AS patient_status, p.date_of_birth, p.gender, p.phone,
-    DATEDIFF(NOW(), p.admitted_at) AS days_admitted
+    a.id AS patient_id, p.full_name AS patient_name, p.patient_code,
+    a.diagnosis, a.doctor_name, a.admitted_at, a.expected_discharge,
+    a.status AS patient_status, p.date_of_birth, p.gender, p.phone,
+    DATEDIFF(NOW(), a.admitted_at) AS days_admitted
   FROM beds b
   JOIN rooms r ON b.room_id = r.id
-  LEFT JOIN patients p ON p.bed_id = b.id AND p.status IN ('admitted', 'treating', 'waiting_discharge')
+  LEFT JOIN admissions a ON a.bed_id = b.id AND a.status IN ('admitted', 'treating', 'waiting_discharge')
+  LEFT JOIN patients p ON a.patient_id = p.id
 `;
 
 export async function getBedsByRoom(roomId: number) {
@@ -63,7 +64,7 @@ export async function updateBedStatus(id: number, status: string, notes?: string
   return getBedById(id);
 }
 
-export async function assignBed(bedId: number, patientId: number, performedBy?: number) {
+export async function assignBed(bedId: number, patientId: number /* maps to admission_id */, performedBy?: number) {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -80,22 +81,22 @@ export async function assignBed(bedId: number, patientId: number, performedBy?: 
       throw Object.assign(new Error('Giường đã được sử dụng hoặc bị khoá'), { statusCode: 409, code: 'BED_OCCUPIED' });
     }
 
-    // Release patient from current bed (if any)
-    const [currentPatient] = await conn.execute<RowDataPacket[]>(
-      'SELECT bed_id FROM patients WHERE id = ? FOR UPDATE',
-      [patientId]
+    // Release admission from current bed (if any)
+    const [currentAdmission] = await conn.execute<RowDataPacket[]>(
+      'SELECT bed_id FROM admissions WHERE id = ? FOR UPDATE',
+      [patientId] // Here patientId variable actually holds admission_id
     );
-    if (currentPatient.length > 0 && currentPatient[0].bed_id) {
-      await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', currentPatient[0].bed_id]);
+    if (currentAdmission.length > 0 && currentAdmission[0].bed_id) {
+      await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', currentAdmission[0].bed_id]);
     }
 
     // Assign new bed
     await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['occupied', bedId]);
-    await conn.execute('UPDATE patients SET bed_id = ? WHERE id = ?', [bedId, patientId]);
+    await conn.execute('UPDATE admissions SET bed_id = ? WHERE id = ?', [bedId, patientId]);
 
     // Log history
     await conn.execute(
-      'INSERT INTO bed_history (patient_id, bed_id, action, performed_by) VALUES (?, ?, ?, ?)',
+      'INSERT INTO admission_bed_history (admission_id, bed_id, action, performed_by) VALUES (?, ?, ?, ?)',
       [patientId, bedId, 'assign', performedBy || null]
     );
 
@@ -117,18 +118,18 @@ export async function releaseBed(bedId: number, performedBy?: number) {
     // Lock bed row
     await conn.execute<RowDataPacket[]>('SELECT id FROM beds WHERE id = ? FOR UPDATE', [bedId]);
 
-    // Get patient on this bed (lock patient row too)
-    const [patients] = await conn.execute<RowDataPacket[]>(
-      'SELECT id FROM patients WHERE bed_id = ? AND status IN (?, ?, ?) FOR UPDATE',
+    // Get admission on this bed (lock row too)
+    const [admissions] = await conn.execute<RowDataPacket[]>(
+      'SELECT id FROM admissions WHERE bed_id = ? AND status IN (?, ?, ?) FOR UPDATE',
       [bedId, 'admitted', 'treating', 'waiting_discharge']
     );
 
-    if (patients.length > 0) {
-      const patientId = patients[0].id;
-      await conn.execute('UPDATE patients SET bed_id = NULL WHERE id = ?', [patientId]);
+    if (admissions.length > 0) {
+      const admissionId = admissions[0].id;
+      await conn.execute('UPDATE admissions SET bed_id = NULL WHERE id = ?', [admissionId]);
       await conn.execute(
-        'INSERT INTO bed_history (patient_id, bed_id, action, performed_by) VALUES (?, ?, ?, ?)',
-        [patientId, bedId, 'release', performedBy || null]
+        'INSERT INTO admission_bed_history (admission_id, bed_id, action, performed_by) VALUES (?, ?, ?, ?)',
+        [admissionId, bedId, 'release', performedBy || null]
       );
     }
 

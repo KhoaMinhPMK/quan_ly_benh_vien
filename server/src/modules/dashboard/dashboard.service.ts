@@ -5,12 +5,12 @@ export async function getDashboardStats(departmentId?: number) {
   const deptFilter = departmentId ? ' AND r.department_id = ?' : '';
   const deptParam = departmentId ? [departmentId] : [];
 
-  // Total inpatients (scoped by department through rooms)
+  // Total in-admissions (scoped by department through rooms)
   const [patientRows] = await db.execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM patients p
-     LEFT JOIN beds b ON p.bed_id = b.id
+    `SELECT COUNT(*) AS total FROM admissions a
+     LEFT JOIN beds b ON a.bed_id = b.id
      LEFT JOIN rooms r ON b.room_id = r.id
-     WHERE p.status IN ('admitted', 'treating', 'waiting_discharge')${deptFilter}`,
+     WHERE a.status IN ('admitted', 'treating', 'waiting_discharge')${deptFilter}`,
     deptParam
   );
 
@@ -30,26 +30,26 @@ export async function getDashboardStats(departmentId?: number) {
 
   // Discharge today/tomorrow
   const [dischargeRows] = await db.execute<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM patients p
-     LEFT JOIN beds b ON p.bed_id = b.id
+    `SELECT COUNT(*) AS total FROM admissions a
+     LEFT JOIN beds b ON a.bed_id = b.id
      LEFT JOIN rooms r ON b.room_id = r.id
-     WHERE p.status IN ('treating', 'waiting_discharge')
-     AND p.expected_discharge IS NOT NULL
-     AND p.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)${deptFilter}`,
+     WHERE a.status IN ('treating', 'waiting_discharge')
+     AND a.expected_discharge IS NOT NULL
+     AND a.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)${deptFilter}`,
     deptParam
   );
 
   // Incomplete checklists
   const [checklistRows] = await db.execute<RowDataPacket[]>(
-    `SELECT COUNT(DISTINCT p.id) AS total FROM patients p
-     LEFT JOIN beds b ON p.bed_id = b.id
+    `SELECT COUNT(DISTINCT a.id) AS total FROM admissions a
+     LEFT JOIN beds b ON a.bed_id = b.id
      LEFT JOIN rooms r ON b.room_id = r.id
      INNER JOIN checklist_templates ct ON ct.is_active = TRUE
-     LEFT JOIN patient_checklists pc ON pc.patient_id = p.id AND pc.checklist_template_id = ct.id AND pc.is_completed = TRUE
-     WHERE p.status IN ('treating', 'waiting_discharge')
-     AND p.expected_discharge IS NOT NULL
-     AND p.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 2 DAY)
-     AND pc.id IS NULL${deptFilter}`,
+     LEFT JOIN admission_checklists ac ON ac.admission_id = a.id AND ac.checklist_template_id = ct.id AND ac.is_completed = TRUE
+     WHERE a.status IN ('treating', 'waiting_discharge')
+     AND a.expected_discharge IS NOT NULL
+     AND a.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+     AND ac.id IS NULL${deptFilter}`,
     deptParam
   );
 
