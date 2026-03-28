@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { fetchPatients, updatePatient, type Patient } from '../../services/api/medboardApi';
+import { fetchPatients, type Patient } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import AddPatientModal from './AddPatientModal';
@@ -29,10 +29,6 @@ export default function PatientListPage() {
   const [filterDoctor, setFilterDoctor] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
-  const [editPatient, setEditPatient] = useState<Patient | null>(null);
-  const [editForm, setEditForm] = useState({ diagnosis: '', doctor_name: '', expected_discharge: '', status: '', notes: '' });
-  const [editError, setEditError] = useState('');
-  const [editSaving, setEditSaving] = useState(false);
   const [selectedDrawerPatientId, setSelectedDrawerPatientId] = useState<number | null>(null);
 
   const statusLabels: Record<string, string> = {
@@ -54,7 +50,7 @@ export default function PatientListPage() {
     const editId = searchParams.get('edit');
     if (editId && patients.length > 0) {
       const p = patients.find(x => x.id.toString() === editId);
-      if (p) openEdit(p);
+      if (p) setSelectedDrawerPatientId(p.id);
       setSearchParams(new URLSearchParams());
     }
   }, [searchParams, patients, setSearchParams]);
@@ -67,34 +63,7 @@ export default function PatientListPage() {
   const filteredPatients = patients;
   const waitingList = patients.filter(p => !p.bed_id && p.status !== 'discharged');
 
-  const openEdit = (p: Patient) => {
-    setEditPatient(p);
-    setEditForm({
-      diagnosis: p.diagnosis || '',
-      doctor_name: p.doctor_name || '',
-      expected_discharge: p.expected_discharge ? p.expected_discharge.split('T')[0] : '',
-      status: p.status,
-      notes: p.notes || '',
-    });
-    setEditError('');
-  };
 
-  const handleEditSave = async () => {
-    if (!editPatient || editSaving) return;
-    setEditError('');
-    setEditSaving(true);
-    try {
-      await updatePatient(editPatient.id, editForm as Record<string, string>);
-      setEditPatient(null);
-      showToast(t.common.success, 'success');
-      loadPatients();
-    } catch (e: unknown) {
-      const err = e as { response?: { data?: { error?: { message?: string } } } };
-      setEditError(err.response?.data?.error?.message || t.common.error);
-    } finally {
-      setEditSaving(false);
-    }
-  };
 
   const subtitle = `${filteredPatients.length} ${t.patients.patientsCount}`;
 
