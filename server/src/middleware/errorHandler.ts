@@ -15,7 +15,7 @@ export function errorHandler(err: AppError, _req: Request, res: Response, _next:
     success: false,
     error: {
       code,
-      message: statusCode === 500 ? 'Lỗi hệ thống, vui lòng thử lại sau' : err.message,
+      message: err.message, // Return full error to client for debugging
     },
   });
 }

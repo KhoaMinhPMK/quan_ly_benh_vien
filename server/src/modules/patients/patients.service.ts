@@ -360,13 +360,14 @@ export async function toggleChecklist(admissionId: number, templateId: number, c
   // Ensure strict MySQL TinyInt(1) type handling and avoid JS Date parser issues
   const isCompletedInt = (completed === true || completed === 'true' || completed === 1) ? 1 : 0;
   const completedBy = isCompletedInt ? (userId || null) : null;
+  const dateExpr = isCompletedInt ? 'NOW()' : 'NULL';
 
   // Upsert
   await db.execute(
     `INSERT INTO admission_checklists (admission_id, checklist_template_id, is_completed, completed_by, completed_at)
-     VALUES (?, ?, ?, ?, CASE WHEN ? = 1 THEN NOW() ELSE NULL END)
+     VALUES (?, ?, ?, ?, ${dateExpr})
      ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed), completed_by = VALUES(completed_by), completed_at = VALUES(completed_at)`,
-    [admissionId, templateId, isCompletedInt, completedBy, isCompletedInt]
+    [admissionId, templateId, isCompletedInt, completedBy]
   );
   return getPatientChecklists(admissionId);
 }
