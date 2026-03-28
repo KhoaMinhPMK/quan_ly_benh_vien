@@ -209,7 +209,7 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                     <label>{t.bedPanel?.expectedDischarge || 'Dự kiến XV'}</label>
                     <span style={isOverdue ? { color: '#EF4444', fontWeight: 600 } : {}}>
                       {patient.expected_discharge ? new Date(patient.expected_discharge).toLocaleDateString(locale) : '—'}
-                      {isOverdue && ' ⚠️ Quá hạn'}
+                      {isOverdue && <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" style={{verticalAlign:'middle',marginLeft:4}}><path d="M12 9v4M12 17h.01M10.29 3.86l-8.8 15.23A2 2 0 0 0 3.24 22h17.52a2 2 0 0 0 1.75-2.91l-8.8-15.23a2 2 0 0 0-3.42 0z"/></svg> Quá hạn</>}
                     </span>
                   </div>
                   <div className="bed-panel__info-row"><label>{t.bedPanel?.patientStatus || 'Trạng thái'}</label>
@@ -301,7 +301,7 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
         <div className="bed-panel__actions">
           {!editing ? (
             <button className="btn btn--primary btn--sm" onClick={() => setEditing(true)}>
-              ✏️ {t.common?.edit || 'Chỉnh sửa'}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>{t.common?.edit || 'Chỉnh sửa'}
             </button>
           ) : (
             <>

@@ -100,11 +100,11 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
 
             {/* Tái khám: Tìm bệnh nhân cũ */}
             <div className="form-field" style={{ marginBottom: 16 }}>
-              <label className="form-field__label" style={{ color: '#3B82F6' }}>🔍 Tìm bệnh nhân cũ (Tái khám)</label>
+              <label className="form-field__label" style={{ color: '#3B82F6' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>Tìm bệnh nhân cũ (Tái khám)</label>
               {selectedExistingId ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#EFF6FF', borderRadius: 8, fontSize: 13 }}>
-                  <span>✅ Đã chọn: <strong>{form.full_name}</strong></span>
-                  <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13 }} onClick={clearExistingPatient}>✕ Bỏ chọn</button>
+                  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" style={{verticalAlign:'middle',marginRight:4}}><path d="M5 12l5 5L20 7"/></svg>Đã chọn: <strong>{form.full_name}</strong></span>
+                  <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13 }} onClick={clearExistingPatient}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{verticalAlign:'middle',marginRight:2}}><path d="M18 6L6 18M6 6l12 12"/></svg>Bỏ chọn</button>
                 </div>
               ) : (
                 <div style={{ position: 'relative' }}>

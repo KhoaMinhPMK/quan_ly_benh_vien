@@ -184,7 +184,7 @@ export default function PatientListPage() {
                     <td>{formatDate(p.admitted_at)}</td>
                     <td style={p.expected_discharge && new Date(p.expected_discharge) <= new Date() ? { color: '#EF4444', fontWeight: 600 } : {}}>
                       {formatDate(p.expected_discharge)}
-                      {p.expected_discharge && new Date(p.expected_discharge) <= new Date() && ' ⚠️'}
+                      {p.expected_discharge && new Date(p.expected_discharge) <= new Date() && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" style={{verticalAlign:'middle',marginLeft:4}}><path d="M12 9v4M12 17h.01M10.29 3.86l-8.8 15.23A2 2 0 0 0 3.24 22h17.52a2 2 0 0 0 1.75-2.91l-8.8-15.23a2 2 0 0 0-3.42 0z"/></svg>}
                     </td>
                     <td>
                       <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
