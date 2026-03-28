@@ -2,11 +2,12 @@ import { db } from '../../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export async function getNotifications(userId: number, limit = 20) {
+  const safeLimit = parseInt(String(limit), 10);
   const [rows] = await db.execute<RowDataPacket[]>(
     `SELECT * FROM notifications 
      WHERE target_user_id = ? OR target_user_id IS NULL
-     ORDER BY created_at DESC LIMIT ?`,
-    [userId, limit]
+     ORDER BY created_at DESC LIMIT ${safeLimit}`,
+    [userId]
   );
   return rows;
 }
