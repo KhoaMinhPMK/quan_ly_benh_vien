@@ -146,7 +146,7 @@ export const fetchBedHistory = async (bedId: number) =>
 // ============================================================
 // Patients
 // ============================================================
-export const fetchPatients = async (p?: { status?: string; search?: string; room_id?: number }) =>
+export const fetchPatients = async (p?: { status?: string; search?: string; room_id?: number; doctor_name?: string }) =>
   (await httpClient.get<ApiRes<Patient[]>>('/patients', { params: p })).data.data;
 
 export const fetchPatient = async (id: number) =>

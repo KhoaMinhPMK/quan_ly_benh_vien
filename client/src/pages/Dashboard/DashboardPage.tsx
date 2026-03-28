@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardStats, fetchPatients, type DashboardStats, type Patient } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
+import AddPatientModal from '../Patients/AddPatientModal';
+import PatientAssignBedModal from '../Patients/PatientAssignBedModal';
 import iconBed from '../../assets/icons/outline/bed.svg';
 import iconUsers from '../../assets/icons/outline/users.svg';
 import iconDoorExit from '../../assets/icons/outline/door-exit.svg';
@@ -19,25 +21,27 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [waitingList, setWaitingList] = useState<Patient[]>([]);
+  const isFirstLoad = useRef(true);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
+
+  const loadData = () => {
+    if (isFirstLoad.current) setLoading(true);
+    fetchDashboardStats()
+      .then(data => setStats(data))
+      .catch(() => {})
+      .finally(() => { setLoading(false); isFirstLoad.current = false; });
+    fetchPatients().then(patients => {
+      setWaitingList(patients.filter(p => !p.bed_id));
+    }).catch(() => {});
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    const loadData = () => {
-      fetchDashboardStats()
-        .then(data => { if (isMounted) setStats(data); })
-        .catch(() => {})
-        .finally(() => { if (isMounted) setLoading(false); });
-      fetchPatients().then(patients => {
-        if (isMounted) setWaitingList(patients.filter(p => !p.bed_id));
-      }).catch(() => {});
-    };
-
     loadData();
     const interval = setInterval(loadData, 30000);
     const handleFocus = () => loadData();
     window.addEventListener('focus', handleFocus);
     return () => { 
-      isMounted = false;
       clearInterval(interval); 
       window.removeEventListener('focus', handleFocus); 
     };
@@ -138,10 +142,12 @@ export default function DashboardPage() {
                 </div>
                 <div className="alert-banner__tags">
                   {waitingList.slice(0, 6).map(p => (
-                    <span key={p.id} className="alert-banner__tag alert-banner__tag--info">
+                    <button key={p.id} className="alert-banner__tag alert-banner__tag--info"
+                      style={{ cursor: 'pointer', border: 'none', textAlign: 'left' }}
+                      onClick={() => setAssignBedPatientId(p.id)}>
                       {p.full_name}
                       <span className="alert-banner__tag-detail">{p.patient_code}</span>
-                    </span>
+                    </button>
                   ))}
                   {waitingList.length > 6 && (
                     <Link to="/patients" className="alert-banner__tag alert-banner__tag--info alert-banner__tag--more">
@@ -193,7 +199,16 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <h3 className="dashboard__section-title">{t.dashboard.quickActions}</h3>
       <div className="dashboard__actions">
-        {quickActions.map(a => (
+        {/* Nhập viện mới — mở modal ngay tại dashboard */}
+        <div className="action-card" style={{ cursor: 'pointer' }} onClick={() => setShowAddModal(true)}>
+          <div className="action-card__icon"><img src={iconPlus} alt="" /></div>
+          <div>
+            <div className="action-card__text">{quickActions[0].text}</div>
+            <div className="action-card__desc">{quickActions[0].desc}</div>
+          </div>
+        </div>
+        {/* Sơ đồ phòng + Xuất viện vẫn giữ Link */}
+        {quickActions.slice(1).map(a => (
           <Link to={a.to} className="action-card" key={a.to}>
             <div className="action-card__icon"><img src={a.icon} alt="" /></div>
             <div>
@@ -252,6 +267,10 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Modals */}
+      <AddPatientModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={() => { setShowAddModal(false); loadData(); }} />
+      <PatientAssignBedModal open={!!assignBedPatientId} patientId={assignBedPatientId} onClose={() => setAssignBedPatientId(null)} onAssigned={() => { setAssignBedPatientId(null); loadData(); }} />
     </div>
   );
 }

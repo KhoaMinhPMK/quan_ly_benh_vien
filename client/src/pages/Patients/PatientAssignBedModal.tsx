@@ -79,7 +79,11 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
                 <label className="form-field__label">{t.addPatient?.room}</label>
                 <select className="form-field__input" value={roomId} onChange={e => setRoomId(e.target.value)}>
                   <option value="">{t.addPatient?.selectRoom}</option>
-                  {rooms.map(r => <option key={r.id} value={r.id}>{r.room_code} - {r.name}</option>)}
+                  {rooms.map(r => (
+                    <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
+                      {r.room_code} - {r.name} {r.empty_beds > 0 ? `(Còn ${r.empty_beds})` : '(HẾT)'}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="form-field">

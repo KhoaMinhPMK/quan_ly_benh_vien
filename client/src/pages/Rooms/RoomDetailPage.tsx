@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchRoom, fetchBedsByRoom, releaseBed, updatePatient, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
@@ -26,22 +26,24 @@ export default function RoomDetailPage() {
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [releasing, setReleasing] = useState(false);
 
+  const isFirstLoad = useRef(true);
+
   const loadData = useCallback(async () => {
     if (!id) return;
-    setLoading(true);
+    if (isFirstLoad.current) setLoading(true);
     try {
       const [roomData, bedData] = await Promise.all([fetchRoom(Number(id)), fetchBedsByRoom(Number(id))]);
       setRoom(roomData);
       setBeds([...bedData].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9)));
     } catch { /* empty state */ }
-    finally { setLoading(false); }
+    finally { setLoading(false); isFirstLoad.current = false; }
   }, [id]);
 
   useEffect(() => {
     let active = true;
     const load = async () => {
       if (!id) return;
-      setLoading(true);
+      if (isFirstLoad.current) setLoading(true);
       try {
         const [roomData, bedData] = await Promise.all([fetchRoom(Number(id)), fetchBedsByRoom(Number(id))]);
         if (active) {
@@ -49,7 +51,7 @@ export default function RoomDetailPage() {
           setBeds([...bedData].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9)));
         }
       } catch { /* empty state */ }
-      finally { if (active) setLoading(false); }
+      finally { if (active) { setLoading(false); isFirstLoad.current = false; } }
     };
     load();
     const timer = setInterval(load, 30000);

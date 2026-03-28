@@ -5,7 +5,7 @@ import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import AddPatientModal from './AddPatientModal';
 import PatientAssignBedModal from './PatientAssignBedModal';
-import Modal from '../../components/Modal/Modal';
+import PatientDrawer from '../../components/PatientDrawer/PatientDrawer';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
 import iconMapPin from '../../assets/icons/outline/map-pin.svg';
@@ -33,6 +33,7 @@ export default function PatientListPage() {
   const [editForm, setEditForm] = useState({ diagnosis: '', doctor_name: '', expected_discharge: '', status: '', notes: '' });
   const [editError, setEditError] = useState('');
   const [editSaving, setEditSaving] = useState(false);
+  const [selectedDrawerPatientId, setSelectedDrawerPatientId] = useState<number | null>(null);
 
   const statusLabels: Record<string, string> = {
     admitted: t.patients.statusAdmitted, treating: t.patients.statusTreating,
@@ -41,13 +42,13 @@ export default function PatientListPage() {
 
   const loadPatients = () => {
     setLoading(true);
-    fetchPatients({ status: filterStatus, search: search || undefined })
+    fetchPatients({ status: filterStatus, search: search || undefined, doctor_name: filterDoctor || undefined })
       .then(setPatients)
       .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadPatients(); }, [filterStatus, search]);
+  useEffect(() => { loadPatients(); }, [filterStatus, search, filterDoctor]);
 
   useEffect(() => {
     const editId = searchParams.get('edit');
@@ -63,7 +64,7 @@ export default function PatientListPage() {
     return new Date(d).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US');
   };
 
-  const filteredPatients = filterDoctor ? patients.filter(p => p.doctor_name?.toLowerCase().includes(filterDoctor.toLowerCase())) : patients;
+  const filteredPatients = patients;
   const waitingList = patients.filter(p => !p.bed_id && p.status !== 'discharged');
 
   const openEdit = (p: Patient) => {
@@ -191,6 +192,7 @@ export default function PatientListPage() {
               <thead>
                 <tr>
                   <th>{t.patients.patientCode}</th>
+                  <th>Mã BA</th>
                   <th>{t.patients.fullName}</th>
                   <th>{t.patients.roomBed}</th>
                   <th>{t.patients.diagnosis}</th>
@@ -203,14 +205,18 @@ export default function PatientListPage() {
               </thead>
               <tbody>
                 {filteredPatients.map((p) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} onClick={() => setSelectedDrawerPatientId(p.id)} style={{ cursor: 'pointer' }}>
                     <td><strong>{p.patient_code}</strong></td>
+                    <td style={{ fontSize: 12, color: '#6B7280' }}>{p.admission_code || '—'}</td>
                     <td>{p.full_name}</td>
                     <td>{p.room_code && p.bed_code ? `${p.room_code} / ${p.bed_code}` : <span className="text-muted">{t.patients.noBed}</span>}</td>
                     <td className="data-table__col-diagnosis">{p.diagnosis || '--'}</td>
                     <td>{p.doctor_name || '--'}</td>
                     <td>{formatDate(p.admitted_at)}</td>
-                    <td>{formatDate(p.expected_discharge)}</td>
+                    <td style={p.expected_discharge && new Date(p.expected_discharge) <= new Date() ? { color: '#EF4444', fontWeight: 600 } : {}}>
+                      {formatDate(p.expected_discharge)}
+                      {p.expected_discharge && new Date(p.expected_discharge) <= new Date() && ' ⚠️'}
+                    </td>
                     <td>
                       <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
                         {statusLabels[p.status] || p.status}
@@ -221,7 +227,7 @@ export default function PatientListPage() {
                         {!p.bed_id && p.status !== 'discharged' && (
                           <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ {t.patients.assignBed || 'Xếp giường'}</button>
                         )}
-                        <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); openEdit(p); }}>{t.common.edit}</button>
+                        <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); setSelectedDrawerPatientId(p.id); }}>{t.common.edit}</button>
                       </div>
                     </td>
                   </tr>
@@ -233,7 +239,7 @@ export default function PatientListPage() {
           {/* Mobile Cards */}
           <div className="patient-cards">
             {filteredPatients.map((p) => (
-              <div key={p.id} className="patient-card" onClick={() => openEdit(p)}>
+              <div key={p.id} className="patient-card" onClick={() => setSelectedDrawerPatientId(p.id)}>
                 <div className="patient-card__header">
                   <span className="patient-card__code">{p.patient_code}</span>
                   <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>
@@ -271,35 +277,13 @@ export default function PatientListPage() {
       <AddPatientModal open={showAddModal} onClose={() => setShowAddModal(false)} onCreated={() => { loadPatients(); showToast(t.common.success, 'success'); }} />
       <PatientAssignBedModal open={!!assignBedPatientId} patientId={assignBedPatientId} onClose={() => setAssignBedPatientId(null)} onAssigned={() => { setAssignBedPatientId(null); loadPatients(); showToast(t.common.success, 'success'); }} />
 
-      {/* Edit Patient Modal */}
-      {editPatient && (
-        <Modal title={t.patients.editPatient} onClose={() => setEditPatient(null)}>
-          <div className="modal__body">
-            {editError && <div className="modal__error">{editError}</div>}
-            <div className="form-field"><label className="form-field__label">{t.patients.fullName}</label>
-              <input className="form-field__input form-field__input--disabled" value={editPatient.full_name} disabled /></div>
-            <div className="form-field"><label className="form-field__label">{t.patients.diagnosis}</label>
-              <input className="form-field__input" value={editForm.diagnosis} onChange={e => setEditForm({...editForm, diagnosis: e.target.value})} /></div>
-            <div className="modal__row">
-              <div className="form-field"><label className="form-field__label">{t.patients.doctor}</label>
-                <input className="form-field__input" value={editForm.doctor_name} onChange={e => setEditForm({...editForm, doctor_name: e.target.value})} /></div>
-              <div className="form-field"><label className="form-field__label">{t.patients.expectedDC}</label>
-                <input className="form-field__input" type="date" value={editForm.expected_discharge} onChange={e => setEditForm({...editForm, expected_discharge: e.target.value})} /></div>
-            </div>
-            <div className="form-field"><label className="form-field__label">{t.patients.status}</label>
-              <select className="form-field__input" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                <option value="admitted">{t.patients.statusAdmitted}</option>
-                <option value="treating">{t.patients.statusTreating}</option>
-                <option value="waiting_discharge">{t.patients.statusWaiting}</option>
-              </select></div>
-            <div className="form-field"><label className="form-field__label">{t.common.notes}</label>
-              <textarea className="form-field__input" value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} rows={3} /></div>
-          </div>
-          <div className="modal__footer">
-            <button className="btn btn--secondary" onClick={() => setEditPatient(null)}>{t.common.cancel}</button>
-            <button className="btn btn--primary" onClick={handleEditSave} disabled={editSaving}>{editSaving ? t.common.processing : t.common.update}</button>
-          </div>
-        </Modal>
+      {/* Patient Detail Drawer */}
+      {selectedDrawerPatientId && (
+        <PatientDrawer
+          patientId={selectedDrawerPatientId}
+          onClose={() => setSelectedDrawerPatientId(null)}
+          onUpdated={() => loadPatients()}
+        />
       )}
     </div>
   );

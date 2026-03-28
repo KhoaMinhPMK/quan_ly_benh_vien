@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createPatient, fetchRooms, fetchBedsByRoom, type Room, type Bed } from '../../services/api/medboardApi';
+import { createPatient, fetchRooms, fetchBedsByRoom, globalSearch, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import '../../components/Modal/Modal.scss';
 
@@ -19,6 +19,12 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Re-admission (tái khám) search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedExistingId, setSelectedExistingId] = useState<number | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => { if (open) fetchRooms({ status: 'active' }).then(setRooms).catch(() => {}); }, [open]);
 
@@ -33,19 +39,48 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
     setForm({ ...form, [e.target.name]: e.target.value }); setError('');
   };
 
+  // Debounced search for existing patients
+  useEffect(() => {
+    if (searchQuery.length < 2) { setSearchResults([]); setShowResults(false); return; }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const r = await globalSearch(searchQuery);
+        setSearchResults(r.patients || []);
+        setShowResults(true);
+      } catch { setSearchResults([]); }
+      setSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const selectExistingPatient = (p: any) => {
+    setSelectedExistingId(p.id);
+    setForm(f => ({ ...f, full_name: p.full_name }));
+    setSearchQuery('');
+    setShowResults(false);
+  };
+
+  const clearExistingPatient = () => {
+    setSelectedExistingId(null);
+    setForm(f => ({ ...f, full_name: '', date_of_birth: '', gender: 'male', phone: '' }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.full_name || !form.diagnosis || !form.doctor_name) { setError(t.addPatient.requiredFields); return; }
     setLoading(true);
     try {
       await createPatient({
+        patient_id: selectedExistingId || undefined,
         full_name: form.full_name, date_of_birth: form.date_of_birth || undefined, gender: form.gender,
         phone: form.phone || undefined, diagnosis: form.diagnosis, doctor_name: form.doctor_name,
         bed_id: form.bed_id ? Number(form.bed_id) : undefined, expected_discharge: form.expected_discharge || undefined,
         notes: form.notes || undefined,
-      } as Partial<import('../../services/api/medboardApi').Patient>);
+      } as any);
       onCreated(); onClose();
       setForm({ full_name: '', date_of_birth: '', gender: 'male', phone: '', address: '', diagnosis: '', doctor_name: '', bed_id: '', room_id: '', expected_discharge: '', notes: '' });
+      setSelectedExistingId(null); setSearchQuery('');
     } catch (err: unknown) { setError(err instanceof Error ? err.message : t.common.error); }
     finally { setLoading(false); }
   };
@@ -62,9 +97,43 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
         <form onSubmit={handleSubmit}>
           <div className="modal__body">
             {error && <div className="modal__error">{error}</div>}
+
+            {/* Tái khám: Tìm bệnh nhân cũ */}
+            <div className="form-field" style={{ marginBottom: 16 }}>
+              <label className="form-field__label" style={{ color: '#3B82F6' }}>🔍 Tìm bệnh nhân cũ (Tái khám)</label>
+              {selectedExistingId ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: '#EFF6FF', borderRadius: 8, fontSize: 13 }}>
+                  <span>✅ Đã chọn: <strong>{form.full_name}</strong></span>
+                  <button type="button" style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer', fontSize: 13 }} onClick={clearExistingPatient}>✕ Bỏ chọn</button>
+                </div>
+              ) : (
+                <div style={{ position: 'relative' }}>
+                  <input className="form-field__input" placeholder="Gõ tên hoặc mã BN để tìm bệnh nhân cũ..."
+                    value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                    onFocus={() => searchResults.length > 0 && setShowResults(true)} />
+                  {searching && <span style={{ position: 'absolute', right: 12, top: 10, fontSize: 12, color: '#9CA3AF' }}>Đang tìm...</span>}
+                  {showResults && searchResults.length > 0 && (
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: 200, overflowY: 'auto' }}>
+                      {searchResults.map(p => (
+                        <div key={p.id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}
+                          onClick={() => selectExistingPatient(p)}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                          <strong>{p.full_name}</strong> — {p.patient_code}
+                          {p.admission_code && <span style={{ color: '#9CA3AF', marginLeft: 8 }}>{p.admission_code}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="form-field">
               <label className="form-field__label">{t.addPatient.fullName} *</label>
-              <input className="form-field__input" name="full_name" value={form.full_name} onChange={handleChange} placeholder={t.addPatient.fullNamePlaceholder} />
+              <input className="form-field__input" name="full_name" value={form.full_name} onChange={handleChange}
+                placeholder={t.addPatient.fullNamePlaceholder} disabled={!!selectedExistingId}
+                style={selectedExistingId ? { opacity: 0.6 } : {}} />
             </div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addPatient.dob}</label>
@@ -84,7 +153,11 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
               <div className="form-field"><label className="form-field__label">{t.addPatient.room}</label>
                 <select className="form-field__input" name="room_id" value={form.room_id} onChange={handleChange}>
                   <option value="">{t.addPatient.selectRoom}</option>
-                  {rooms.map((r) => <option key={r.id} value={r.id}>{r.room_code} - {r.name}</option>)}
+                  {rooms.map((r) => (
+                    <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
+                      {r.room_code} - {r.name} {r.empty_beds > 0 ? `(Còn ${r.empty_beds} giường)` : '(HẾT)'}
+                    </option>
+                  ))}
                 </select></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.bed}</label>
                 <select className="form-field__input" name="bed_id" value={form.bed_id} onChange={handleChange} disabled={!form.room_id}>

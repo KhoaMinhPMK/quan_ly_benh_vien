@@ -121,6 +121,7 @@ export default function DischargeListPage() {
                   <thead>
                     <tr>
                       <th>{t.discharge.patientCode}</th>
+                      <th>Mã BA</th>
                       <th>{t.discharge.fullName}</th>
                       <th>{t.discharge.room}</th>
                       <th>{t.discharge.expectedDate}</th>
@@ -132,6 +133,7 @@ export default function DischargeListPage() {
                     {patients.map((p) => (
                       <tr key={p.id} className={selectedPatient?.id === p.id ? 'discharge__row--active' : ''}>
                         <td><strong>{p.patient_code}</strong></td>
+                        <td style={{ fontSize: 12, color: '#6B7280' }}>{p.admission_code || '—'}</td>
                         <td>{p.full_name}</td>
                         <td>{p.room_code || '--'}</td>
                         <td>{formatDate(p.expected_discharge)}</td>
@@ -186,7 +188,15 @@ export default function DischargeListPage() {
                 <h3 className="card__title">{t.discharge.checklistTitle}: {selectedPatient.full_name}</h3>
               </div>
 
-              {/* Progress bar */}
+              {/* Clinical Summary */}
+              <div style={{ padding: '12px 20px', background: 'var(--bg-secondary, #F8FAFC)', borderBottom: '1px solid var(--border-color, #E2E8F0)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: 13 }}>
+                <div><span style={{ color: '#6B7280' }}>🏥 Chẩn đoán:</span> <strong>{selectedPatient.diagnosis || '—'}</strong></div>
+                <div><span style={{ color: '#6B7280' }}>👨‍⚕️ BS điều trị:</span> <strong>{selectedPatient.doctor_name || '—'}</strong></div>
+                <div><span style={{ color: '#6B7280' }}>📅 Nhập viện:</span> {selectedPatient.admitted_at ? new Date(selectedPatient.admitted_at).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US') : '—'}
+                  {selectedPatient.admitted_at && <span style={{ color: '#3B82F6', marginLeft: 4 }}>({Math.ceil((Date.now() - new Date(selectedPatient.admitted_at).getTime()) / 86400000)} ngày)</span>}
+                </div>
+                <div><span style={{ color: '#6B7280' }}>🛏️ Phòng/Giường:</span> {selectedPatient.room_code || '—'} / {selectedPatient.bed_code || '—'}</div>
+              </div>
               <div className="discharge__progress-wrap">
                 <div className="discharge__progress-header">
                   <span>{t.discharge.checklistProgress}</span>
