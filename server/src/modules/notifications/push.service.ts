@@ -25,7 +25,7 @@ export function initWebPush() {
     webpush.setVapidDetails(
       'mailto:admin@medboard.vn',
       process.env.VAPID_PUBLIC_KEY,
-      process.env.VAPID_PRIVATE_KEY
+      process.env.VAPID_PRIVATE_KEY || ''
     );
   }
 }

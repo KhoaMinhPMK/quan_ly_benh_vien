@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, subscribeToPush, unsubscribeFromPush, getVapidPublicKey, type Notification } from '../../services/api/medboardApi';
+import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, subscribeToPush, getVapidPublicKey, type Notification } from '../../services/api/medboardApi';
 import './NotificationBell.scss';
 
 export default function NotificationBell() {
