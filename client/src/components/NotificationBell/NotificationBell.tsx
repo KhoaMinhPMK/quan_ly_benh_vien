@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, type Notification } from '../../services/api/medboardApi';
+import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, subscribeToPush, unsubscribeFromPush, getVapidPublicKey, type Notification } from '../../services/api/medboardApi';
 import './NotificationBell.scss';
 
 export default function NotificationBell() {
@@ -55,6 +55,48 @@ export default function NotificationBell() {
     } catch {}
   };
 
+  const [pushStatus, setPushStatus] = useState<string>('default');
+  
+  useEffect(() => {
+    if ('Notification' in window) {
+      setPushStatus(Notification.permission);
+    }
+  }, []);
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  const handleSubscribePush = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      setPushStatus(permission);
+      if (permission !== 'granted') return;
+      
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        const vapidPublicKey = await getVapidPublicKey();
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        });
+      }
+      await subscribeToPush(subscription.toJSON());
+      alert('Đã bật thông báo thành công!');
+    } catch (e) {
+      console.error('Push Config Error', e);
+      alert('Không thể đăng ký thông báo Push');
+    }
+  };
+
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
     const mins = Math.floor(diff / 60000);
@@ -79,9 +121,17 @@ export default function NotificationBell() {
         <div className="notif-bell__dropdown">
           <div className="notif-bell__header">
             <span className="notif-bell__title">Thông báo</span>
-            {notifications.some(n => !n.is_read) && (
-              <button className="notif-bell__mark-all" onClick={handleReadAll}>Đánh dấu đã đọc</button>
-            )}
+            <div className="notif-bell__actions">
+              {pushStatus === 'default' && (
+                <button className="notif-bell__push-btn" onClick={handleSubscribePush} title="Bật thông báo khi tắt trang">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="18" cy="6" r="3" fill="#3b82f6" stroke="none" /></svg>
+                  Bật Push
+                </button>
+              )}
+              {notifications.some(n => !n.is_read) && (
+                <button className="notif-bell__mark-all" onClick={handleReadAll}>Đã đọc</button>
+              )}
+            </div>
           </div>
           <div className="notif-bell__list">
             {loading ? (

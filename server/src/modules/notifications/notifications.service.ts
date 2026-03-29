@@ -1,5 +1,6 @@
 import { db } from '../../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { saveSubscription, deleteSubscription, sendPushNotification } from './push.service';
 
 export async function getNotifications(userId: number, limit = 20) {
   const safeLimit = parseInt(String(limit), 10);
@@ -43,5 +44,27 @@ export async function createNotification(data: {
     [data.type, data.title, data.message || null, data.target_user_id || null,
      data.target_role || null, data.reference_type || null, data.reference_id || null]
   );
+  
+  if (data.target_user_id) {
+    // Fire and forget push notification
+    sendPushNotification(data.target_user_id, {
+      title: data.title,
+      body: data.message || '',
+      data: {
+        url: '/',
+        reference_type: data.reference_type,
+        reference_id: data.reference_id
+      }
+    }).catch(err => console.error('Failed to send push notification', err));
+  }
+
   return { id: result.insertId, ...data };
+}
+
+export async function registerPushSubscription(userId: number, subscription: any, userAgent: string) {
+  return saveSubscription(userId, subscription, userAgent);
+}
+
+export async function unregisterPushSubscription(endpoint: string) {
+  return deleteSubscription(endpoint);
 }

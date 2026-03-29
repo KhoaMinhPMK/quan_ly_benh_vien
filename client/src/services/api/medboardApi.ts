@@ -221,6 +221,15 @@ export const markNotificationRead = async (id: number) =>
 export const markAllNotificationsRead = async () =>
   (await httpClient.post<ApiRes<void>>('/notifications/read-all')).data;
 
+export const subscribeToPush = async (subscription: any) =>
+  (await httpClient.post<ApiRes<void>>('/notifications/subscribe', { subscription })).data;  
+
+export const unsubscribeFromPush = async (endpoint: string) =>
+  (await httpClient.post<ApiRes<void>>('/notifications/unsubscribe', { endpoint })).data;
+
+export const getVapidPublicKey = async () =>
+  (await httpClient.get<ApiRes<{ publicKey: string }>>('/notifications/vapid-public-key')).data.data.publicKey;
+
 // ============================================================
 // Search
 // ============================================================

@@ -14,8 +14,12 @@ import searchRoutes from './modules/search/search.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import configRoutes from './modules/config/config.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { initWebPush } from './modules/notifications/push.service';
 
 const app = express();
+
+// Init Web Push
+initWebPush();
 
 // Middleware
 const allowedOrigins = process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [];

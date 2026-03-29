@@ -70,6 +70,28 @@
   font-size: 15px;
   color: var(--text-primary, #1F2937);
 }
+.notif-bell__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.notif-bell__push-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-primary, #3B82F6);
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.notif-bell__push-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
 .notif-bell__mark-all {
   background: none;
   border: none;
