@@ -482,6 +482,7 @@ const vi = {
     auditEntity: 'Đối tượng',
     auditId: 'ID',
     noAuditLogs: 'Chưa có nhật ký',
+    auditCount: 'bản ghi',
     on: 'Bật',
     off: 'Tắt',
     tabStatuses: 'Trạng thái',

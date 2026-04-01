@@ -484,6 +484,7 @@ const en: Translations = {
     auditEntity: 'Entity',
     auditId: 'ID',
     noAuditLogs: 'No audit logs yet',
+    auditCount: 'records',
     on: 'On',
     off: 'Off',
     tabStatuses: 'Statuses',
