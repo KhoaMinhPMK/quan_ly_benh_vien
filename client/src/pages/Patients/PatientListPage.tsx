@@ -225,7 +225,7 @@ export default function PatientListPage() {
           <input type="text" className="form-field__input" placeholder={t.patients.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__input patient-filters__select" value={filterStatus || ''}
+        <select className="form-field__select patient-filters__select" value={filterStatus || ''}
           onChange={(e) => setFilterStatus(e.target.value || undefined)}>
           <option value="">{t.patients.filterStatus}</option>
           <option value="admitted">{t.patients.statusAdmitted}</option>

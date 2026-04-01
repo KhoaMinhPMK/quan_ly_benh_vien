@@ -139,7 +139,7 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
               <div className="form-field"><label className="form-field__label">{t.addPatient.dob}</label>
                 <input className="form-field__input" name="date_of_birth" type="date" value={form.date_of_birth} onChange={handleChange} /></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.gender}</label>
-                <select className="form-field__input" name="gender" value={form.gender} onChange={handleChange}>
+                <select className="form-field__select" name="gender" value={form.gender} onChange={handleChange}>
                   <option value="male">{t.addPatient.male}</option><option value="female">{t.addPatient.female}</option>
                 </select></div>
             </div>
@@ -151,7 +151,7 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
               <input className="form-field__input" name="doctor_name" value={form.doctor_name} onChange={handleChange} placeholder={t.addPatient.doctorPlaceholder} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addPatient.room}</label>
-                <select className="form-field__input" name="room_id" value={form.room_id} onChange={handleChange}>
+                <select className="form-field__select" name="room_id" value={form.room_id} onChange={handleChange}>
                   <option value="">{t.addPatient.selectRoom}</option>
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
@@ -160,7 +160,7 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
                   ))}
                 </select></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.bed}</label>
-                <select className="form-field__input" name="bed_id" value={form.bed_id} onChange={handleChange} disabled={!form.room_id}>
+                <select className="form-field__select" name="bed_id" value={form.bed_id} onChange={handleChange} disabled={!form.room_id}>
                   <option value="">{t.addPatient.selectBed}</option>
                   {beds.map((b) => <option key={b.id} value={b.id}>{b.bed_code}</option>)}
                 </select></div>

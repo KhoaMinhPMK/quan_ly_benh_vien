@@ -117,12 +117,12 @@ export default function RoomListPage() {
           <input type="text" className="form-field__input" placeholder={t.rooms.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__input room-filters__select" value={filterDept || ''}
+        <select className="form-field__select room-filters__select" value={filterDept || ''}
           onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)}>
           <option value="">{t.rooms.filterDepartment}</option>
           {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        <select className="form-field__input room-filters__select" value={filterStatus || ''}
+        <select className="form-field__select room-filters__select" value={filterStatus || ''}
           onChange={(e) => setFilterStatus(e.target.value || undefined)}>
           <option value="">{t.rooms.filterStatus}</option>
           <option value="active">{t.rooms.statusActive}</option>
@@ -276,7 +276,7 @@ export default function RoomListPage() {
               <input className="form-field__input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.rooms.roomType}</label>
-                <select className="form-field__input" value={editForm.room_type} onChange={e => setEditForm({...editForm, room_type: e.target.value})}>
+                <select className="form-field__select" value={editForm.room_type} onChange={e => setEditForm({...editForm, room_type: e.target.value})}>
                   <option value="normal">{typeLabels.normal}</option>
                   <option value="vip">{typeLabels.vip}</option>
                   <option value="icu">{typeLabels.icu}</option>
@@ -286,7 +286,7 @@ export default function RoomListPage() {
                 <input className="form-field__input" type="number" min={1} max={20} value={editForm.max_beds} onChange={e => setEditForm({...editForm, max_beds: Number(e.target.value)})} /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.rooms.statusLabel}</label>
-              <select className="form-field__input" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+              <select className="form-field__select" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
                 <option value="active">{t.rooms.statusActive}</option>
                 <option value="maintenance">{t.rooms.statusMaintenance}</option>
                 <option value="closed">{t.rooms.statusClosed}</option>

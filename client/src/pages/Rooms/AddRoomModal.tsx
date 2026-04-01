@@ -54,12 +54,12 @@ export default function AddRoomModal({ open, onClose, onCreated }: Props) {
             </div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addRoom.department} *</label>
-                <select className="form-field__input" name="department_id" value={form.department_id} onChange={handleChange}>
+                <select className="form-field__select" name="department_id" value={form.department_id} onChange={handleChange}>
                   <option value="">{t.addRoom.selectDept}</option>
                   {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select></div>
               <div className="form-field"><label className="form-field__label">{t.addRoom.roomType}</label>
-                <select className="form-field__input" name="room_type" value={form.room_type} onChange={handleChange}>
+                <select className="form-field__select" name="room_type" value={form.room_type} onChange={handleChange}>
                   <option value="normal">{t.addRoom.typeNormal}</option>
                   <option value="vip">VIP</option>
                   <option value="icu">{t.addRoom.typeICU}</option>

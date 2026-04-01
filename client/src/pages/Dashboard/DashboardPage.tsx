@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const isFirstLoad = useRef(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
+  const [patientsWithNotes, setPatientsWithNotes] = useState<Patient[]>([]);
 
   const loadData = () => {
     if (isFirstLoad.current) setLoading(true);
@@ -33,6 +34,7 @@ export default function DashboardPage() {
       .finally(() => { setLoading(false); isFirstLoad.current = false; });
     fetchPatients().then(patients => {
       setWaitingList(patients.filter(p => !p.bed_id));
+      setPatientsWithNotes(patients.filter(p => p.notes && p.notes.trim() && p.status !== 'discharged'));
     }).catch(() => {});
   };
 
@@ -163,37 +165,37 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="dashboard__stats">
-        <div className="stat-card">
+        <Link to="/patients" className="stat-card stat-card--clickable">
           <div className="stat-card__icon"><img src={iconUsers} alt="" /></div>
           <div>
             <div className="stat-card__value">{loading ? '—' : stats?.total_patients ?? 0}</div>
             <div className="stat-card__label">{t.dashboard.totalPatients}</div>
           </div>
-        </div>
+        </Link>
 
-        <div className="stat-card">
+        <Link to="/rooms" className="stat-card stat-card--clickable">
           <div className="stat-card__icon"><img src={iconBed} alt="" /></div>
           <div>
             <div className="stat-card__value">{loading ? '—' : stats?.beds.empty_beds ?? 0}</div>
             <div className="stat-card__label">{t.dashboard.emptyBeds}</div>
           </div>
-        </div>
+        </Link>
 
-        <div className="stat-card">
+        <Link to="/discharge" className="stat-card stat-card--clickable">
           <div className="stat-card__icon"><img src={iconDoorExit} alt="" /></div>
           <div>
             <div className="stat-card__value">{loading ? '—' : stats?.discharge_pending ?? 0}</div>
             <div className="stat-card__label">{t.dashboard.dischargePending}</div>
           </div>
-        </div>
+        </Link>
 
-        <div className="stat-card">
+        <Link to="/patients" className="stat-card stat-card--clickable">
           <div className="stat-card__icon"><img src={iconClipboardCheck} alt="" /></div>
           <div>
             <div className="stat-card__value">{loading ? '—' : stats?.patients_missing_checklist ?? 0}</div>
             <div className="stat-card__label">{t.dashboard.missingChecklist}</div>
           </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Actions */}
@@ -218,6 +220,37 @@ export default function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      {/* Patient Notes Overview */}
+      {patientsWithNotes.length > 0 && (
+        <>
+          <h3 className="dashboard__section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:6}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            {t.dashboard.notesOverview || 'Ghi chú bệnh nhân'}
+            <span className="dashboard__section-count">{patientsWithNotes.length}</span>
+          </h3>
+          <div className="dashboard__notes-grid">
+            {patientsWithNotes.slice(0, 6).map(p => (
+              <Link to={`/patients?edit=${p.id}`} key={p.id} className="dashboard__note-card">
+                <div className="dashboard__note-card-header">
+                  <strong>{p.full_name}</strong>
+                  <span className="dashboard__note-card-code">{p.patient_code}</span>
+                </div>
+                <p className="dashboard__note-card-text">{p.notes!.length > 120 ? p.notes!.substring(0, 120) + '...' : p.notes}</p>
+                <div className="dashboard__note-card-meta">
+                  {p.room_code && <span>{p.room_code}</span>}
+                  {p.doctor_name && <span>{p.doctor_name}</span>}
+                </div>
+              </Link>
+            ))}
+          </div>
+          {patientsWithNotes.length > 6 && (
+            <Link to="/patients" className="btn btn--ghost btn--sm" style={{ marginTop: 8 }}>
+              {t.common.viewAll || 'Xem tất cả'} ({patientsWithNotes.length}) →
+            </Link>
+          )}
+        </>
+      )}
 
       {/* Room Occupancy */}
       {stats && stats.rooms.length > 0 && (

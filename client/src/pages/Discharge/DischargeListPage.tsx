@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchDischargeList, fetchChecklists, toggleChecklist, dischargePatient, type Patient, type ChecklistItem } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
+import PatientDrawer from '../../components/PatientDrawer/PatientDrawer';
 import iconClipboardCheck from '../../assets/icons/outline/clipboard-check.svg';
 import iconMapPin from '../../assets/icons/outline/map-pin.svg';
 import iconCalendar from '../../assets/icons/outline/calendar.svg';
@@ -11,6 +13,7 @@ import './DischargeListPage.scss';
 export default function DischargeListPage() {
   const { t, lang } = useTranslation();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -20,6 +23,7 @@ export default function DischargeListPage() {
   const [discharging, setDischarging] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [dateFilter, setDateFilter] = useState<string>('');
+  const [drawerPatientId, setDrawerPatientId] = useState<number | null>(null);
 
   const statusLabels: Record<string, string> = {
     treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
@@ -163,8 +167,8 @@ export default function DischargeListPage() {
                       <tr key={p.id} className={selectedPatient?.id === p.id ? 'discharge__row--active' : ''}>
                         <td><strong>{p.patient_code}</strong></td>
                         <td style={{ fontSize: 12, color: '#6B7280' }}>{p.admission_code || '—'}</td>
-                        <td>{p.full_name}</td>
-                        <td>{p.room_code || '--'}</td>
+                        <td><button className="btn btn--ghost btn--sm" style={{ padding: 0, fontWeight: 500 }} onClick={() => setDrawerPatientId(p.id)}>{p.full_name}</button></td>
+                        <td>{p.room_code ? <button className="btn btn--ghost btn--sm" style={{ padding: 0 }} onClick={() => navigate(`/rooms/${(p as any).room_id || ''}`)}>{p.room_code}</button> : '--'}</td>
                         <td>{formatDate(p.expected_discharge)}</td>
                         <td>
                           <span className={`badge ${p.status === 'waiting_discharge' ? 'badge--warning' : 'badge--info'}`}>
@@ -274,6 +278,15 @@ export default function DischargeListPage() {
         onCancel={() => setConfirmOpen(false)}
         loading={discharging}
       />
+
+      {/* Patient Detail Drawer */}
+      {drawerPatientId && (
+        <PatientDrawer
+          patientId={drawerPatientId}
+          onClose={() => setDrawerPatientId(null)}
+          onUpdated={() => loadList()}
+        />
+      )}
     </div>
   );
 }

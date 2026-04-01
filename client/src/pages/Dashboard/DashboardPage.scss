@@ -40,6 +40,80 @@
     font-weight: v.$font-weight-semibold;
     color: v.$color-text-primary;
     margin-bottom: v.$space-4;
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+  }
+
+  &__section-count {
+    font-size: 11px;
+    font-weight: v.$font-weight-bold;
+    background: v.$color-primary;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 8px;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  // Notes overview
+  &__notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: v.$space-3;
+    margin-bottom: v.$space-4;
+  }
+
+  &__note-card {
+    display: block;
+    background: v.$color-bg-white;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    padding: v.$space-3;
+    text-decoration: none;
+    color: inherit;
+    transition: all v.$transition-fast;
+    border-left: 3px solid #F59E0B;
+
+    &:hover {
+      border-color: v.$color-primary;
+      border-left-color: v.$color-primary;
+      box-shadow: v.$shadow-sm;
+    }
+  }
+
+  &__note-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: v.$space-2;
+
+    strong {
+      font-size: v.$font-size-sm;
+      color: v.$color-text-primary;
+    }
+  }
+
+  &__note-card-code {
+    font-size: 11px;
+    color: v.$color-text-muted;
+    font-family: 'SF Mono', monospace;
+  }
+
+  &__note-card-text {
+    font-size: 12px;
+    color: v.$color-text-secondary;
+    line-height: 1.5;
+    margin: 0;
+    word-break: break-word;
+  }
+
+  &__note-card-meta {
+    display: flex;
+    gap: v.$space-3;
+    margin-top: v.$space-2;
+    font-size: 11px;
+    color: v.$color-text-muted;
   }
 
   // Room grid

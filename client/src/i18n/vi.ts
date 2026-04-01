@@ -44,6 +44,9 @@ const vi = {
     more: 'khác',
     expand: 'Mở rộng',
     collapse: 'Thu gọn',
+    viewAll: 'Xem tất cả',
+    prev: 'Trước',
+    next: 'Tiếp',
   },
 
   // ── Sidebar / Navigation ──
@@ -128,6 +131,7 @@ const vi = {
     qaRoomsDesc: 'Xem trạng thái và xếp giường',
     qaDischarge: 'Ra viện hôm nay',
     qaDischargeDesc: 'Kiểm tra hồ sơ và xác nhận',
+    notesOverview: 'Ghi chú bệnh nhân',
   },
 
   // ── Rooms ──
@@ -249,6 +253,12 @@ const vi = {
     confirmRelease: 'Giải phóng giường',
     requestDischarge: 'Yêu cầu ra viện',
     markClean: '✓ Hoàn tất vệ sinh',
+    checklistCompleted: 'hoàn thành',
+    checklistAllDone: 'Đã hoàn tất',
+    checklistPending: 'Chưa hoàn thành',
+    checklistDone: 'Đã hoàn thành',
+    viewRoom: 'Xem phòng',
+    goDischarge: 'Đi đến XV',
   },
 
   // ── Transfer Modal ──

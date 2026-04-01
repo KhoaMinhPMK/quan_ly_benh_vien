@@ -77,7 +77,7 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
             <div className="modal__row">
               <div className="form-field">
                 <label className="form-field__label">{t.addPatient?.room}</label>
-                <select className="form-field__input" value={roomId} onChange={e => setRoomId(e.target.value)}>
+                <select className="form-field__select" value={roomId} onChange={e => setRoomId(e.target.value)}>
                   <option value="">{t.addPatient?.selectRoom}</option>
                   {rooms.map(r => (
                     <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
@@ -88,7 +88,7 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
               </div>
               <div className="form-field">
                 <label className="form-field__label">{t.addPatient?.bed}</label>
-                <select className="form-field__input" value={bedId} onChange={e => setBedId(e.target.value)} disabled={!roomId}>
+                <select className="form-field__select" value={bedId} onChange={e => setBedId(e.target.value)} disabled={!roomId}>
                   <option value="">{t.addPatient?.selectBed}</option>
                   {beds.map(b => <option key={b.id} value={b.id}>{b.bed_code}</option>)}
                 </select>

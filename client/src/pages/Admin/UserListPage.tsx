@@ -85,7 +85,7 @@ export default function UserListPage() {
 
       <div className="admin-filters">
         <input className="form-field__input" placeholder={t.common.search} value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 240 }} />
-        <select className="form-field__input" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ maxWidth: 160 }}>
+        <select className="form-field__select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ maxWidth: 160 }}>
           <option value="">{t.users.filterRole}</option>
           {Object.entries(roleLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
@@ -124,12 +124,12 @@ export default function UserListPage() {
             <div className="form-field"><label className="form-field__label">{t.users.fullName}</label><input className="form-field__input" value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.users.role}</label>
-                <select className="form-field__input" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
+                <select className="form-field__select" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
                   {Object.entries(roleLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
               </div>
               <div className="form-field"><label className="form-field__label">{t.users.department}</label>
-                <select className="form-field__input" value={form.department_id} onChange={e => setForm({...form, department_id: e.target.value})}>
+                <select className="form-field__select" value={form.department_id} onChange={e => setForm({...form, department_id: e.target.value})}>
                   <option value="">{t.users.selectDept}</option>
                   {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>

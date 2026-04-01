@@ -60,6 +60,15 @@
     }
   }
 
+  &--warning {
+    background: #F59E0B;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #D97706;
+    }
+  }
+
   &--ghost {
     background: transparent;
     color: v.$color-text-secondary;
@@ -173,6 +182,10 @@
     @include m.form-input;
   }
 
+  &__select {
+    @include m.form-select;
+  }
+
   &__textarea {
     @include m.form-input;
     height: auto;
@@ -238,6 +251,18 @@
   display: flex;
   align-items: center;
   gap: v.$space-4;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow v.$transition-fast, transform v.$transition-fast;
+
+  &--clickable {
+    cursor: pointer;
+    &:hover {
+      box-shadow: v.$shadow-md;
+      transform: translateY(-1px);
+    }
+    &:active { transform: translateY(0); }
+  }
 
   &__icon {
     width: 40px;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchPatient, fetchChecklists, toggleChecklist, fetchBedHistory, updatePatient, type Patient, type ChecklistItem, type BedHistoryEntry } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -15,6 +16,7 @@ type Tab = 'info' | 'checklist' | 'history' | 'notes';
 export default function PatientDrawer({ patientId, onClose, onUpdated }: PatientDrawerProps) {
   const { t, lang } = useTranslation();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
@@ -232,7 +234,7 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                       <input className="form-field__input" type="date" value={editForm.expected_discharge} onChange={e => setEditForm({...editForm, expected_discharge: e.target.value})} /></div>
                     {allowedStatuses.length > 0 && (
                       <div className="form-field"><label className="form-field__label">{t.bedPanel?.patientStatus || 'Trạng thái'}</label>
-                        <select className="form-field__input" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+                        <select className="form-field__select" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
                           <option value={patient.status}>{statusLabels[patient.status]} (Hiện tại)</option>
                           {allowedStatuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
                         </select></div>
@@ -247,17 +249,62 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                 <div className="bed-panel__checklist">
                   {checklists.length === 0 ? (
                     <p className="bed-panel__loading">{t.bedPanel?.noChecklist || 'Chưa có checklist'}</p>
-                  ) : checklists.map(c => (
-                    <label key={c.template_id} className={`bed-panel__check-item ${c.is_completed ? 'bed-panel__check-item--done' : ''}`}>
-                      <input type="checkbox" checked={c.is_completed} onChange={() => handleToggleChecklist(c.template_id, !c.is_completed)} />
-                      <div>
-                        <div className="bed-panel__check-name">{c.name}</div>
-                        {c.is_completed && c.completed_by_name && (
-                          <div className="bed-panel__check-meta">{c.completed_by_name} · {c.completed_at ? new Date(c.completed_at).toLocaleString(locale) : ''}</div>
+                  ) : (() => {
+                    const done = checklists.filter(c => c.is_completed);
+                    const pending = checklists.filter(c => !c.is_completed);
+                    const pct = Math.round((done.length / checklists.length) * 100);
+                    const r = 18; const circ = 2 * Math.PI * r; const offset = circ - (pct / 100) * circ;
+                    return (
+                      <>
+                        {/* Progress ring header */}
+                        <div className="bed-panel__check-progress">
+                          <svg width="48" height="48" viewBox="0 0 48 48">
+                            <circle cx="24" cy="24" r={r} fill="none" stroke="#E5E7EB" strokeWidth="4" />
+                            <circle cx="24" cy="24" r={r} fill="none" stroke={pct === 100 ? '#22C55E' : '#2563EB'} strokeWidth="4"
+                              strokeDasharray={circ} strokeDashoffset={offset}
+                              strokeLinecap="round" transform="rotate(-90 24 24)" style={{ transition: 'stroke-dashoffset 0.4s ease' }} />
+                            <text x="24" y="24" textAnchor="middle" dominantBaseline="central"
+                              fill={pct === 100 ? '#22C55E' : '#2563EB'} fontSize="11" fontWeight="700">{pct}%</text>
+                          </svg>
+                          <div>
+                            <div className="bed-panel__check-progress-label">{done.length}/{checklists.length} {t.bedPanel?.checklistCompleted || 'hoàn thành'}</div>
+                            {pct === 100 && <div className="bed-panel__check-progress-done">✓ {t.bedPanel?.checklistAllDone || 'Đã hoàn tất'}</div>}
+                          </div>
+                        </div>
+                        {/* Pending items */}
+                        {pending.length > 0 && (
+                          <div className="bed-panel__check-group">
+                            <div className="bed-panel__check-group-title">{t.bedPanel?.checklistPending || 'Chưa hoàn thành'} ({pending.length})</div>
+                            {pending.map(c => (
+                              <label key={c.template_id} className="bed-panel__check-card">
+                                <input type="checkbox" checked={false} onChange={() => handleToggleChecklist(c.template_id, true)} />
+                                <div className="bed-panel__check-card-content">
+                                  <div className="bed-panel__check-name">{c.name}</div>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
                         )}
-                      </div>
-                    </label>
-                  ))}
+                        {/* Done items */}
+                        {done.length > 0 && (
+                          <div className="bed-panel__check-group">
+                            <div className="bed-panel__check-group-title bed-panel__check-group-title--done">{t.bedPanel?.checklistDone || 'Đã hoàn thành'} ({done.length})</div>
+                            {done.map(c => (
+                              <label key={c.template_id} className="bed-panel__check-card bed-panel__check-card--done">
+                                <input type="checkbox" checked={true} onChange={() => handleToggleChecklist(c.template_id, false)} />
+                                <div className="bed-panel__check-card-content">
+                                  <div className="bed-panel__check-name">{c.name}</div>
+                                  {c.completed_by_name && (
+                                    <div className="bed-panel__check-meta">{c.completed_by_name} · {c.completed_at ? new Date(c.completed_at).toLocaleString(locale) : ''}</div>
+                                  )}
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -299,6 +346,37 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
         </div>
 
         <div className="bed-panel__actions">
+          {/* Quick action buttons based on patient status */}
+          {!editing && patient.status !== 'discharged' && (
+            <div className="bed-panel__quick-actions">
+              {patient.room_code && (
+                <button className="btn btn--ghost btn--sm" onClick={() => { onClose(); navigate(`/rooms/${(patient as any).room_id || ''}`); }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                  {t.bedPanel?.viewRoom || 'Xem phòng'}
+                </button>
+              )}
+              {(patient.status === 'treating' || patient.status === 'admitted') && (
+                <button className="btn btn--warning btn--sm" onClick={async () => {
+                  try {
+                    await updatePatient(patient.id, { status: 'waiting_discharge' } as Record<string, string>);
+                    showToast(t.common?.success || 'Thành công', 'success');
+                    const updated = await fetchPatient(patientId);
+                    setPatient(updated);
+                    if (onUpdated) onUpdated();
+                  } catch { showToast(t.common?.error || 'Lỗi', 'error'); }
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  {t.bedPanel?.requestDischarge || 'Yêu cầu XV'}
+                </button>
+              )}
+              {patient.status === 'waiting_discharge' && (
+                <button className="btn btn--primary btn--sm" onClick={() => { onClose(); navigate('/discharge'); }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  {t.bedPanel?.goDischarge || 'Đi đến XV'}
+                </button>
+              )}
+            </div>
+          )}
           {!editing ? (
             <button className="btn btn--primary btn--sm" onClick={() => setEditing(true)}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>{t.common?.edit || 'Chỉnh sửa'}

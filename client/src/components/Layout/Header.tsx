@@ -136,9 +136,10 @@ export default function Header({ onMenuToggle }: HeaderProps) {
           </div>
 
           {/* Language Switch */}
-          <button className="header__lang-btn" onClick={toggleLang} title={t.header.languageSwitch}>
-            {lang === 'vi' ? '🇻🇳' : '🇬🇧'} {lang.toUpperCase()}
-          </button>
+          <div className="header__lang-toggle" role="radiogroup" aria-label={t.header.languageSwitch}>
+            <button className={`header__lang-option ${lang === 'vi' ? 'header__lang-option--active' : ''}`} onClick={() => lang !== 'vi' && toggleLang()}>VI</button>
+            <button className={`header__lang-option ${lang === 'en' ? 'header__lang-option--active' : ''}`} onClick={() => lang !== 'en' && toggleLang()}>EN</button>
+          </div>
 
           {/* Notification Bell */}
           <div className="header__notif-wrap">

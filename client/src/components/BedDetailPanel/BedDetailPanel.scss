@@ -182,7 +182,78 @@
   &__checklist {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: v.$space-3;
+  }
+
+  &__check-progress {
+    display: flex;
+    align-items: center;
+    gap: v.$space-3;
+    padding: v.$space-3;
+    background: v.$color-bg-surface;
+    border-radius: v.$radius;
+    margin-bottom: v.$space-2;
+  }
+
+  &__check-progress-label {
+    font-size: 13px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-primary;
+  }
+
+  &__check-progress-done {
+    font-size: 12px;
+    color: #22C55E;
+    font-weight: v.$font-weight-medium;
+    margin-top: 2px;
+  }
+
+  &__check-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  &__check-group-title {
+    font-size: 11px;
+    font-weight: v.$font-weight-semibold;
+    color: v.$color-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: v.$space-1 0 v.$space-2;
+    border-bottom: 1px solid v.$color-border;
+    margin-bottom: v.$space-1;
+
+    &--done { color: #22C55E; }
+  }
+
+  &__check-card {
+    display: flex;
+    align-items: flex-start;
+    gap: v.$space-2;
+    padding: v.$space-2 v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    margin-top: v.$space-1;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: v.$color-bg-white;
+
+    &:hover { border-color: v.$color-primary; box-shadow: 0 1px 4px rgba(37, 99, 235, 0.08); }
+
+    input[type='checkbox'] { margin-top: 3px; accent-color: v.$color-primary; cursor: pointer; }
+
+    &--done {
+      background: #F9FAFB;
+      border-color: #E5E7EB;
+      &:hover { border-color: #D1D5DB; box-shadow: none; }
+      .bed-panel__check-name { color: v.$color-text-muted; text-decoration: line-through; }
+    }
+  }
+
+  &__check-card-content {
+    flex: 1;
+    min-width: 0;
   }
 
   &__check-item {
@@ -299,5 +370,14 @@
     border-top: 1px solid v.$color-border;
     flex-shrink: 0;
     background: #FAFBFC;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  &__quick-actions {
+    display: flex;
+    gap: v.$space-1;
+    margin-right: auto;
+    flex-wrap: wrap;
   }
 }

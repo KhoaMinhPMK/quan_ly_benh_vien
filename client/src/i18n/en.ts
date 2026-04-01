@@ -46,6 +46,9 @@ const en: Translations = {
     more: 'more',
     expand: 'Expand',
     collapse: 'Collapse',
+    viewAll: 'View All',
+    prev: 'Prev',
+    next: 'Next',
   },
 
   // ── Sidebar / Navigation ──
@@ -130,6 +133,7 @@ const en: Translations = {
     qaRoomsDesc: 'View status and assign beds',
     qaDischarge: 'Discharge Today',
     qaDischargeDesc: 'Check records and confirm',
+    notesOverview: 'Patient Notes',
   },
 
   // ── Rooms ──
@@ -251,6 +255,12 @@ const en: Translations = {
     confirmRelease: 'Release bed',
     requestDischarge: 'Request Discharge',
     markClean: '✓ Mark as Clean',
+    checklistCompleted: 'completed',
+    checklistAllDone: 'All done',
+    checklistPending: 'Pending',
+    checklistDone: 'Completed',
+    viewRoom: 'View Room',
+    goDischarge: 'Go to Discharge',
   },
 
   // ── Transfer Modal ──

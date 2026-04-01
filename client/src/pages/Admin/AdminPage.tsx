@@ -40,29 +40,41 @@ function ConfigSection() {
 
   const handleUpdate = async (key: string, value: string) => { await updateSystemConfig(key, value); load(); };
 
+  if (loading) return <div className="card" style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</div>;
+
   return (
-    <div className="card" style={{ padding: 0 }}>
-      <table className="data-table">
-        <thead><tr><th>{t.admin.configKey}</th><th>{t.admin.configValue}</th><th>{t.admin.configDesc}</th><th style={{ width: 80 }}>{t.common.save}</th></tr></thead>
-        <tbody>
-          {loading ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</td></tr> :
-           configs.map(c => <ConfigRow key={c.config_key} cfg={c} onSave={handleUpdate} />)}
-        </tbody>
-      </table>
+    <div className="admin-config-grid">
+      {configs.map(c => <ConfigCard key={c.config_key} cfg={c} onSave={handleUpdate} />)}
     </div>
   );
 }
 
-function ConfigRow({ cfg, onSave }: { cfg: SystemConfig; onSave: (k: string, v: string) => void }) {
+function ConfigCard({ cfg, onSave }: { cfg: SystemConfig; onSave: (k: string, v: string) => void }) {
   const { t } = useTranslation();
   const [val, setVal] = useState(cfg.config_value);
+  const [saving, setSaving] = useState(false);
+  const changed = val !== cfg.config_value;
+
+  const handleSave = async () => {
+    setSaving(true);
+    await onSave(cfg.config_key, val);
+    setSaving(false);
+  };
+
   return (
-    <tr>
-      <td><strong>{cfg.config_key}</strong></td>
-      <td><input className="form-field__input" value={val} onChange={e => setVal(e.target.value)} style={{ maxWidth: 200 }} /></td>
-      <td style={{ fontSize: 13, color: '#6B7280' }}>{cfg.description}</td>
-      <td><button className="btn btn--primary btn--sm" onClick={() => onSave(cfg.config_key, val)}>{t.common.save}</button></td>
-    </tr>
+    <div className="admin-config-card">
+      <div className="admin-config-card__header">
+        <span className="admin-config-card__key">{cfg.config_key}</span>
+        {changed && <span className="admin-config-card__changed">*</span>}
+      </div>
+      {cfg.description && <p className="admin-config-card__desc">{cfg.description}</p>}
+      <div className="admin-config-card__input-row">
+        <input className="form-field__input" value={val} onChange={e => setVal(e.target.value)} />
+        <button className="btn btn--primary btn--sm" onClick={handleSave} disabled={!changed || saving}>
+          {saving ? '...' : t.common.save}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -186,27 +198,53 @@ function AuditSection() {
   const { t, lang } = useTranslation();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const perPage = 20;
+
   useEffect(() => { setLoading(true); fetchAuditLogs().then(setLogs).catch(() => {}).finally(() => setLoading(false)); }, []);
 
+  const filtered = logs.filter(l => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (l.user_name || '').toLowerCase().includes(q) || l.action.toLowerCase().includes(q) || l.entity_type.toLowerCase().includes(q);
+  });
+
+  const totalPages = Math.ceil(filtered.length / perPage);
+  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+
   return (
-    <div className="card" style={{ padding: 0 }}>
-      <table className="data-table">
-        <thead><tr><th>{t.admin.auditTime}</th><th>{t.admin.auditUser}</th><th>{t.admin.auditAction}</th><th>{t.admin.auditEntity}</th><th>{t.admin.auditId}</th></tr></thead>
-        <tbody>
-          {loading ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</td></tr> :
-           logs.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32 }}>{t.admin.noAuditLogs}</td></tr> :
-           logs.map(l => (
-            <tr key={l.id}>
-              <td style={{ fontSize: 12 }}>{new Date(l.created_at).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}</td>
-              <td>{l.user_name || '—'}</td>
-              <td><span className="badge badge--neutral">{l.action}</span></td>
-              <td>{l.entity_type}</td>
-              <td>{l.entity_id}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <>
+      <div className="admin-filters" style={{ marginBottom: 16 }}>
+        <input className="form-field__input" placeholder={t.common.search} value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ maxWidth: 280 }} />
+        <span style={{ fontSize: 13, color: '#6B7280' }}>{filtered.length} {t.admin.auditCount || 'bản ghi'}</span>
+      </div>
+      <div className="card" style={{ padding: 0 }}>
+        <table className="data-table">
+          <thead><tr><th>{t.admin.auditTime}</th><th>{t.admin.auditUser}</th><th>{t.admin.auditAction}</th><th>{t.admin.auditEntity}</th><th>{t.admin.auditId}</th></tr></thead>
+          <tbody>
+            {loading ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</td></tr> :
+             paged.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32 }}>{t.admin.noAuditLogs}</td></tr> :
+             paged.map(l => (
+              <tr key={l.id}>
+                <td style={{ fontSize: 12 }}>{new Date(l.created_at).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}</td>
+                <td>{l.user_name || '—'}</td>
+                <td><span className="badge badge--neutral">{l.action}</span></td>
+                <td>{l.entity_type}</td>
+                <td>{l.entity_id}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {totalPages > 1 && (
+        <div className="admin-pagination">
+          <button className="btn btn--ghost btn--sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>← {t.common.prev || 'Trước'}</button>
+          <span className="admin-pagination__info">{page}/{totalPages}</span>
+          <button className="btn btn--ghost btn--sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{t.common.next || 'Tiếp'} →</button>
+        </div>
+      )}
+    </>
   );
 }
 
