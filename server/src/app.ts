@@ -18,6 +18,9 @@ import { initWebPush } from './modules/notifications/push.service';
 
 const app = express();
 
+// Trust proxy (behind IIS/reverse proxy on VPS)
+app.set('trust proxy', 1);
+
 // Init Web Push
 initWebPush();
 
