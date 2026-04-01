@@ -19,16 +19,32 @@ USER = "Administrator"
 PASS = "mWm8mY5KUawr"
 PROJECT = r"C:\inetpub\wwwroot\quanlybenhvien"
 
+_client = None
+
+
+def get_client():
+    global _client
+    if _client is None or _client.get_transport() is None or not _client.get_transport().is_active():
+        _client = paramiko.SSHClient()
+        _client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        _client.connect(HOST, port=PORT, username=USER, password=PASS,
+                        timeout=15, look_for_keys=False, allow_agent=False)
+    return _client
+
+
+def close_client():
+    global _client
+    if _client:
+        _client.close()
+        _client = None
+
 
 def run(cmd, timeout=120):
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(HOST, port=PORT, username=USER, password=PASS, timeout=15)
+    client = get_client()
     _, stdout, stderr = client.exec_command(cmd, timeout=timeout)
     out = stdout.read().decode("utf-8", errors="replace").strip()
     err = stderr.read().decode("utf-8", errors="replace").strip()
     code = stdout.channel.recv_exit_status()
-    client.close()
     return out, err, code
 
 
@@ -103,25 +119,28 @@ def show_status():
 if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else "full"
 
-    if arg == "full":
-        deploy_full()
-    elif arg == "server":
-        deploy_server()
-    elif arg == "client":
-        deploy_client()
-    elif arg == "pull":
-        pull_only()
-    elif arg == "logs":
-        show_logs()
-    elif arg == "status":
-        show_status()
-    elif arg == "cmd":
-        cmd = " ".join(sys.argv[2:])
-        out, err, code = run(cmd)
-        if out:
-            print(out)
-        if err:
-            print(f"[STDERR] {err}")
-        print(f"[EXIT: {code}]")
-    else:
-        print(__doc__)
+    try:
+        if arg == "full":
+            deploy_full()
+        elif arg == "server":
+            deploy_server()
+        elif arg == "client":
+            deploy_client()
+        elif arg == "pull":
+            pull_only()
+        elif arg == "logs":
+            show_logs()
+        elif arg == "status":
+            show_status()
+        elif arg == "cmd":
+            cmd = " ".join(sys.argv[2:])
+            out, err, code = run(cmd)
+            if out:
+                print(out)
+            if err:
+                print(f"[STDERR] {err}")
+            print(f"[EXIT: {code}]")
+        else:
+            print(__doc__)
+    finally:
+        close_client()
