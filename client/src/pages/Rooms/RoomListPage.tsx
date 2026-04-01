@@ -41,6 +41,12 @@ export default function RoomListPage() {
 
   useEffect(() => { loadRooms(); }, [filterDept, filterStatus, search]);
 
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const timer = setInterval(loadRooms, 30000);
+    return () => clearInterval(timer);
+  }, [filterDept, filterStatus, search]);
+
   const typeLabels = lang === 'vi' ? TYPE_LABELS_VI : TYPE_LABELS_EN;
 
   const getOccupancyColor = (room: Room) => {
@@ -142,7 +148,7 @@ export default function RoomListPage() {
             </button>
           )}
           <button className={`room-chips__chip room-chips__chip--success ${quickFilter === 'has_empty' ? 'room-chips__chip--active' : ''}`} onClick={() => setQuickFilter(quickFilter === 'has_empty' ? '' : 'has_empty')}>
-            Còn trống <span className="room-chips__count">{hasEmptyCount}</span>
+            {t.rooms.hasEmpty} <span className="room-chips__count">{hasEmptyCount}</span>
           </button>
         </div>
       )}

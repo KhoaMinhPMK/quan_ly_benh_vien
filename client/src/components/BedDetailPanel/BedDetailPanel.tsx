@@ -181,12 +181,12 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
             <>
               <button className="btn btn--secondary btn--sm" onClick={onTransfer}>{t.bedPanel.transferBed}</button>
               {patient.status !== 'waiting_discharge' && patient.status !== 'discharged' && onRequestDischarge && (
-                <button className="btn btn--primary btn--sm" onClick={onRequestDischarge}>{t.bedPanel.requestDischarge || 'Cho xuất viện'}</button>
+                <button className="btn btn--primary btn--sm" onClick={onRequestDischarge}>{t.bedPanel.requestDischarge}</button>
               )}
             </>
           )}
           {bedStatus === 'cleaning' && onMarkClean && (
-            <button className="btn btn--primary btn--sm" onClick={onMarkClean}>✓ Hoàn tất vệ sinh</button>
+            <button className="btn btn--primary btn--sm" onClick={onMarkClean}>{t.bedPanel.markClean}</button>
           )}
           {(bedStatus === 'locked' || (!patient && bedStatus !== 'empty' && bedStatus !== 'cleaning')) && (
             <button className="btn btn--secondary btn--sm" onClick={onRelease}>{t.bedPanel.releaseBed}</button>

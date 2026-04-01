@@ -5,7 +5,7 @@
   display: flex;
   gap: v.$space-1;
   margin-bottom: v.$space-4;
-  background: v.$color-bg-secondary;
+  background: v.$color-bg-surface;
   padding: 4px;
   border-radius: v.$radius;
   width: fit-content;
@@ -51,7 +51,7 @@
     border-radius: 10px;
     font-size: 11px;
     font-weight: v.$font-weight-semibold;
-    background: v.$color-bg-secondary;
+    background: v.$color-bg-surface;
     color: v.$color-text-secondary;
   }
 }

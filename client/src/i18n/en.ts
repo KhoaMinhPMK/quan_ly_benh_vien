@@ -39,6 +39,8 @@ const en: Translations = {
     notFound: 'Not found',
     day: 'day',
     days: 'days',
+    today: 'Today',
+    tomorrow: 'Tomorrow',
     update: 'Update',
     fillAllFields: 'Please fill in all fields',
     more: 'more',
@@ -156,6 +158,7 @@ const en: Translations = {
     filterDepartment: 'All departments',
     filterStatus: 'All statuses',
     searchPlaceholder: 'Search rooms...',
+    hasEmpty: 'Available',
     detail: {
       backToList: '← Back to list',
       capacityLabel: 'capacity',
@@ -247,6 +250,7 @@ const en: Translations = {
     statusDischarged: 'Discharged',
     confirmRelease: 'Release bed',
     requestDischarge: 'Request Discharge',
+    markClean: '✓ Mark as Clean',
   },
 
   // ── Transfer Modal ──
@@ -309,6 +313,7 @@ const en: Translations = {
     waitingList: 'Waiting for Bed',
     waitingListDesc: 'Admitted patients not yet assigned to a bed',
     assignBed: 'Assign Bed',
+    admissionCode: 'Admission Code',
   },
 
   // ── Add Patient Modal ──
@@ -363,6 +368,10 @@ const en: Translations = {
     loadingChecklist: 'Loading checklist...',
     filterDoctor: 'All doctors',
     blockDischargeMsg: 'Records incomplete. Please complete all checklist items before discharge.',
+    diagnosisLabel: 'Diagnosis:',
+    doctorLabel: 'Attending:',
+    admittedLabel: 'Admitted:',
+    roomBedLabel: 'Room/Bed:',
   },
 
   // ── Reports ──

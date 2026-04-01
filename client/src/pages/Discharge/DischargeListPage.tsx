@@ -38,6 +38,12 @@ export default function DischargeListPage() {
 
   useEffect(() => { loadList(); }, [dateFilter]);
 
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const timer = setInterval(loadList, 30000);
+    return () => clearInterval(timer);
+  }, [dateFilter]);
+
   const openChecklist = async (patient: Patient) => {
     setSelectedPatient(patient);
     setChecklistLoading(true);
@@ -111,10 +117,10 @@ export default function DischargeListPage() {
           {t.common.all}
         </button>
         <button className={`discharge__date-chip ${dateFilter === todayStr ? 'discharge__date-chip--active' : ''}`} onClick={() => setDateFilter(todayStr)}>
-          Hôm nay
+          {t.common.today}
         </button>
         <button className={`discharge__date-chip ${dateFilter === tomorrowStr ? 'discharge__date-chip--active' : ''}`} onClick={() => setDateFilter(tomorrowStr)}>
-          Ngày mai
+          {t.common.tomorrow}
         </button>
         <input
           type="date"
@@ -144,7 +150,7 @@ export default function DischargeListPage() {
                   <thead>
                     <tr>
                       <th>{t.discharge.patientCode}</th>
-                      <th>Mã BA</th>
+                      <th>{t.patients.admissionCode}</th>
                       <th>{t.discharge.fullName}</th>
                       <th>{t.discharge.room}</th>
                       <th>{t.discharge.expectedDate}</th>
@@ -213,12 +219,12 @@ export default function DischargeListPage() {
 
               {/* Clinical Summary */}
               <div style={{ padding: '12px 20px', background: 'var(--bg-secondary, #F8FAFC)', borderBottom: '1px solid var(--border-color, #E2E8F0)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px', fontSize: 13 }}>
-                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>Chẩn đoán:</span> <strong>{selectedPatient.diagnosis || '—'}</strong></div>
-                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M8 7a4 4 0 108 0 4 4 0 00-8 0M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>BS điều trị:</span> <strong>{selectedPatient.doctor_name || '—'}</strong></div>
-                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>Nhập viện:</span> {selectedPatient.admitted_at ? new Date(selectedPatient.admitted_at).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US') : '—'}
-                  {selectedPatient.admitted_at && <span style={{ color: '#3B82F6', marginLeft: 4 }}>({Math.ceil((Date.now() - new Date(selectedPatient.admitted_at).getTime()) / 86400000)} ngày)</span>}
+                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 21h18M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1M5 21V5a2 2 0 012-2h10a2 2 0 012 2v16"/></svg>{t.discharge.diagnosisLabel}</span> <strong>{selectedPatient.diagnosis || '—'}</strong></div>
+                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M8 7a4 4 0 108 0 4 4 0 00-8 0M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>{t.discharge.doctorLabel}</span> <strong>{selectedPatient.doctor_name || '—'}</strong></div>
+                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></svg>{t.discharge.admittedLabel}</span> {selectedPatient.admitted_at ? new Date(selectedPatient.admitted_at).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US') : '—'}
+                  {selectedPatient.admitted_at && <span style={{ color: '#3B82F6', marginLeft: 4 }}>({Math.ceil((Date.now() - new Date(selectedPatient.admitted_at).getTime()) / 86400000)} {t.common.days})</span>}
                 </div>
-                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 7v11m0-4.5h18M21 7v11M12 3v4"/></svg>Phòng/Giường:</span> {selectedPatient.room_code || '—'} / {selectedPatient.bed_code || '—'}</div>
+                <div><span style={{ color: '#6B7280' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 7v11m0-4.5h18M21 7v11M12 3v4"/></svg>{t.discharge.roomBedLabel}</span> {selectedPatient.room_code || '—'} / {selectedPatient.bed_code || '—'}</div>
               </div>
               <div className="discharge__progress-wrap">
                 <div className="discharge__progress-header">

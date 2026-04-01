@@ -51,6 +51,12 @@ export default function PatientListPage() {
 
   useEffect(() => { loadPatients(); }, [filterStatus, search, filterDoctor]);
 
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const timer = setInterval(loadPatients, 30000);
+    return () => clearInterval(timer);
+  }, [filterStatus, search, filterDoctor]);
+
   useEffect(() => {
     const editId = searchParams.get('edit');
     if (editId && patients.length > 0) {
@@ -198,7 +204,7 @@ export default function PatientListPage() {
             <div className="alert-banner__tags">
               {waitingQueue.slice(0, 5).map(p => (
                 <span key={p.id} className="alert-banner__tag alert-banner__tag--warning" onClick={() => setAssignBedPatientId(p.id)} style={{ cursor: 'pointer' }}>
-                  {p.full_name} <span style={{fontSize:11, opacity:0.8}}>+ {t.patients.assignBed || 'Xếp'}</span>
+                  {p.full_name} <span style={{fontSize:11, opacity:0.8}}>+ {t.patients.assignBed}</span>
                 </span>
               ))}
               {waitingQueue.length > 5 && (
@@ -226,7 +232,7 @@ export default function PatientListPage() {
           <option value="treating">{t.patients.statusTreating}</option>
           <option value="waiting_discharge">{t.patients.statusWaiting}</option>
         </select>
-        <input type="text" className="form-field__input patient-filters__select" placeholder={t.patients.allDoctors || 'Bác sĩ phụ trách...'}
+        <input type="text" className="form-field__input patient-filters__select" placeholder={t.patients.allDoctors}
           value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} />
       </div>
 
@@ -270,7 +276,7 @@ export default function PatientListPage() {
               <thead>
                 <tr>
                   <th>{t.patients.patientCode}</th>
-                  <th>Mã BA</th>
+                  <th>{t.patients.admissionCode}</th>
                   <th>{t.patients.fullName}</th>
                   <th>{t.patients.roomBed}</th>
                   <th>{t.patients.diagnosis}</th>
@@ -303,7 +309,7 @@ export default function PatientListPage() {
                     <td>
                       <div className="data-table__actions" style={{ display: 'flex', gap: 4 }}>
                         {!p.bed_id && p.status !== 'discharged' && (
-                          <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ {t.patients.assignBed || 'Xếp giường'}</button>
+                          <button className="btn btn--primary btn--sm" onClick={(e) => { e.stopPropagation(); setAssignBedPatientId(p.id); }}>+ {t.patients.assignBed}</button>
                         )}
                         <button className="btn btn--ghost btn--sm" onClick={(e) => { e.stopPropagation(); setSelectedDrawerPatientId(p.id); }}>{t.common.edit}</button>
                       </div>

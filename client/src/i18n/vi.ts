@@ -37,6 +37,8 @@ const vi = {
     notFound: 'Không tìm thấy',
     day: 'ngày',
     days: 'ngày',
+    today: 'Hôm nay',
+    tomorrow: 'Ngày mai',
     update: 'Cập nhật',
     fillAllFields: 'Vui lòng điền đầy đủ thông tin',
     more: 'khác',
@@ -154,6 +156,7 @@ const vi = {
     filterDepartment: 'Tất cả khoa',
     filterStatus: 'Tất cả trạng thái',
     searchPlaceholder: 'Tìm phòng...',
+    hasEmpty: 'Còn trống',
     detail: {
       backToList: '← Quay lại danh sách',
       capacityLabel: 'công suất',
@@ -245,6 +248,7 @@ const vi = {
     statusDischarged: 'Đã ra viện',
     confirmRelease: 'Giải phóng giường',
     requestDischarge: 'Yêu cầu ra viện',
+    markClean: '✓ Hoàn tất vệ sinh',
   },
 
   // ── Transfer Modal ──
@@ -307,6 +311,7 @@ const vi = {
     waitingList: 'Chờ xếp giường',
     waitingListDesc: 'Bệnh nhân đã nhập viện nhưng chưa được phân giường',
     assignBed: 'Xếp giường',
+    admissionCode: 'Mã BA',
   },
 
   // ── Add Patient Modal ──
@@ -361,6 +366,10 @@ const vi = {
     loadingChecklist: 'Đang tải checklist...',
     filterDoctor: 'Tất cả bác sĩ',
     blockDischargeMsg: 'Hồ sơ chưa hoàn tất. Vui lòng hoàn thành tất cả mục checklist trước khi ra viện.',
+    diagnosisLabel: 'Chẩn đoán:',
+    doctorLabel: 'BS điều trị:',
+    admittedLabel: 'Nhập viện:',
+    roomBedLabel: 'Phòng/Giường:',
   },
 
   // ── Reports ──
