@@ -134,6 +134,9 @@ export const assignBed = async (bedId: number, patientId: number) =>
 export const releaseBed = async (bedId: number) =>
   (await httpClient.post<ApiRes<Bed>>(`/beds/${bedId}/release`)).data.data;
 
+export const markBedClean = async (bedId: number) =>
+  (await httpClient.patch<ApiRes<Bed>>(`/beds/${bedId}/status`, { status: 'empty' })).data.data;
+
 export const transferBed = async (currentBedId: number, data: { patient_id: number; target_bed_id: number; reason?: string }) =>
   (await httpClient.post<ApiRes<any>>(`/beds/${currentBedId}/transfer`, data)).data.data;
 
@@ -166,6 +169,19 @@ export const dischargePatient = async (id: number) =>
 // ============================================================
 export const fetchDischargeList = async (date?: string) =>
   (await httpClient.get<ApiRes<Patient[]>>('/patients/discharge-list', { params: { date } })).data.data;
+
+// ============================================================
+// Waiting Queue
+// ============================================================
+export interface WaitingPatient {
+  id: number; patient_id: number; patient_code: string; admission_code: string;
+  full_name: string; date_of_birth: string; gender: string; phone: string;
+  diagnosis: string; doctor_name: string; status: string; admitted_at: string;
+  expected_discharge: string; notes: string; hours_waiting: number;
+}
+
+export const fetchWaitingQueue = async (search?: string) =>
+  (await httpClient.get<ApiRes<WaitingPatient[]>>('/patients/waiting-queue', { params: { search } })).data.data;
 
 // ============================================================
 // Checklists

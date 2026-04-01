@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middleware/authMiddleware';
 import { rbacMiddleware } from '../../middleware/rbac';
+import { dataScopeMiddleware } from '../../middleware/dataScope';
 import * as ctrl from './beds.controller';
 
 const router = Router();
 router.use(authMiddleware);
+router.use(dataScopeMiddleware);
 
 router.get('/available', ctrl.listAvailable);
 router.get('/room/:roomId', ctrl.listByRoom);

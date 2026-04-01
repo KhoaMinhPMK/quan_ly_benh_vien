@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { fetchUsers, createUser, updateUser, deleteUser, resetUserPassword, fetchDepartments, type User, type Department } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal/Modal';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import './AdminPages.scss';
 import { ROLE_LABELS } from '../../utils/roleLabels';
 
@@ -21,6 +23,9 @@ export default function UserListPage() {
   const [error, setError] = useState('');
   const [resetPwId, setResetPwId] = useState<number | null>(null);
   const [newPw, setNewPw] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const { showToast } = useToast();
 
   const load = () => {
     setLoading(true);
@@ -49,8 +54,21 @@ export default function UserListPage() {
   };
 
   const handleDelete = async (id: number) => {
-    const msg = t.users.confirmDisable;
-    if (confirm(msg)) { await deleteUser(id); load(); }
+    setConfirmDeleteId(id);
+  };
+  const handleDeleteConfirm = async () => {
+    if (!confirmDeleteId) return;
+    setDeleting(true);
+    try {
+      await deleteUser(confirmDeleteId);
+      load();
+      showToast(t.common.success, 'success');
+    } catch {
+      showToast(t.common.error, 'error');
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
   };
   const handleResetPw = async () => { if (resetPwId && newPw.length >= 6) { await resetUserPassword(resetPwId, newPw); setResetPwId(null); setNewPw(''); } };
 
@@ -136,6 +154,16 @@ export default function UserListPage() {
           </div>
         </Modal>
       )}
+
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title={t.users.confirmDisable}
+        message={t.users.confirmDisable}
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setConfirmDeleteId(null)}
+        loading={deleting}
+      />
     </div>
   );
 }

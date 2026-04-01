@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchRoom, fetchBedsByRoom, releaseBed, updatePatient, type Room, type Bed } from '../../services/api/medboardApi';
+import { fetchRoom, fetchBedsByRoom, releaseBed, markBedClean, updatePatient, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import BedVisual from '../../components/BedVisual/BedVisual';
@@ -58,7 +58,24 @@ export default function RoomDetailPage() {
     return () => { active = false; clearInterval(timer); };
   }, [id]);
 
-  const handleBedClick = (bed: Bed) => { bed.status === 'empty' ? setShowAssign(bed) : setSelectedBed(bed); };
+  const handleBedClick = (bed: Bed) => {
+    if (bed.status === 'empty') {
+      setShowAssign(bed);
+    } else {
+      setSelectedBed(bed);
+    }
+  };
+
+  const handleMarkClean = async (bedId: number) => {
+    try {
+      await markBedClean(bedId);
+      showToast(t.common.success, 'success');
+      setSelectedBed(null);
+      loadData();
+    } catch {
+      showToast(t.common.error, 'error');
+    }
+  };
 
   const handleRelease = async () => {
     if (!selectedBed) return;
@@ -212,7 +229,8 @@ export default function RoomDetailPage() {
             notes: selectedBed.notes || undefined,
           } : null}
           onClose={() => setSelectedBed(null)} onTransfer={() => setShowTransfer(true)}
-          onRelease={handleRelease} onAssign={() => setShowAssign(selectedBed)} onRequestDischarge={handleRequestDischarge} />
+          onRelease={handleRelease} onAssign={() => setShowAssign(selectedBed)} onRequestDischarge={handleRequestDischarge}
+          onMarkClean={() => handleMarkClean(selectedBed.id)} />
       )}
 
       {showTransfer && selectedBed && selectedBed.patient_id && (

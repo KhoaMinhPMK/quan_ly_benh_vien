@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchChecklists, toggleChecklist, fetchBedHistory, updatePatient, type ChecklistItem, type BedHistoryEntry } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import { useToast } from '../../contexts/ToastContext';
 import './BedDetailPanel.scss';
 
 interface PatientInfo {
@@ -12,13 +13,14 @@ interface PatientInfo {
 interface BedDetailPanelProps {
   bedId: number; bedCode: string; bedStatus: string; patient: PatientInfo | null;
   onClose: () => void; onTransfer: () => void; onRelease: () => void; onAssign: () => void;
-  onRequestDischarge?: () => void;
+  onRequestDischarge?: () => void; onMarkClean?: () => void;
 }
 
 type Tab = 'info' | 'checklist' | 'history' | 'notes';
 
-export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onClose, onTransfer, onRelease, onAssign, onRequestDischarge }: BedDetailPanelProps) {
+export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onClose, onTransfer, onRelease, onAssign, onRequestDischarge, onMarkClean }: BedDetailPanelProps) {
   const { t, lang } = useTranslation();
+  const { showToast } = useToast();
   const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
   const [tab, setTab] = useState<Tab>('info');
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
@@ -46,14 +48,14 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
 
   useEffect(() => {
     setLoadingTab(true);
-    if (tab === 'checklist' && patient) { fetchChecklists(patient.id).then(setChecklists).catch(() => {}).finally(() => setLoadingTab(false)); }
-    else if (tab === 'history') { fetchBedHistory(bedId).then(setHistory).catch(() => {}).finally(() => setLoadingTab(false)); }
+    if (tab === 'checklist' && patient) { fetchChecklists(patient.id).then(setChecklists).catch(() => { showToast(t.common.error, 'error'); }).finally(() => setLoadingTab(false)); }
+    else if (tab === 'history') { fetchBedHistory(bedId).then(setHistory).catch(() => { showToast(t.common.error, 'error'); }).finally(() => setLoadingTab(false)); }
     else { setLoadingTab(false); }
   }, [tab, bedId, patient]);
 
   const handleToggleChecklist = async (templateId: number, completed: boolean) => {
     if (!patient) return;
-    try { const updated = await toggleChecklist(patient.id, templateId, completed); setChecklists(updated); } catch {}
+    try { const updated = await toggleChecklist(patient.id, templateId, completed); setChecklists(updated); } catch { showToast(t.common.error, 'error'); }
   };
 
   const handleSaveNotes = async () => {
@@ -63,7 +65,7 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
       await updatePatient(patient.id, { notes: noteText } as any);
       setNotesSaved(true);
       setTimeout(() => setNotesSaved(false), 2000);
-    } catch {}
+    } catch { showToast(t.common.error, 'error'); }
     setSavingNotes(false);
   };
 
@@ -183,7 +185,10 @@ export default function BedDetailPanel({ bedId, bedCode, bedStatus, patient, onC
               )}
             </>
           )}
-          {(bedStatus === 'cleaning' || bedStatus === 'locked' || (!patient && bedStatus !== 'empty')) && (
+          {bedStatus === 'cleaning' && onMarkClean && (
+            <button className="btn btn--primary btn--sm" onClick={onMarkClean}>✓ Hoàn tất vệ sinh</button>
+          )}
+          {(bedStatus === 'locked' || (!patient && bedStatus !== 'empty' && bedStatus !== 'cleaning')) && (
             <button className="btn btn--secondary btn--sm" onClick={onRelease}>{t.bedPanel.releaseBed}</button>
           )}
         </div>

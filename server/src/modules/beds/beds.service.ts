@@ -133,7 +133,8 @@ export async function releaseBed(bedId: number, performedBy?: number) {
       );
     }
 
-    await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', bedId]);
+    // Set to cleaning instead of empty — staff will mark as empty when done
+    await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['cleaning', bedId]);
 
     await conn.commit();
     return getBedById(bedId);

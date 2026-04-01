@@ -291,9 +291,9 @@ export async function dischargePatient(id: number, performedBy?: number) {
       ['discharged', id]
     );
 
-    // Release bed
+    // Release bed — set to cleaning state
     if (bedId) {
-      await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['empty', bedId]);
+      await conn.execute('UPDATE beds SET status = ? WHERE id = ?', ['cleaning', bedId]);
       await conn.execute(
         'INSERT INTO admission_bed_history (admission_id, bed_id, action, performed_by) VALUES (?, ?, ?, ?)',
         [id, bedId, 'release', performedBy || null]
@@ -337,6 +337,31 @@ export async function getDischargeList(filters: { date?: string; department_id?:
 
   sql += ' ORDER BY a.expected_discharge ASC';
   const [rows] = await db.execute<PatientRow[]>(sql, params);
+  return rows;
+}
+
+export async function getWaitingQueue(filters: { department_id?: number; search?: string }) {
+  let sql = `
+    SELECT a.id, a.patient_id, p.patient_code, p.full_name, p.date_of_birth, p.gender, p.phone,
+           a.admission_code, a.diagnosis, a.doctor_name, a.bed_id, a.status, a.admitted_at, a.expected_discharge, a.notes,
+           TIMESTAMPDIFF(HOUR, a.admitted_at, NOW()) AS hours_waiting
+    FROM admissions a
+    JOIN patients p ON a.patient_id = p.id
+    WHERE a.bed_id IS NULL AND a.status IN ('admitted', 'treating')
+  `;
+  const params: (string | number)[] = [];
+
+  if (filters.search) {
+    sql += ' AND (p.patient_code LIKE ? OR p.full_name LIKE ? OR a.admission_code LIKE ?)';
+    params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
+  }
+  if (filters.department_id) {
+    // For waiting queue, we don't have a room yet — filter via doctor's department or skip
+    // Since admission has no direct department, we scope by user's department only if needed
+  }
+
+  sql += ' ORDER BY a.admitted_at ASC';
+  const [rows] = await db.execute<RowDataPacket[]>(sql, params);
   return rows;
 }
 

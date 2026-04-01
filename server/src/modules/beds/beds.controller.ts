@@ -71,7 +71,7 @@ export async function transfer(req: Request, res: Response, next: NextFunction):
 export async function listAvailable(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const beds = await transferService.getAvailableBeds({
-      department_id: req.query.department_id ? Number(req.query.department_id) : undefined,
+      department_id: req.dataScope?.departmentId ?? (req.query.department_id ? Number(req.query.department_id) : undefined),
       room_id: req.query.room_id ? Number(req.query.room_id) : undefined,
     });
     res.json({ success: true, data: beds });

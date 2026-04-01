@@ -19,20 +19,24 @@ export default function DischargeListPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [discharging, setDischarging] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   const statusLabels: Record<string, string> = {
     treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
   };
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
   const loadList = () => {
     setLoading(true);
-    fetchDischargeList()
+    fetchDischargeList(dateFilter || undefined)
       .then(setPatients)
       .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadList(); }, []);
+  useEffect(() => { loadList(); }, [dateFilter]);
 
   const openChecklist = async (patient: Patient) => {
     setSelectedPatient(patient);
@@ -99,6 +103,25 @@ export default function DischargeListPage() {
           <h2 className="page-header__title">{t.discharge.title}</h2>
           <p className="page-header__subtitle">{t.discharge.subtitle}</p>
         </div>
+      </div>
+
+      {/* Date filter chips */}
+      <div className="discharge__date-filters">
+        <button className={`discharge__date-chip ${!dateFilter ? 'discharge__date-chip--active' : ''}`} onClick={() => setDateFilter('')}>
+          {t.common.all}
+        </button>
+        <button className={`discharge__date-chip ${dateFilter === todayStr ? 'discharge__date-chip--active' : ''}`} onClick={() => setDateFilter(todayStr)}>
+          Hôm nay
+        </button>
+        <button className={`discharge__date-chip ${dateFilter === tomorrowStr ? 'discharge__date-chip--active' : ''}`} onClick={() => setDateFilter(tomorrowStr)}>
+          Ngày mai
+        </button>
+        <input
+          type="date"
+          className="discharge__date-input"
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+        />
       </div>
 
       <div className="discharge__layout">

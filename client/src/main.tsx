@@ -4,7 +4,7 @@ import { LanguageProvider } from './i18n/LanguageContext'
 import App from './App'
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-import './styles/main.scss';
+import './styles/index.scss';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

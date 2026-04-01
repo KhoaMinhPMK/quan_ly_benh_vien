@@ -27,6 +27,7 @@ export default function RoomListPage() {
   const [editRoom, setEditRoom] = useState<Room | null>(null);
   const [editForm, setEditForm] = useState({ name: '', room_type: '', max_beds: 0, status: '', notes: '' });
   const [editError, setEditError] = useState('');
+  const [quickFilter, setQuickFilter] = useState<'' | 'full' | 'near_full' | 'has_empty'>('');
 
   useEffect(() => { fetchDepartments().then(setDepartments).catch(() => { showToast(t.common.error, 'error'); }); }, []);
 
@@ -76,6 +77,18 @@ export default function RoomListPage() {
 
   const subtitle = `${rooms.length} ${t.rooms.roomsInSystem}`;
 
+  // Apply quick filter
+  const displayRooms = rooms.filter(r => {
+    if (quickFilter === 'full') return r.total_beds > 0 && r.empty_beds === 0;
+    if (quickFilter === 'near_full') return r.total_beds > 0 && r.empty_beds === 1;
+    if (quickFilter === 'has_empty') return r.empty_beds > 0;
+    return true;
+  });
+
+  const fullCount = rooms.filter(r => r.total_beds > 0 && r.empty_beds === 0).length;
+  const nearFullCount = rooms.filter(r => r.total_beds > 0 && r.empty_beds === 1).length;
+  const hasEmptyCount = rooms.filter(r => r.empty_beds > 0).length;
+
   return (
     <div>
       <div className="page-header">
@@ -112,13 +125,35 @@ export default function RoomListPage() {
         </select>
       </div>
 
+      {/* Quick context chips */}
+      {!loading && rooms.length > 0 && (
+        <div className="room-chips">
+          <button className={`room-chips__chip ${quickFilter === '' ? 'room-chips__chip--active' : ''}`} onClick={() => setQuickFilter('')}>
+            {t.common.all} <span className="room-chips__count">{rooms.length}</span>
+          </button>
+          {fullCount > 0 && (
+            <button className={`room-chips__chip room-chips__chip--error ${quickFilter === 'full' ? 'room-chips__chip--active' : ''}`} onClick={() => setQuickFilter(quickFilter === 'full' ? '' : 'full')}>
+              {t.dashboard.roomsFull} <span className="room-chips__count">{fullCount}</span>
+            </button>
+          )}
+          {nearFullCount > 0 && (
+            <button className={`room-chips__chip room-chips__chip--warning ${quickFilter === 'near_full' ? 'room-chips__chip--active' : ''}`} onClick={() => setQuickFilter(quickFilter === 'near_full' ? '' : 'near_full')}>
+              {t.dashboard.roomsNearFull} <span className="room-chips__count">{nearFullCount}</span>
+            </button>
+          )}
+          <button className={`room-chips__chip room-chips__chip--success ${quickFilter === 'has_empty' ? 'room-chips__chip--active' : ''}`} onClick={() => setQuickFilter(quickFilter === 'has_empty' ? '' : 'has_empty')}>
+            Còn trống <span className="room-chips__count">{hasEmptyCount}</span>
+          </button>
+        </div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="card card--no-hover room-list__loading">
           <div className="loading-screen__spinner room-list__spinner" />
           <p className="room-list__loading-text">{t.common.loadingData}</p>
         </div>
-      ) : rooms.length === 0 ? (
+      ) : displayRooms.length === 0 ? (
         <div className="card card--no-hover">
           <div className="empty-state">
             <div className="empty-state__title">{t.rooms.noRooms}</div>
@@ -144,7 +179,7 @@ export default function RoomListPage() {
                 </tr>
               </thead>
               <tbody>
-                {rooms.map((room) => {
+                {displayRooms.map((room) => {
                   const { fill } = getOccupancyColor(room);
                   const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
                   return (
@@ -182,7 +217,7 @@ export default function RoomListPage() {
 
           {/* Mobile Cards */}
           <div className="room-cards">
-            {rooms.map((room) => {
+            {displayRooms.map((room) => {
               const { fill } = getOccupancyColor(room);
               const ratio = room.total_beds > 0 ? (room.occupied_beds / room.total_beds) * 100 : 0;
               return (

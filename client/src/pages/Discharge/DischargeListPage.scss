@@ -1,6 +1,55 @@
 @use '../../styles/abstracts/variables' as v;
 
 .discharge {
+  // ── Date filter chips ──
+  &__date-filters {
+    display: flex;
+    align-items: center;
+    gap: v.$space-2;
+    margin-bottom: v.$space-4;
+    flex-wrap: wrap;
+  }
+
+  &__date-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: v.$space-1 v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: 20px;
+    background: v.$color-bg-white;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family;
+    color: v.$color-text-secondary;
+    cursor: pointer;
+    transition: all v.$transition-fast;
+
+    &:hover {
+      border-color: v.$color-primary;
+      color: v.$color-primary;
+    }
+
+    &--active {
+      background: v.$color-primary;
+      border-color: v.$color-primary;
+      color: v.$color-text-white;
+    }
+  }
+
+  &__date-input {
+    padding: v.$space-1 v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: v.$radius;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family;
+    color: v.$color-text-primary;
+    background: v.$color-bg-white;
+
+    &:focus {
+      outline: none;
+      border-color: v.$color-primary;
+    }
+  }
+
   &__layout {
     display: grid;
     grid-template-columns: 1fr 400px;

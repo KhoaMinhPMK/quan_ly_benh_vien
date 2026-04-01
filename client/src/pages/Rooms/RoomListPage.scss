@@ -1,5 +1,73 @@
 @use '../../styles/abstracts/variables' as v;
 
+// ── Quick context chips ──
+.room-chips {
+  display: flex;
+  gap: v.$space-2;
+  margin-bottom: v.$space-4;
+  flex-wrap: wrap;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: v.$space-1;
+    padding: v.$space-1 v.$space-3;
+    border: 1px solid v.$color-border;
+    border-radius: 20px;
+    background: v.$color-bg-white;
+    font-size: v.$font-size-sm;
+    font-family: v.$font-family;
+    color: v.$color-text-secondary;
+    cursor: pointer;
+    transition: all v.$transition-fast;
+
+    &:hover {
+      border-color: v.$color-primary;
+      color: v.$color-primary;
+    }
+
+    &--active {
+      background: v.$color-primary;
+      border-color: v.$color-primary;
+      color: v.$color-text-white;
+
+      .room-chips__count {
+        background: rgba(255,255,255,0.25);
+        color: v.$color-text-white;
+      }
+    }
+
+    &--error {
+      &:hover { border-color: v.$color-error; color: v.$color-error; }
+      &.room-chips__chip--active { background: v.$color-error; border-color: v.$color-error; }
+    }
+
+    &--warning {
+      &:hover { border-color: v.$color-warning; color: v.$color-warning; }
+      &.room-chips__chip--active { background: v.$color-warning; border-color: v.$color-warning; }
+    }
+
+    &--success {
+      &:hover { border-color: v.$color-success; color: v.$color-success; }
+      &.room-chips__chip--active { background: v.$color-success; border-color: v.$color-success; }
+    }
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: v.$font-weight-semibold;
+    background: v.$color-bg-secondary;
+    color: v.$color-text-secondary;
+  }
+}
+
 .room-filters {
   display: flex;
   align-items: center;

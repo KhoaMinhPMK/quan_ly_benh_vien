@@ -4,13 +4,12 @@ import { logAudit } from '../../middleware/auditLogger';
 
 export async function list(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const userDept = req.user?.role !== 'admin' ? req.user?.departmentId : undefined;
     const patients = await patientsService.getAllPatients({
       status: req.query.status as string | undefined,
       search: req.query.search as string | undefined,
       room_id: req.query.room_id ? Number(req.query.room_id) : undefined,
       doctor_name: req.query.doctor_name as string | undefined,
-      department_id: userDept ?? undefined,
+      department_id: req.dataScope?.departmentId,
     });
     res.json({ success: true, data: patients });
   } catch (error) { next(error); }
@@ -52,10 +51,19 @@ export async function discharge(req: Request, res: Response, next: NextFunction)
 
 export async function dischargeList(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const userDept = req.user?.role !== 'admin' ? req.user?.departmentId : undefined;
     const patients = await patientsService.getDischargeList({
       date: req.query.date as string | undefined,
-      department_id: userDept ?? undefined,
+      department_id: req.dataScope?.departmentId,
+    });
+    res.json({ success: true, data: patients });
+  } catch (error) { next(error); }
+}
+
+export async function waitingQueue(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const patients = await patientsService.getWaitingQueue({
+      search: req.query.search as string | undefined,
+      department_id: req.dataScope?.departmentId,
     });
     res.json({ success: true, data: patients });
   } catch (error) { next(error); }

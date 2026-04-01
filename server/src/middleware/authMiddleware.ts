@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-const userCache = new Map<number, { isActive: boolean, role: string, exp: number }>();
+const userCache = new Map<number, { isActive: boolean, role: string, departmentId: number | null, exp: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -36,11 +36,11 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     
     let cacheStatus = userCache.get(decoded.id);
     if (!cacheStatus || cacheStatus.exp < now) {
-      const [rows] = await db.execute<RowDataPacket[]>('SELECT is_active, role FROM users WHERE id = ?', [decoded.id]);
+      const [rows] = await db.execute<RowDataPacket[]>('SELECT is_active, role, department_id FROM users WHERE id = ?', [decoded.id]);
       if (rows.length === 0) {
         throw new Error('User not found');
       }
-      cacheStatus = { isActive: Boolean(rows[0].is_active), role: rows[0].role, exp: now + CACHE_TTL };
+      cacheStatus = { isActive: Boolean(rows[0].is_active), role: rows[0].role, departmentId: rows[0].department_id ?? null, exp: now + CACHE_TTL };
       userCache.set(decoded.id, cacheStatus);
     }
 
@@ -49,7 +49,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    req.user = { ...decoded, role: cacheStatus.role as any }; // Update role with latest from DB
+    req.user = { ...decoded, role: cacheStatus.role as any, departmentId: cacheStatus.departmentId }; // Update role & dept with latest from DB
     next();
   } catch (err: any) {
     if (err.message === 'User not found') {
