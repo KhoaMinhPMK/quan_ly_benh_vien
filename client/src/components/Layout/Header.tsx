@@ -31,6 +31,16 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const basePath = '/' + (location.pathname.split('/')[1] || '');
   const pageTitle = (t.header.titles as Record<string, string>)[basePath] || 'MedBoard';
 
+  // Live clock
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
+  const clockTime = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const clockDate = now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
   // Poll unread count
   useEffect(() => {
     const load = () => fetchUnreadCount().then(setUnread).catch(() => {});
@@ -88,6 +98,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
             </button>
           )}
           <h1 className="header__title">{pageTitle}</h1>
+        </div>
+
+        <div className="header__clock">
+          <span className="header__clock-time">{clockTime}</span>
+          <span className="header__clock-date">{clockDate}</span>
         </div>
 
         <div className="header__right">
