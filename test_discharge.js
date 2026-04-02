@@ -1,4 +1,4 @@
-const mysql = require('mysql2/promise');
+const mysql = require('C:/inetpub/wwwroot/quanlybenhvien/server/node_modules/mysql2/promise');
 (async () => {
   const db = await mysql.createPool({ host:'localhost', user:'root', password:'123456', database:'medboard' });
   
