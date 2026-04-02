@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchOccupancyReport, fetchDischargeReport, fetchMissingRecordsReport, fetchDepartmentReport, type OccupancyReport, type DischargeReport } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import PatientDrawer from '../../components/PatientDrawer/PatientDrawer';
 import './AdminPages.scss';
 
 type Tab = 'occupancy' | 'discharge' | 'missing' | 'department';
 
 export default function ReportsPage() {
   const { t, lang } = useTranslation();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('occupancy');
   const [occupancy, setOccupancy] = useState<OccupancyReport[]>([]);
   const [discharge, setDischarge] = useState<DischargeReport[]>([]);
@@ -15,6 +18,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [drawerPatientId, setDrawerPatientId] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -93,7 +97,7 @@ export default function ReportsPage() {
                 <tbody>
                   {occupancy.map(r => (
                     <tr key={r.id}>
-                      <td><strong>{r.room_code}</strong> — {r.name}</td>
+                      <td><button className="btn btn--ghost btn--sm" style={{ padding: 0, fontWeight: 600 }} onClick={() => navigate(`/rooms/${r.id}`)}>{r.room_code}</button> — {r.name}</td>
                       <td>{r.department_name}</td>
                       <td>{r.total_beds}</td>
                       <td>{r.occupied_beds}</td>
@@ -121,7 +125,7 @@ export default function ReportsPage() {
                   {discharge.map(r => (
                     <tr key={r.id}>
                       <td>{r.patient_code}</td>
-                      <td><strong>{r.full_name}</strong></td>
+                      <td><button className="btn btn--ghost btn--sm" style={{ padding: 0, fontWeight: 600 }} onClick={() => setDrawerPatientId(r.id)}>{r.full_name}</button></td>
                       <td>{r.diagnosis}</td>
                       <td>{r.doctor_name}</td>
                       <td>{r.admitted_at ? new Date(r.admitted_at).toLocaleDateString(locale) : '—'}</td>
@@ -148,7 +152,7 @@ export default function ReportsPage() {
                   {missing.map((r: any) => (
                     <tr key={r.id}>
                       <td>{r.patient_code}</td>
-                      <td><strong>{r.full_name}</strong></td>
+                      <td><button className="btn btn--ghost btn--sm" style={{ padding: 0, fontWeight: 600 }} onClick={() => setDrawerPatientId(r.id)}>{r.full_name}</button></td>
                       <td>{r.doctor_name}</td>
                       <td>{r.total_items}</td>
                       <td>{r.completed_items}</td>
@@ -174,7 +178,7 @@ export default function ReportsPage() {
                 <tbody>
                   {department.map((r: any) => (
                     <tr key={r.id}>
-                      <td><strong>{r.name}</strong></td>
+                      <td><button className="btn btn--ghost btn--sm" style={{ padding: 0, fontWeight: 600 }} onClick={() => navigate('/rooms')}>{r.name}</button></td>
                       <td>{r.code}</td>
                       <td>{r.total_rooms}</td>
                       <td>{r.total_beds}</td>
@@ -187,6 +191,13 @@ export default function ReportsPage() {
             </div>
           )}
         </>
+      )}
+
+      {drawerPatientId && (
+        <PatientDrawer
+          patientId={drawerPatientId}
+          onClose={() => setDrawerPatientId(null)}
+        />
       )}
     </div>
   );

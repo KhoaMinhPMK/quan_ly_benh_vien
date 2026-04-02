@@ -320,15 +320,15 @@ export async function getDischargeList(filters: { date?: string; department_id?:
     LEFT JOIN beds b ON a.bed_id = b.id
     LEFT JOIN rooms r ON b.room_id = r.id
     WHERE a.status IN ('treating', 'waiting_discharge')
-    AND a.expected_discharge IS NOT NULL
   `;
   const params: (string | number)[] = [];
 
   if (filters.date) {
-    sql += ' AND a.expected_discharge = ?';
-    params.push(filters.date);
+    sql += ' AND (a.status = ? OR a.expected_discharge = ?)';
+    params.push('waiting_discharge', filters.date);
   } else {
-    sql += ' AND a.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)';
+    sql += ' AND (a.status = ? OR (a.expected_discharge IS NOT NULL AND a.expected_discharge <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)))';
+    params.push('waiting_discharge');
   }
   if (filters.department_id) {
     sql += ' AND r.department_id = ?';
