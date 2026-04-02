@@ -14,6 +14,7 @@ import iconBuilding from '../../assets/icons/outline/building-hospital.svg';
 import iconLogout from '../../assets/icons/outline/logout.svg';
 import iconChevronLeft from '../../assets/icons/outline/chevron-left.svg';
 import iconChevronRight from '../../assets/icons/outline/chevron-right.svg';
+import iconLock from '../../assets/icons/outline/lock.svg';
 
 interface NavItem { path: string; labelKey: keyof typeof import('../../i18n/vi').default.nav; icon: string; adminOnly?: boolean; }
 
@@ -25,6 +26,7 @@ const navItems: NavItem[] = [
   { path: '/reports', labelKey: 'reports', icon: iconReport },
   { path: '/users', labelKey: 'users', icon: iconUsers, adminOnly: true },
   { path: '/admin', labelKey: 'admin', icon: iconSettings, adminOnly: true },
+  { path: '/access', labelKey: 'access', icon: iconLock, adminOnly: true },
 ];
 
 import { getRoleLabel } from '../../utils/roleLabels';

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { AccessProvider } from './contexts/AccessContext';
 import { ToastProvider } from './contexts/ToastContext';
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute';
 import AppLayout from './components/Layout/AppLayout';
@@ -12,6 +13,7 @@ import DischargeListPage from './pages/Discharge/DischargeListPage';
 import UserListPage from './pages/Admin/UserListPage';
 import ReportsPage from './pages/Admin/ReportsPage';
 import AdminPage from './pages/Admin/AdminPage';
+import AccessCenterPage from './pages/Admin/AccessCenterPage';
 import './styles/index.scss';
 
 export default function App() {
@@ -19,6 +21,7 @@ export default function App() {
     <BrowserRouter>
       <ToastProvider>
       <AuthProvider>
+        <AccessProvider>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -39,10 +42,12 @@ export default function App() {
             <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']}><ReportsPage /></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><UserListPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
+            <Route path="/access" element={<ProtectedRoute allowedRoles={['admin']}><AccessCenterPage /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </AccessProvider>
       </AuthProvider>
       </ToastProvider>
     </BrowserRouter>

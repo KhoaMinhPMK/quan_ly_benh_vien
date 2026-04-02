@@ -13,6 +13,7 @@ import reportsRoutes from './modules/reports/reports.routes';
 import searchRoutes from './modules/search/search.routes';
 import auditRoutes from './modules/audit/audit.routes';
 import configRoutes from './modules/config/config.routes';
+import accessRoutes from './modules/access/access.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { initWebPush } from './modules/notifications/push.service';
 
@@ -56,6 +57,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/config', configRoutes);
+app.use('/api/access', accessRoutes);
 
 // Error handling
 app.use(notFoundHandler);
