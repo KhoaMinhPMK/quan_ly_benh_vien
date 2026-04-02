@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPatient, fetchRooms, fetchBedsByRoom, globalSearch, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import Select from '../../components/Select/Select';
 import '../../components/Modal/Modal.scss';
 
 interface Props {
@@ -139,9 +140,9 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
               <div className="form-field"><label className="form-field__label">{t.addPatient.dob}</label>
                 <input className="form-field__input" name="date_of_birth" type="date" value={form.date_of_birth} onChange={handleChange} /></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.gender}</label>
-                <select className="form-field__select" name="gender" value={form.gender} onChange={handleChange}>
-                  <option value="male">{t.addPatient.male}</option><option value="female">{t.addPatient.female}</option>
-                </select></div>
+                <Select value={form.gender} onChange={val => setForm({...form, gender: val})}
+                  options={[{ value: 'male', label: t.addPatient.male }, { value: 'female', label: t.addPatient.female }]}
+                /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.addPatient.phone}</label>
               <input className="form-field__input" name="phone" value={form.phone} onChange={handleChange} placeholder={t.addPatient.phonePlaceholder} /></div>
@@ -151,19 +152,21 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
               <input className="form-field__input" name="doctor_name" value={form.doctor_name} onChange={handleChange} placeholder={t.addPatient.doctorPlaceholder} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addPatient.room}</label>
-                <select className="form-field__select" name="room_id" value={form.room_id} onChange={handleChange}>
-                  <option value="">{t.addPatient.selectRoom}</option>
-                  {rooms.map((r) => (
-                    <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
-                      {r.room_code} - {r.name} {r.empty_beds > 0 ? `(Còn ${r.empty_beds} giường)` : '(HẾT)'}
-                    </option>
-                  ))}
-                </select></div>
+                <Select value={form.room_id} onChange={val => { setForm({...form, room_id: val, bed_id: ''}); }}
+                  placeholder={t.addPatient.selectRoom}
+                  options={[
+                    { value: '', label: t.addPatient.selectRoom },
+                    ...rooms.map(r => ({ value: String(r.id), label: `${r.room_code} - ${r.name} ${r.empty_beds > 0 ? `(Còn ${r.empty_beds} giường)` : '(HẾT)'}`, disabled: r.empty_beds === 0 }))
+                  ]}
+                /></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.bed}</label>
-                <select className="form-field__select" name="bed_id" value={form.bed_id} onChange={handleChange} disabled={!form.room_id}>
-                  <option value="">{t.addPatient.selectBed}</option>
-                  {beds.map((b) => <option key={b.id} value={b.id}>{b.bed_code}</option>)}
-                </select></div>
+                <Select value={form.bed_id} onChange={val => setForm({...form, bed_id: val})} disabled={!form.room_id}
+                  placeholder={t.addPatient.selectBed}
+                  options={[
+                    { value: '', label: t.addPatient.selectBed },
+                    ...beds.map(b => ({ value: String(b.id), label: b.bed_code }))
+                  ]}
+                /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.addPatient.expectedDischarge}</label>
               <input className="form-field__input" name="expected_discharge" type="date" value={form.expected_discharge} onChange={handleChange} /></div>

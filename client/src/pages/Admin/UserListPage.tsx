@@ -5,6 +5,7 @@ import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import Modal from '../../components/Modal/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
+import Select from '../../components/Select/Select';
 import './AdminPages.scss';
 import { ROLE_LABELS } from '../../utils/roleLabels';
 
@@ -85,10 +86,14 @@ export default function UserListPage() {
 
       <div className="admin-filters">
         <input className="form-field__input" placeholder={t.common.search} value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 240 }} />
-        <select className="form-field__select" value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ maxWidth: 160 }}>
-          <option value="">{t.users.filterRole}</option>
-          {Object.entries(roleLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
+        <Select value={roleFilter} onChange={val => setRoleFilter(val)}
+          placeholder={t.users.filterRole}
+          style={{ maxWidth: 160 }}
+          options={[
+            { value: '', label: t.users.filterRole },
+            ...Object.entries(roleLabels).map(([k, v]) => ({ value: k, label: v }))
+          ]}
+        />
       </div>
 
       <div className="card" style={{ padding: 0 }}>
@@ -124,15 +129,18 @@ export default function UserListPage() {
             <div className="form-field"><label className="form-field__label">{t.users.fullName}</label><input className="form-field__input" value={form.full_name} onChange={e => setForm({...form, full_name: e.target.value})} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.users.role}</label>
-                <select className="form-field__select" value={form.role} onChange={e => setForm({...form, role: e.target.value})}>
-                  {Object.entries(roleLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-                </select>
+                <Select value={form.role} onChange={val => setForm({...form, role: val})}
+                  options={Object.entries(roleLabels).map(([k, v]) => ({ value: k, label: v }))}
+                />
               </div>
               <div className="form-field"><label className="form-field__label">{t.users.department}</label>
-                <select className="form-field__select" value={form.department_id} onChange={e => setForm({...form, department_id: e.target.value})}>
-                  <option value="">{t.users.selectDept}</option>
-                  {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
+                <Select value={form.department_id} onChange={val => setForm({...form, department_id: val})}
+                  placeholder={t.users.selectDept}
+                  options={[
+                    { value: '', label: t.users.selectDept },
+                    ...depts.map(d => ({ value: String(d.id), label: d.name }))
+                  ]}
+                />
               </div>
             </div>
           </div>

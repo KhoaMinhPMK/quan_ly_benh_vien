@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { fetchRooms, fetchBedsByRoom, assignBed, fetchPatient, type Room, type Bed, type Patient } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import Select from '../../components/Select/Select';
 import '../../components/Modal/Modal.scss';
 
 interface Props {
@@ -77,21 +78,23 @@ export default function PatientAssignBedModal({ open, patientId, onClose, onAssi
             <div className="modal__row">
               <div className="form-field">
                 <label className="form-field__label">{t.addPatient?.room}</label>
-                <select className="form-field__select" value={roomId} onChange={e => setRoomId(e.target.value)}>
-                  <option value="">{t.addPatient?.selectRoom}</option>
-                  {rooms.map(r => (
-                    <option key={r.id} value={r.id} disabled={r.empty_beds === 0}>
-                      {r.room_code} - {r.name} {r.empty_beds > 0 ? `(Còn ${r.empty_beds})` : '(HẾT)'}
-                    </option>
-                  ))}
-                </select>
+                <Select value={roomId} onChange={val => setRoomId(val)}
+                  placeholder={t.addPatient?.selectRoom}
+                  options={[
+                    { value: '', label: t.addPatient?.selectRoom || '' },
+                    ...rooms.map(r => ({ value: String(r.id), label: `${r.room_code} - ${r.name} ${r.empty_beds > 0 ? `(Còn ${r.empty_beds})` : '(HẾT)'}`, disabled: r.empty_beds === 0 }))
+                  ]}
+                />
               </div>
               <div className="form-field">
                 <label className="form-field__label">{t.addPatient?.bed}</label>
-                <select className="form-field__select" value={bedId} onChange={e => setBedId(e.target.value)} disabled={!roomId}>
-                  <option value="">{t.addPatient?.selectBed}</option>
-                  {beds.map(b => <option key={b.id} value={b.id}>{b.bed_code}</option>)}
-                </select>
+                <Select value={bedId} onChange={val => setBedId(val)} disabled={!roomId}
+                  placeholder={t.addPatient?.selectBed}
+                  options={[
+                    { value: '', label: t.addPatient?.selectBed || '' },
+                    ...beds.map(b => ({ value: String(b.id), label: b.bed_code }))
+                  ]}
+                />
               </div>
             </div>
             {beds.length === 0 && roomId && (

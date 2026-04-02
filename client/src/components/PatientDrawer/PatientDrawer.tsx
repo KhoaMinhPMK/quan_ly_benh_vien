@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchPatient, fetchChecklists, toggleChecklist, fetchBedHistory, updatePatient, type Patient, type ChecklistItem, type BedHistoryEntry } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
+import Select from '../Select/Select';
 import '../BedDetailPanel/BedDetailPanel.scss';
 
 interface PatientDrawerProps {
@@ -234,10 +235,12 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                       <input className="form-field__input" type="date" value={editForm.expected_discharge} onChange={e => setEditForm({...editForm, expected_discharge: e.target.value})} /></div>
                     {allowedStatuses.length > 0 && (
                       <div className="form-field"><label className="form-field__label">{t.bedPanel?.patientStatus || 'Trạng thái'}</label>
-                        <select className="form-field__select" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                          <option value={patient.status}>{statusLabels[patient.status]} (Hiện tại)</option>
-                          {allowedStatuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
-                        </select></div>
+                        <Select value={editForm.status} onChange={val => setEditForm({...editForm, status: val})}
+                          options={[
+                            { value: patient.status, label: `${statusLabels[patient.status]} (Hiện tại)` },
+                            ...allowedStatuses.map(s => ({ value: s, label: statusLabels[s] }))
+                          ]}
+                        /></div>
                     )}
                     <div className="form-field"><label className="form-field__label">{t.common?.notes || 'Ghi chú'}</label>
                       <textarea className="form-field__input" value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} rows={3} /></div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createRoom, fetchDepartments, type Department } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
+import Select from '../../components/Select/Select';
 import '../../components/Modal/Modal.scss';
 
 interface Props {
@@ -54,17 +55,22 @@ export default function AddRoomModal({ open, onClose, onCreated }: Props) {
             </div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addRoom.department} *</label>
-                <select className="form-field__select" name="department_id" value={form.department_id} onChange={handleChange}>
-                  <option value="">{t.addRoom.selectDept}</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select></div>
+                <Select value={form.department_id} onChange={val => setForm({...form, department_id: val})}
+                  placeholder={t.addRoom.selectDept}
+                  options={[
+                    { value: '', label: t.addRoom.selectDept },
+                    ...departments.map((d) => ({ value: String(d.id), label: d.name }))
+                  ]}
+                /></div>
               <div className="form-field"><label className="form-field__label">{t.addRoom.roomType}</label>
-                <select className="form-field__select" name="room_type" value={form.room_type} onChange={handleChange}>
-                  <option value="normal">{t.addRoom.typeNormal}</option>
-                  <option value="vip">VIP</option>
-                  <option value="icu">{t.addRoom.typeICU}</option>
-                  <option value="isolation">{t.addRoom.typeIsolation}</option>
-                </select></div>
+                <Select value={form.room_type} onChange={val => setForm({...form, room_type: val})}
+                  options={[
+                    { value: 'normal', label: t.addRoom.typeNormal },
+                    { value: 'vip', label: 'VIP' },
+                    { value: 'icu', label: t.addRoom.typeICU },
+                    { value: 'isolation', label: t.addRoom.typeIsolation },
+                  ]}
+                /></div>
             </div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addRoom.maxBeds}</label>

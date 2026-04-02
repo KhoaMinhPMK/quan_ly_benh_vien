@@ -12,6 +12,7 @@ import iconMapPin from '../../assets/icons/outline/map-pin.svg';
 import iconStethoscope from '../../assets/icons/outline/stethoscope.svg';
 import iconUserCircle from '../../assets/icons/outline/user-circle.svg';
 import iconCalendar from '../../assets/icons/outline/calendar.svg';
+import Select from '../../components/Select/Select';
 import './PatientListPage.scss';
 
 const STATUS_BADGE: Record<string, string> = {
@@ -225,13 +226,16 @@ export default function PatientListPage() {
           <input type="text" className="form-field__input" placeholder={t.patients.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__select patient-filters__select" value={filterStatus || ''}
-          onChange={(e) => setFilterStatus(e.target.value || undefined)}>
-          <option value="">{t.patients.filterStatus}</option>
-          <option value="admitted">{t.patients.statusAdmitted}</option>
-          <option value="treating">{t.patients.statusTreating}</option>
-          <option value="waiting_discharge">{t.patients.statusWaiting}</option>
-        </select>
+        <Select className="patient-filters__select" value={filterStatus || ''}
+          onChange={(val) => setFilterStatus(val || undefined)}
+          placeholder={t.patients.filterStatus}
+          options={[
+            { value: '', label: t.patients.filterStatus },
+            { value: 'admitted', label: t.patients.statusAdmitted },
+            { value: 'treating', label: t.patients.statusTreating },
+            { value: 'waiting_discharge', label: t.patients.statusWaiting },
+          ]}
+        />
         <input type="text" className="form-field__input patient-filters__select" placeholder={t.patients.allDoctors}
           value={filterDoctor} onChange={(e) => setFilterDoctor(e.target.value)} />
       </div>

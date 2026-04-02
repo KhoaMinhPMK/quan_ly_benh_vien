@@ -7,6 +7,7 @@ import AddRoomModal from './AddRoomModal';
 import Modal from '../../components/Modal/Modal';
 import iconSearch from '../../assets/icons/outline/search.svg';
 import iconPlus from '../../assets/icons/outline/adjustments-plus.svg';
+import Select from '../../components/Select/Select';
 import './RoomListPage.scss';
 
 const TYPE_LABELS_VI: Record<string, string> = { normal: 'Thường', vip: 'VIP', icu: 'ICU', isolation: 'Cách ly' };
@@ -117,18 +118,24 @@ export default function RoomListPage() {
           <input type="text" className="form-field__input" placeholder={t.rooms.searchPlaceholder}
             value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <select className="form-field__select room-filters__select" value={filterDept || ''}
-          onChange={(e) => setFilterDept(e.target.value ? Number(e.target.value) : undefined)}>
-          <option value="">{t.rooms.filterDepartment}</option>
-          {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
-        <select className="form-field__select room-filters__select" value={filterStatus || ''}
-          onChange={(e) => setFilterStatus(e.target.value || undefined)}>
-          <option value="">{t.rooms.filterStatus}</option>
-          <option value="active">{t.rooms.statusActive}</option>
-          <option value="maintenance">{t.rooms.statusMaintenance}</option>
-          <option value="closed">{t.rooms.statusClosed}</option>
-        </select>
+        <Select className="room-filters__select" value={String(filterDept || '')}
+          onChange={(val) => setFilterDept(val ? Number(val) : undefined)}
+          placeholder={t.rooms.filterDepartment}
+          options={[
+            { value: '', label: t.rooms.filterDepartment },
+            ...departments.map((d) => ({ value: String(d.id), label: d.name }))
+          ]}
+        />
+        <Select className="room-filters__select" value={filterStatus || ''}
+          onChange={(val) => setFilterStatus(val || undefined)}
+          placeholder={t.rooms.filterStatus}
+          options={[
+            { value: '', label: t.rooms.filterStatus },
+            { value: 'active', label: t.rooms.statusActive },
+            { value: 'maintenance', label: t.rooms.statusMaintenance },
+            { value: 'closed', label: t.rooms.statusClosed },
+          ]}
+        />
       </div>
 
       {/* Quick context chips */}
@@ -276,21 +283,25 @@ export default function RoomListPage() {
               <input className="form-field__input" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.rooms.roomType}</label>
-                <select className="form-field__select" value={editForm.room_type} onChange={e => setEditForm({...editForm, room_type: e.target.value})}>
-                  <option value="normal">{typeLabels.normal}</option>
-                  <option value="vip">{typeLabels.vip}</option>
-                  <option value="icu">{typeLabels.icu}</option>
-                  <option value="isolation">{typeLabels.isolation}</option>
-                </select></div>
+                <Select value={editForm.room_type} onChange={val => setEditForm({...editForm, room_type: val})}
+                  options={[
+                    { value: 'normal', label: typeLabels.normal },
+                    { value: 'vip', label: typeLabels.vip },
+                    { value: 'icu', label: typeLabels.icu },
+                    { value: 'isolation', label: typeLabels.isolation },
+                  ]}
+                /></div>
               <div className="form-field"><label className="form-field__label">{t.rooms.maxBedsLabel}</label>
                 <input className="form-field__input" type="number" min={1} max={20} value={editForm.max_beds} onChange={e => setEditForm({...editForm, max_beds: Number(e.target.value)})} /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.rooms.statusLabel}</label>
-              <select className="form-field__select" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                <option value="active">{t.rooms.statusActive}</option>
-                <option value="maintenance">{t.rooms.statusMaintenance}</option>
-                <option value="closed">{t.rooms.statusClosed}</option>
-              </select></div>
+              <Select value={editForm.status} onChange={val => setEditForm({...editForm, status: val})}
+                options={[
+                  { value: 'active', label: t.rooms.statusActive },
+                  { value: 'maintenance', label: t.rooms.statusMaintenance },
+                  { value: 'closed', label: t.rooms.statusClosed },
+                ]}
+              /></div>
             <div className="form-field"><label className="form-field__label">{t.common.notes}</label>
               <textarea className="form-field__input" value={editForm.notes} onChange={e => setEditForm({...editForm, notes: e.target.value})} rows={2} /></div>
           </div>
