@@ -55,7 +55,7 @@ export default function TransferModal({ open, patientName, patientId, currentBed
           <div className="transfer-modal__arrow">↓</div>
           <div className="transfer-modal__field">
             <label>{t.transfer.targetRoom}</label>
-            <select value={targetRoomId || ''} onChange={e => setTargetRoomId(e.target.value ? Number(e.target.value) : null)}>
+            <select className="form-field__select" value={targetRoomId || ''} onChange={e => setTargetRoomId(e.target.value ? Number(e.target.value) : null)}>
               <option value="">{t.transfer.selectRoom}</option>
               {rooms.filter(r => r.id !== currentRoomId || rooms.length === 1).map(r => (
                 <option key={r.id} value={r.id}>{r.name} ({r.room_code}) — {r.total_beds - r.occupied_beds} {t.transfer.emptyCount}</option>
