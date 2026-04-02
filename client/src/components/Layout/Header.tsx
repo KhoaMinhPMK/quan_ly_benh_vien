@@ -38,7 +38,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
     return () => clearInterval(timer);
   }, []);
   const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
-  const clockTime = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+  const clockTime = now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const clockDate = now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // Poll unread count
