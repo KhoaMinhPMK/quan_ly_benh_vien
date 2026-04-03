@@ -180,8 +180,8 @@ export async function getAccessAuditLogs(filters?: { subject_type?: string; subj
   const params: (string | number | boolean | null)[] = [];
   if (filters?.subject_type) { sql += ' AND subject_type = ?'; params.push(filters.subject_type); }
   if (filters?.subject_id) { sql += ' AND subject_id = ?'; params.push(filters.subject_id); }
-  sql += ' ORDER BY created_at DESC LIMIT ?';
-  params.push(filters?.limit || 100);
+  const limit = Math.min(Math.max(Number(filters?.limit) || 100, 1), 1000);
+  sql += ` ORDER BY created_at DESC LIMIT ${limit}`;
   const [rows] = await db.execute<RowDataPacket[]>(sql, params);
   return rows;
 }

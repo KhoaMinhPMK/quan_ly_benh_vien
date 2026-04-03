@@ -10,7 +10,7 @@ import {
   type ModuleEntitlement, type PolicyAssignment, type EffectiveAccess, type AccessAuditLog,
   type EntitlementEffect, type PolicyEffect,
 } from '../../services/api/accessApi';
-import { fetchUsers, type User } from '../../services/api/medboardApi';
+import { fetchUsers, fetchDepartments, type User, type Department } from '../../services/api/medboardApi';
 import Modal from '../../components/Modal/Modal';
 import './AdminPages.scss';
 import './AccessCenter.scss';
@@ -57,21 +57,63 @@ export default function AccessCenterPage() {
 // ============================================================
 function SubjectSelector({ value, onChange }: { value: { type: SubjectType; id: number }; onChange: (v: { type: SubjectType; id: number }) => void }) {
   const { t } = useTranslation();
+  const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [groups, setGroups] = useState<UserGroup[]>([]);
+
+  useEffect(() => {
+    fetchUsers().then(setUsers).catch(() => {});
+    fetchDepartments().then(setDepartments).catch(() => {});
+    fetchGroups().then(setGroups).catch(() => {});
+  }, []);
+
   const subjectTypes: { value: SubjectType; label: string }[] = [
-    { value: 'user', label: 'User' },
-    { value: 'role_template', label: 'Role Template' },
-    { value: 'department', label: 'Department' },
-    { value: 'group', label: 'Group' },
-    { value: 'tenant', label: 'Tenant' },
+    { value: 'user', label: t.access.subjectUser || 'Người dùng' },
+    { value: 'department', label: t.access.subjectDepartment || 'Khoa' },
+    { value: 'group', label: t.access.subjectGroup || 'Nhóm' },
   ];
+
+  const handleTypeChange = (type: SubjectType) => {
+    onChange({ type, id: 0 });
+  };
+
+  const renderIdPicker = () => {
+    if (value.type === 'user') {
+      return (
+        <select className="form-field__input" value={value.id || ''} onChange={e => onChange({ ...value, id: Number(e.target.value) })}>
+          <option value="">{t.access.selectUser || '— Chọn người dùng —'}</option>
+          {users.map(u => <option key={u.id} value={u.id}>{u.full_name} ({u.role})</option>)}
+        </select>
+      );
+    }
+    if (value.type === 'department') {
+      return (
+        <select className="form-field__input" value={value.id || ''} onChange={e => onChange({ ...value, id: Number(e.target.value) })}>
+          <option value="">{t.access.selectDepartment || '— Chọn khoa —'}</option>
+          {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+      );
+    }
+    if (value.type === 'group') {
+      return (
+        <select className="form-field__input" value={value.id || ''} onChange={e => onChange({ ...value, id: Number(e.target.value) })}>
+          <option value="">{t.access.selectGroup || '— Chọn nhóm —'}</option>
+          {groups.map(g => <option key={g.id} value={g.id}>{g.name} ({g.code})</option>)}
+        </select>
+      );
+    }
+    return (
+      <input className="form-field__input" type="number" min={1} placeholder="ID"
+        value={value.id || ''} onChange={e => onChange({ ...value, id: Number(e.target.value) })} />
+    );
+  };
 
   return (
     <div className="ac-subject-selector">
-      <select className="form-field__input" value={value.type} onChange={e => onChange({ ...value, type: e.target.value as SubjectType })}>
+      <select className="form-field__input" value={value.type} onChange={e => handleTypeChange(e.target.value as SubjectType)}>
         {subjectTypes.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
       </select>
-      <input className="form-field__input" type="number" min={1} placeholder={t.access.subjectId}
-        value={value.id || ''} onChange={e => onChange({ ...value, id: Number(e.target.value) })} />
+      {renderIdPicker()}
     </div>
   );
 }
@@ -111,6 +153,7 @@ function ModulesTab({ catalog }: { catalog: { modules: FeatureModule[]; capabili
   return (
     <div className="ac-section">
       <SubjectSelector value={subject} onChange={setSubject} />
+      {!subject.id && <p className="text-muted text-sm" style={{ margin: '8px 0 16px' }}>{t.access.selectSubjectHint || 'Chọn đối tượng ở trên để bật/tắt module cho đối tượng đó.'}</p>}
       {loading ? <div className="card" style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</div> : (
         <div className="ac-module-grid">
           {catalog.modules.map(m => {
@@ -122,14 +165,16 @@ function ModulesTab({ catalog }: { catalog: { modules: FeatureModule[]; capabili
                   {m.is_core && <span className="ac-module-card__badge ac-module-card__badge--core">{t.access.core}</span>}
                 </div>
                 {m.description && <p className="ac-module-card__desc">{m.description}</p>}
-                <div className="ac-module-card__actions">
-                  {(['enabled', 'inherit', 'disabled'] as EntitlementEffect[]).map(e => (
-                    <button key={e} className={`btn btn--sm ${eff === e ? 'btn--primary' : 'btn--ghost'}`}
-                      onClick={() => handleToggle(m.module_key, e)}>
-                      {t.access[e]}
-                    </button>
-                  ))}
-                </div>
+                {subject.id > 0 && (
+                  <div className="ac-module-card__actions">
+                    {(['enabled', 'inherit', 'disabled'] as EntitlementEffect[]).map(e => (
+                      <button key={e} className={`btn btn--sm ${eff === e ? 'btn--primary' : 'btn--ghost'}`}
+                        onClick={() => handleToggle(m.module_key, e)}>
+                        {t.access[e]}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
@@ -345,7 +390,8 @@ function PoliciesTab({ catalog }: { catalog: { modules: FeatureModule[]; capabil
   return (
     <div className="ac-section">
       <SubjectSelector value={subject} onChange={setSubject} />
-      {loading ? <div className="card" style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</div> : (
+      {!subject.id && <p className="text-muted text-sm" style={{ margin: '8px 0 16px' }}>{t.access.selectSubjectHint || 'Chọn đối tượng ở trên để phân quyền capability.'}</p>}
+      {loading ? <div className="card" style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</div> : subject.id > 0 ? (
         <>
           {Object.entries(capsByModule).map(([moduleKey, caps]) => (
             <div key={moduleKey} className="ac-cap-module">
@@ -379,7 +425,7 @@ function PoliciesTab({ catalog }: { catalog: { modules: FeatureModule[]; capabil
             </div>
           )}
         </>
-      )}
+      ) : null}
     </div>
   );
 }
