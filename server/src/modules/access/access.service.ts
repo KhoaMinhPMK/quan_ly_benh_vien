@@ -168,10 +168,10 @@ export async function logAccessAudit(
   await db.execute(
     `INSERT INTO access_audit_logs (user_id, user_name, action, subject_type, subject_id, target_key, before_value, after_value, reason, ip_address)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [userId, userName, action, subjectType, subjectId, targetKey,
+    [userId ?? null, userName ?? null, action, subjectType ?? null, subjectId ?? null, targetKey ?? null,
      beforeValue ? JSON.stringify(beforeValue) : null,
      afterValue ? JSON.stringify(afterValue) : null,
-     reason, ip]
+     reason ?? null, ip ?? null]
   );
 }
 

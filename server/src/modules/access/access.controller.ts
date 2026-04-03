@@ -31,8 +31,8 @@ export async function setModule(req: Request, res: Response, next: NextFunction)
       return;
     }
     const before = await svc.getModuleEntitlements(type, id);
-    await svc.setModuleEntitlement(type, id, module_key, effect, reason || null, req.user?.id || null);
-    await logAccessAudit(req.user?.id || null, req.user?.fullName || null, 'module_change', type, id, module_key, before, { effect, reason }, reason, (req.ip as string) || null);
+    await svc.setModuleEntitlement(type, id, module_key, effect, reason ?? null, req.user?.id ?? null);
+    await logAccessAudit(req.user?.id ?? null, req.user?.fullName ?? null, 'module_change', type, id, module_key, before, { effect, reason: reason ?? null }, reason ?? null, req.ip ?? null);
     res.json({ success: true, message: 'Đã cập nhật module entitlement' });
   } catch (e) { next(e); }
 }
@@ -57,8 +57,8 @@ export async function setPolicies(req: Request, res: Response, next: NextFunctio
       return;
     }
     const before = await svc.getPolicies(type, id);
-    await svc.bulkSetPolicies(type, id, policies, 'admin_manual', req.user?.id || null);
-    await logAccessAudit(req.user?.id || null, req.user?.fullName || null, 'capability_change', type, id, null, before, policies, null, (req.ip as string) || null);
+    await svc.bulkSetPolicies(type, id, policies, 'admin_manual', req.user?.id ?? null);
+    await logAccessAudit(req.user?.id ?? null, req.user?.fullName ?? null, 'capability_change', type, id, null, before, policies, null, req.ip ?? null);
     res.json({ success: true, message: 'Đã cập nhật policies' });
   } catch (e) { next(e); }
 }
