@@ -1,5 +1,7 @@
 -- Migration: 007_access_platform
 -- Nền tảng phân quyền động: module + capability + scope + rule engine
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
 
 -- ============================================================
 -- 1. Feature Modules — danh mục phân hệ
