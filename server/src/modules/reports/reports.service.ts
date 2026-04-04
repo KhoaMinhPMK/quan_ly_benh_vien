@@ -100,30 +100,38 @@ export async function getTrendData(days = 30, departmentId?: number) {
 
   const [computed] = await db.execute<RowDataPacket[]>(
     `SELECT
-      DATE(a.admitted_at) AS stat_date,
-      COUNT(*) AS new_admissions,
+      d.stat_date,
+      COALESCE(adm.new_admissions, 0) AS new_admissions,
       (SELECT COUNT(*) FROM admissions a2
        LEFT JOIN beds b2 ON a2.bed_id = b2.id
        LEFT JOIN rooms r2 ON b2.room_id = r2.id
        WHERE a2.status != 'discharged'
-         AND DATE(a2.admitted_at) <= DATE(a.admitted_at)
+         AND DATE(a2.admitted_at) <= d.stat_date
          ${departmentId ? 'AND r2.department_id = ?' : ''}
       ) AS total_patients,
       (SELECT COUNT(*) FROM admissions a3
        LEFT JOIN beds b3 ON a3.bed_id = b3.id
        LEFT JOIN rooms r3 ON b3.room_id = r3.id
        WHERE a3.status = 'discharged'
-         AND DATE(a3.discharged_at) = DATE(a.admitted_at)
+         AND DATE(a3.discharged_at) = d.stat_date
          ${departmentId ? 'AND r3.department_id = ?' : ''}
       ) AS discharges
-    FROM admissions a
-    LEFT JOIN beds b ON a.bed_id = b.id
-    LEFT JOIN rooms r ON b.room_id = r.id
-    WHERE a.admitted_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-      ${deptFilter}
-    GROUP BY DATE(a.admitted_at)
-    ORDER BY stat_date`,
-    departmentId ? [departmentId, departmentId, days, departmentId] : [days]
+    FROM (
+      SELECT DATE(admitted_at) AS stat_date FROM admissions
+      WHERE admitted_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+      GROUP BY DATE(admitted_at)
+    ) d
+    LEFT JOIN (
+      SELECT DATE(a.admitted_at) AS adate, COUNT(*) AS new_admissions
+      FROM admissions a
+      LEFT JOIN beds b ON a.bed_id = b.id
+      LEFT JOIN rooms r ON b.room_id = r.id
+      WHERE a.admitted_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
+        ${deptFilter}
+      GROUP BY DATE(a.admitted_at)
+    ) adm ON adm.adate = d.stat_date
+    ORDER BY d.stat_date`,
+    departmentId ? [departmentId, departmentId, days, days, departmentId] : [days, days]
   );
 
   return computed;
