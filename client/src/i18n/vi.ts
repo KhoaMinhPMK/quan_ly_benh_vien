@@ -59,6 +59,7 @@ const vi = {
     users: 'Người dùng',
     admin: 'Quản trị',
     access: 'Truy cập',
+    saas: 'Nền tảng',
     logout: 'Đăng xuất',
   },
 
@@ -70,6 +71,7 @@ const vi = {
       '/patients': 'Bệnh nhân nội trú',
       '/discharge': 'Ra viện',
       '/reports': 'Báo cáo',
+      '/saas': 'Nền tảng SaaS',
       '/users': 'Quản lý người dùng',
       '/admin': 'Quản trị hệ thống',
       '/access': 'Trung tâm truy cập',
@@ -396,6 +398,7 @@ const vi = {
     tabDischarge: 'Ra viện',
     tabMissing: 'Hồ sơ thiếu',
     tabDepartment: 'Theo khoa',
+    tabDoctor: 'Theo bác sĩ',
     tabHistory: 'Lịch sử ra viện',
     occupancyTitle: 'Công suất giường theo phòng',
     dischargeTitle: 'Lịch sử ra viện',
@@ -582,6 +585,21 @@ const vi = {
     previewHint: 'Xem quyền thực tế của người dùng sau khi giải quyết tất cả các lớp',
     effectiveModules: 'Module hiệu lực',
     effectiveCapabilities: 'Quyền hiệu lực',
+  },
+
+  // ── SaaS Platform ──
+  saas: {
+    title: 'Nền tảng SaaS',
+    subtitle: 'Quản lý gói dịch vụ, tích hợp và cấu hình nền tảng',
+    tabPlans: 'Gói dịch vụ',
+    tabTenants: 'Đơn vị',
+    tabRules: 'Quy tắc giường',
+    tabIntegrations: 'Tích hợp HIS',
+    tabSessions: 'Phiên đăng nhập',
+    tabSLA: 'SLA',
+    tabWidgets: 'Dashboard',
+    tabQR: 'QR Code',
+    tabAudit: 'Audit nâng cao',
   },
 };
 

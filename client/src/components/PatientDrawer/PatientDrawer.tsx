@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchPatient, fetchChecklists, toggleChecklist, fetchBedHistory, updatePatient, type Patient, type ChecklistItem, type BedHistoryEntry } from '../../services/api/medboardApi';
+import { fetchPatient, fetchChecklists, toggleChecklist, fetchBedHistory, updatePatient, fetchPatientNotes, createPatientNote, fetchChecklistHistory, fetchTransferHistory } from '../../services/api/medboardApi';
+import type { Patient, ChecklistItem, BedHistoryEntry, PatientNote, ChecklistReviewEntry } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import Select from '../Select/Select';
@@ -28,6 +29,10 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
   const [noteText, setNoteText] = useState('');
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
+  const [notesList, setNotesList] = useState<PatientNote[]>([]);
+  const [noteType, setNoteType] = useState('general');
+  const [checklistHistory, setChecklistHistory] = useState<ChecklistReviewEntry[]>([]);
+  const [transferHistory, setTransferHistory] = useState<BedHistoryEntry[]>([]);
 
   // Edit mode
   const [editing, setEditing] = useState(false);
@@ -82,8 +87,13 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
     setLoadingTab(true);
     if (tab === 'checklist') {
       fetchChecklists(patient.id).then(setChecklists).catch(() => {}).finally(() => setLoadingTab(false));
-    } else if (tab === 'history' && patient.bed_id) {
-      fetchBedHistory(patient.bed_id).then(setHistory).catch(() => {}).finally(() => setLoadingTab(false));
+      fetchChecklistHistory(patient.id).then(setChecklistHistory).catch(() => {});
+    } else if (tab === 'history') {
+      if (patient.bed_id) fetchBedHistory(patient.bed_id).then(setHistory).catch(() => {});
+      fetchTransferHistory(patient.id).then(setTransferHistory).catch(() => {});
+      setLoadingTab(false);
+    } else if (tab === 'notes') {
+      fetchPatientNotes(patient.id).then(setNotesList).catch(() => {}).finally(() => setLoadingTab(false));
     } else {
       setLoadingTab(false);
     }
@@ -305,6 +315,20 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                             ))}
                           </div>
                         )}
+                        {/* Checklist Review History */}
+                        {checklistHistory.length > 0 && (
+                          <div className="bed-panel__check-group">
+                            <div className="bed-panel__check-group-title" style={{ marginTop: 8 }}>Lịch sử review ({checklistHistory.length})</div>
+                            {checklistHistory.slice(0, 10).map(h => (
+                              <div key={h.id} style={{ padding: '6px 0', borderBottom: '1px solid #f1f5f9', fontSize: 12 }}>
+                                <span style={{ fontWeight: 600 }}>{h.reviewed_by_name}</span>
+                                <span style={{ color: '#64748b' }}> — {h.checklist_name} — </span>
+                                <span style={{ color: h.action === 'complete' ? '#22C55E' : '#EF4444' }}>{h.action === 'complete' ? '✓ Hoàn thành' : '✗ Bỏ đánh dấu'}</span>
+                                <div style={{ color: '#94a3b8', fontSize: 11 }}>{new Date(h.created_at).toLocaleString(locale)}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </>
                     );
                   })()}
@@ -313,33 +337,85 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
 
               {tab === 'history' && (
                 <div className="bed-panel__history">
-                  {!patient.bed_id ? (
-                    <p className="bed-panel__loading">Chưa được gán giường — không có lịch sử chuyển giường</p>
-                  ) : history.length === 0 ? (
+                  {history.length === 0 && transferHistory.length === 0 ? (
                     <p className="bed-panel__loading">{t.bedPanel?.noHistory || 'Chưa có lịch sử'}</p>
-                  ) : history.map(h => (
-                    <div key={h.id} className="bed-panel__history-item">
-                      <div className="bed-panel__history-dot" />
-                      <div>
-                        <div className="bed-panel__history-action">
-                          <strong>{historyActionLabel(h.action)}</strong> — {h.patient_name} ({h.patient_code})
+                  ) : (
+                    <>
+                      {history.map(h => (
+                        <div key={h.id} className="bed-panel__history-item">
+                          <div className="bed-panel__history-dot" />
+                          <div>
+                            <div className="bed-panel__history-action">
+                              <strong>{historyActionLabel(h.action)}</strong> — {h.patient_name} ({h.patient_code})
+                            </div>
+                            <div className="bed-panel__history-meta">{h.performed_by_name || '—'} · {new Date(h.created_at).toLocaleString(locale)}</div>
+                            {h.notes && <div className="bed-panel__history-note">{h.notes}</div>}
+                          </div>
                         </div>
-                        <div className="bed-panel__history-meta">{h.performed_by_name || '—'} · {new Date(h.created_at).toLocaleString(locale)}</div>
-                        {h.notes && <div className="bed-panel__history-note">{h.notes}</div>}
-                      </div>
-                    </div>
-                  ))}
+                      ))}
+                      {transferHistory.length > 0 && (
+                        <>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', margin: '12px 0 8px', textTransform: 'uppercase' }}>Lịch sử chuyển giường</div>
+                          {transferHistory.map((h, i) => (
+                            <div key={`tr-${i}`} className="bed-panel__history-item">
+                              <div className="bed-panel__history-dot" />
+                              <div>
+                                <div className="bed-panel__history-action"><strong>{historyActionLabel(h.action)}</strong></div>
+                                <div className="bed-panel__history-meta">{h.performed_by_name || '—'} · {new Date(h.created_at).toLocaleString(locale)}</div>
+                                {h.notes && <div className="bed-panel__history-note">{h.notes}</div>}
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
               {tab === 'notes' && (
                 <div className="bed-panel__notes-area">
+                  {/* Existing notes list */}
+                  {notesList.length > 0 && (
+                    <div style={{ marginBottom: 12, maxHeight: 200, overflowY: 'auto' }}>
+                      {notesList.map(n => (
+                        <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600 }}>{n.created_by_name}</span>
+                            <span style={{ color: '#94a3b8', fontSize: 12 }}>{new Date(n.created_at).toLocaleString(locale)}</span>
+                          </div>
+                          <span style={{ display: 'inline-block', padding: '1px 6px', background: '#f1f5f9', borderRadius: 4, fontSize: 11, marginBottom: 4 }}>{n.note_type}</span>
+                          <p style={{ margin: 0 }}>{n.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* Add new note */}
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                    <select className="form-field__input" value={noteType} onChange={e => setNoteType(e.target.value)} style={{ maxWidth: 140 }}>
+                      <option value="general">Chung</option>
+                      <option value="clinical">Lâm sàng</option>
+                      <option value="nursing">Điều dưỡng</option>
+                      <option value="discharge">Ra viện</option>
+                    </select>
+                  </div>
                   <textarea className="bed-panel__notes-input" placeholder={t.bedPanel?.notesPlaceholder || 'Ghi chú lâm sàng...'}
-                    rows={6} value={noteText} onChange={e => setNoteText(e.target.value)} />
+                    rows={4} value={noteText} onChange={e => setNoteText(e.target.value)} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, justifyContent: 'flex-end' }}>
                     {notesSaved && <span style={{ color: '#22C55E', fontSize: 13 }}>✓ {t.common?.success || 'Đã lưu'}</span>}
-                    <button className="btn btn--primary btn--sm" onClick={handleSaveNotes} disabled={savingNotes}>
-                      {savingNotes ? (t.common?.processing || 'Đang lưu...') : (t.bedPanel?.saveNote || 'Lưu ghi chú')}
+                    <button className="btn btn--primary btn--sm" onClick={async () => {
+                      if (!noteText.trim() || !patient) return;
+                      setSavingNotes(true);
+                      try {
+                        await createPatientNote(patient.id, noteText, noteType);
+                        setNoteText('');
+                        setNotesSaved(true);
+                        setTimeout(() => setNotesSaved(false), 2000);
+                        fetchPatientNotes(patient.id).then(setNotesList).catch(() => {});
+                      } catch {}
+                      setSavingNotes(false);
+                    }} disabled={savingNotes || !noteText.trim()}>
+                      {savingNotes ? (t.common?.processing || 'Đang lưu...') : (t.bedPanel?.saveNote || 'Thêm ghi chú')}
                     </button>
                   </div>
                 </div>

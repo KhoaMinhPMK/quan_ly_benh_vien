@@ -407,5 +407,17 @@ export async function toggleChecklist(admissionId: number, templateId: number, c
      ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed), completed_by = VALUES(completed_by), completed_at = VALUES(completed_at), answer_text = VALUES(answer_text), notes = VALUES(notes)`,
     [admissionId, templateId, isCompletedInt, completedBy, answerText || null, notes || null]
   );
+
+  // Log review history (#48)
+  if (userId) {
+    try {
+      await db.execute(
+        `INSERT INTO checklist_review_history (admission_id, checklist_template_id, reviewed_by, action, answer_text, notes)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [admissionId, templateId, userId, isCompletedInt ? 'check' : 'uncheck', answerText || null, notes || null]
+      );
+    } catch { /* table may not exist yet, ignore */ }
+  }
+
   return getPatientChecklists(admissionId);
 }

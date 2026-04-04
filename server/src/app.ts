@@ -15,6 +15,9 @@ import auditRoutes from './modules/audit/audit.routes';
 import configRoutes from './modules/config/config.routes';
 import accessRoutes from './modules/access/access.routes';
 import wardsRoutes from './modules/wards/wards.routes';
+import rulesRoutes from './modules/beds/rules.routes';
+import saasRoutes from './modules/saas/saas.routes';
+import extrasRoutes from './modules/config/extras.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { initWebPush } from './modules/notifications/push.service';
 
@@ -60,6 +63,9 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/access', accessRoutes);
 app.use('/api/wards', wardsRoutes);
+app.use('/api/bed-rules', rulesRoutes);
+app.use('/api/saas', saasRoutes);
+app.use('/api/extras', extrasRoutes);
 
 // Error handling
 app.use(notFoundHandler);

@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   { path: '/users', labelKey: 'users', icon: iconUsers, adminOnly: true },
   { path: '/admin', labelKey: 'admin', icon: iconSettings, adminOnly: true },
   { path: '/access', labelKey: 'access', icon: iconLock, adminOnly: true },
+  { path: '/saas', labelKey: 'saas', icon: iconBuilding, adminOnly: true },
 ];
 
 import { getRoleLabel } from '../../utils/roleLabels';

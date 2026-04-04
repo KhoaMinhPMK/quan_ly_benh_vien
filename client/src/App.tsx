@@ -14,6 +14,7 @@ import UserListPage from './pages/Admin/UserListPage';
 import ReportsPage from './pages/Admin/ReportsPage';
 import AdminPage from './pages/Admin/AdminPage';
 import AccessCenterPage from './pages/Admin/AccessCenterPage';
+import SaasAdminPage from './pages/Admin/SaasAdminPage';
 import './styles/index.scss';
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/users" element={<ProtectedRoute allowedRoles={['admin']}><UserListPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
             <Route path="/access" element={<ProtectedRoute allowedRoles={['admin']}><AccessCenterPage /></ProtectedRoute>} />
+            <Route path="/saas" element={<ProtectedRoute allowedRoles={['admin']}><SaasAdminPage /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

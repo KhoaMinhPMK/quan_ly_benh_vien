@@ -62,6 +62,10 @@ export async function exportCSV(req: Request, res: Response, next: NextFunction)
         csv = await svc.exportDepartmentCSV();
         filename = 'bao-cao-theo-khoa.csv';
         break;
+      case 'doctor':
+        csv = await svc.exportDoctorCSV(req.query.department_id ? Number(req.query.department_id) : undefined);
+        filename = 'bao-cao-theo-bac-si.csv';
+        break;
       default:
         res.status(400).json({ success: false, error: { code: 'INVALID_TYPE', message: 'Loại báo cáo không hợp lệ' } });
         return;
@@ -77,5 +81,12 @@ export async function snapshotDaily(_req: Request, res: Response, next: NextFunc
   try {
     await svc.snapshotDailyStats();
     res.json({ success: true, message: 'Snapshot saved' });
+  } catch (e) { next(e); }
+}
+
+export async function doctorReport(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const departmentId = req.query.department_id ? Number(req.query.department_id) : undefined;
+    res.json({ success: true, data: await svc.getDoctorReport(departmentId) });
   } catch (e) { next(e); }
 }

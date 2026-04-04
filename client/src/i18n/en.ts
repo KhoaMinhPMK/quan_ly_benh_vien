@@ -61,6 +61,7 @@ const en: Translations = {
     users: 'Users',
     admin: 'Admin',
     access: 'Access',
+    saas: 'Platform',
     logout: 'Log out',
   },
 
@@ -75,6 +76,7 @@ const en: Translations = {
       '/users': 'User Management',
       '/admin': 'System Admin',
       '/access': 'Access Center',
+      '/saas': 'SaaS Platform',
     },
     searchPlaceholder: 'Search patients, rooms, beds...',
     searchGroupPatient: 'Patients',
@@ -398,6 +400,7 @@ const en: Translations = {
     tabDischarge: 'Discharge',
     tabMissing: 'Missing Records',
     tabDepartment: 'By Department',
+    tabDoctor: 'By Doctor',
     tabHistory: 'Discharge History',
     occupancyTitle: 'Bed Occupancy by Room',
     dischargeTitle: 'Discharge History',
@@ -579,6 +582,21 @@ const en: Translations = {
     previewHint: 'View effective permissions after resolving all layers',
     effectiveModules: 'Effective Modules',
     effectiveCapabilities: 'Effective Capabilities',
+  },
+
+  // ── SaaS Platform ──
+  saas: {
+    title: 'SaaS Platform',
+    subtitle: 'Manage service plans, integrations and platform configuration',
+    tabPlans: 'Plans',
+    tabTenants: 'Tenants',
+    tabRules: 'Bed Rules',
+    tabIntegrations: 'HIS Integration',
+    tabSessions: 'Sessions',
+    tabSLA: 'SLA',
+    tabWidgets: 'Dashboard',
+    tabQR: 'QR Code',
+    tabAudit: 'Advanced Audit',
   },
 };
 

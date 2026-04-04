@@ -1,0 +1,169 @@
+@use '../../styles/abstracts/variables' as v;
+
+.saas-admin {
+  padding: 1.5rem;
+
+  &__header {
+    margin-bottom: 1.5rem;
+    h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 .25rem; }
+    p { color: v.$color-text-secondary; margin: 0; }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid v.$color-border;
+    padding-bottom: .5rem;
+  }
+
+  &__tab {
+    padding: .5rem 1rem;
+    border: none;
+    background: none;
+    border-radius: .5rem .5rem 0 0;
+    cursor: pointer;
+    font-size: .875rem;
+    color: v.$color-text-secondary;
+    transition: all .15s;
+
+    &:hover { background: v.$color-bg-white; }
+    &--active { background: v.$color-primary; color: #fff; font-weight: 600; }
+  }
+
+  &__toolbar {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .875rem;
+
+    th, td { padding: .5rem .75rem; text-align: left; border-bottom: 1px solid v.$color-border; }
+    th { font-weight: 600; color: v.$color-text-secondary; font-size: .8125rem; background: v.$color-bg-white; }
+    tbody tr:hover { background: rgba(v.$color-primary, .04); }
+
+    code { font-size: .75rem; background: v.$color-bg-white; padding: .1rem .35rem; border-radius: .25rem; }
+
+    &--compact {
+      th, td { padding: .35rem .5rem; }
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: .25rem;
+
+      label { font-weight: 600; font-size: .8125rem; }
+      input, select, textarea {
+        padding: .5rem .75rem;
+        border: 1px solid v.$color-border;
+        border-radius: .5rem;
+        font-size: .875rem;
+        &:focus { outline: none; border-color: v.$color-primary; }
+      }
+      textarea { font-family: monospace; font-size: .8125rem; }
+    }
+
+    .form-row { display: flex; gap: .75rem; > * { flex: 1; } }
+    .form-actions { display: flex; gap: .5rem; justify-content: flex-end; margin-top: .5rem; }
+  }
+
+  &__limits {
+    margin-top: 1.5rem;
+
+    h3 { font-size: 1rem; margin: 0 0 1rem; }
+
+    .limits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .limit-card {
+      padding: 1rem;
+      background: v.$color-bg-white;
+      border: 1px solid v.$color-border;
+      border-radius: .75rem;
+
+      &__label { font-size: .8125rem; color: v.$color-text-secondary; margin-bottom: .25rem; }
+      &__value { font-size: 1.25rem; font-weight: 700; margin-bottom: .5rem; }
+      &__bar {
+        height: 6px;
+        background: v.$color-border;
+        border-radius: 3px;
+        overflow: hidden;
+        > div { height: 100%; background: v.$color-primary; border-radius: 3px; transition: width .3s; }
+      }
+    }
+  }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  &--active { background: #34c759; }
+  &--inactive { background: #ccc; }
+}
+
+.badge {
+  display: inline-block;
+  padding: .15rem .5rem;
+  background: v.$color-primary;
+  color: #fff;
+  border-radius: .25rem;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.text-center { text-align: center; }
+.text-success { color: #34c759; }
+.text-warning { color: #ff9500; }
+.text-danger { color: #ff3b30; }
+.text-truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.audit-card {
+  padding: 1rem;
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: .75rem;
+
+  h4 { font-size: .875rem; margin: 0 0 .75rem; }
+}
+
+.btn {
+  padding: .5rem 1rem;
+  border: 1px solid v.$color-border;
+  border-radius: .5rem;
+  background: #fff;
+  cursor: pointer;
+  font-size: .875rem;
+  transition: all .15s;
+
+  &:hover { background: v.$color-bg-white; }
+  &--primary { background: v.$color-primary; color: #fff; border-color: v.$color-primary; &:hover { opacity: .9; } }
+  &--danger { background: #ff3b30; color: #fff; border-color: #ff3b30; &:hover { opacity: .9; } }
+  &--success { background: #34c759; color: #fff; border-color: #34c759; }
+  &--muted { background: #eee; color: #888; }
+  &--sm { padding: .3rem .6rem; font-size: .8125rem; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}

@@ -247,3 +247,36 @@ function formatDate(d: any): string {
   const date = new Date(d);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
+
+// ── Report by doctor (#81) ──
+
+export async function getDoctorReport(departmentId?: number) {
+  let sql = `
+    SELECT a.doctor_name,
+      COUNT(DISTINCT a.id) AS total_patients,
+      SUM(CASE WHEN a.status IN ('admitted','treating','waiting_discharge') THEN 1 ELSE 0 END) AS active_patients,
+      SUM(CASE WHEN a.status = 'discharged' THEN 1 ELSE 0 END) AS discharged_patients,
+      ROUND(AVG(CASE WHEN a.discharged_at IS NOT NULL
+        THEN TIMESTAMPDIFF(DAY, a.admitted_at, a.discharged_at) END), 1) AS avg_stay_days,
+      d.name AS department_name
+    FROM admissions a
+    LEFT JOIN beds b ON a.bed_id = b.id
+    LEFT JOIN rooms r ON b.room_id = r.id
+    LEFT JOIN departments d ON r.department_id = d.id
+    WHERE a.doctor_name IS NOT NULL AND a.doctor_name != ''
+  `;
+  const params: number[] = [];
+  if (departmentId) { sql += ' AND r.department_id = ?'; params.push(departmentId); }
+  sql += ' GROUP BY a.doctor_name, d.name ORDER BY active_patients DESC, total_patients DESC';
+  const [rows] = await db.execute<RowDataPacket[]>(sql, params);
+  return rows;
+}
+
+export async function exportDoctorCSV(departmentId?: number) {
+  const data = await getDoctorReport(departmentId);
+  const headers = ['Bác sĩ', 'Khoa', 'Tổng BN', 'Đang điều trị', 'Đã ra viện', 'TB ngày nằm'];
+  const rows = data.map((r: RowDataPacket) =>
+    [r.doctor_name, r.department_name, r.total_patients, r.active_patients, r.discharged_patients, r.avg_stay_days]
+  );
+  return buildCSV(headers, rows);
+}

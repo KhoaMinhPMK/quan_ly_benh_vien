@@ -360,3 +360,219 @@ export const exportReportCSV = async (type: string, params?: Record<string, stri
   a.click();
   URL.revokeObjectURL(url);
 };
+
+// ============================================================
+// Doctor Report (#81)
+// ============================================================
+export interface DoctorReport {
+  doctor_name: string; department_name: string; total_patients: number;
+  active_patients: number; discharged_patients: number; avg_stay_days: number;
+}
+
+export const fetchDoctorReport = async (departmentId?: number) =>
+  (await httpClient.get<ApiRes<DoctorReport[]>>('/reports/doctor', { params: { department_id: departmentId } })).data.data;
+
+// ============================================================
+// Bed Allocation Rules (#28, #68)
+// ============================================================
+export interface BedAllocationRule {
+  id: number; name: string; description: string; rule_type: string;
+  priority: number; conditions: any; actions: any; is_active: boolean;
+  department_id: number | null; created_at: string;
+}
+
+export const fetchBedRules = async () =>
+  (await httpClient.get<ApiRes<BedAllocationRule[]>>('/bed-rules/rules')).data.data;
+
+export const createBedRule = async (data: Partial<BedAllocationRule>) =>
+  (await httpClient.post<ApiRes<BedAllocationRule>>('/bed-rules/rules', data)).data.data;
+
+export const updateBedRule = async (id: number, data: Partial<BedAllocationRule>) =>
+  (await httpClient.put<ApiRes<BedAllocationRule>>(`/bed-rules/rules/${id}`, data)).data.data;
+
+export const deleteBedRule = async (id: number) =>
+  (await httpClient.delete<ApiRes<void>>(`/bed-rules/rules/${id}`)).data;
+
+// ============================================================
+// Auto Bed Suggestion (#25, #97)
+// ============================================================
+export interface BedSuggestion {
+  bed_id: number; bed_code: string; room_id: number; room_code: string;
+  room_name: string; room_type: string; floor: number; department_name: string;
+  score: number; reasons: string[];
+}
+
+export const suggestBeds = async (patientInfo: {
+  gender?: string; diagnosis?: string; department_id?: number;
+  severity?: string; isolation_required?: boolean; room_type_preference?: string;
+}) => (await httpClient.post<ApiRes<BedSuggestion[]>>('/bed-rules/suggest', patientInfo)).data.data;
+
+// ============================================================
+// SLA (#99)
+// ============================================================
+export interface SLASummary {
+  sla_type: string; name: string; total: number; completed: number;
+  breached: number; warning: number; on_track: number; avg_minutes: number;
+}
+
+export const fetchSLASummary = async () =>
+  (await httpClient.get<ApiRes<SLASummary[]>>('/bed-rules/sla/summary')).data.data;
+
+export const fetchSLATracking = async (filters?: { status?: string; sla_type?: string }) =>
+  (await httpClient.get<ApiRes<any[]>>('/bed-rules/sla/tracking', { params: filters })).data.data;
+
+// ============================================================
+// Session Management (#76)
+// ============================================================
+export interface UserSession {
+  id: number; ip_address: string; device_info: string;
+  last_active_at: string; created_at: string; expires_at: string; is_active: boolean;
+}
+
+export const fetchSessions = async () =>
+  (await httpClient.get<ApiRes<UserSession[]>>('/auth/sessions')).data.data;
+
+export const revokeSession = async (sessionId: number) =>
+  (await httpClient.delete<ApiRes<void>>(`/auth/sessions/${sessionId}`)).data;
+
+export const revokeAllSessions = async () =>
+  (await httpClient.post<ApiRes<void>>('/auth/sessions/revoke-all')).data;
+
+// ============================================================
+// SaaS / Plans (#91, #92)
+// ============================================================
+export interface ServicePlan {
+  id: number; plan_code: string; name: string; description: string;
+  max_users: number; max_departments: number; max_rooms: number; max_beds: number;
+  features: string[]; price_monthly: number; price_yearly: number;
+  is_active: boolean; sort_order: number;
+}
+
+export interface Tenant {
+  id: number; name: string; subdomain: string; custom_domain: string;
+  logo_url: string; plan: string; plan_name: string;
+  is_active: boolean; billing_email: string; expires_at: string;
+  max_users: number; max_departments: number; max_rooms: number; max_beds: number;
+  settings: any;
+}
+
+export interface ResourceLimits {
+  users: { current: number; max: number };
+  departments: { current: number; max: number };
+  rooms: { current: number; max: number };
+  beds: { current: number; max: number };
+}
+
+export const fetchPlans = async () =>
+  (await httpClient.get<ApiRes<ServicePlan[]>>('/saas/plans')).data.data;
+
+export const createPlan = async (data: Partial<ServicePlan>) =>
+  (await httpClient.post<ApiRes<ServicePlan>>('/saas/plans', data)).data.data;
+
+export const updatePlan = async (id: number, data: Partial<ServicePlan>) =>
+  (await httpClient.put<ApiRes<ServicePlan>>(`/saas/plans/${id}`, data)).data.data;
+
+export const fetchTenants = async () =>
+  (await httpClient.get<ApiRes<Tenant[]>>('/saas/tenants')).data.data;
+
+export const fetchTenant = async (id: number) =>
+  (await httpClient.get<ApiRes<Tenant>>(`/saas/tenants/${id}`)).data.data;
+
+export const updateTenant = async (id: number, data: Partial<Tenant>) =>
+  (await httpClient.put<ApiRes<Tenant>>(`/saas/tenants/${id}`, data)).data.data;
+
+export const fetchResourceLimits = async (tenantId: number) =>
+  (await httpClient.get<ApiRes<ResourceLimits>>(`/saas/tenants/${tenantId}/limits`)).data.data;
+
+// ============================================================
+// HIS/EMR Integration (#93)
+// ============================================================
+export interface HISIntegration {
+  id: number; tenant_id: number; integration_name: string; integration_type: string;
+  endpoint_url: string; sync_direction: string; sync_interval_minutes: number;
+  is_active: boolean; last_sync_at: string; last_sync_status: string;
+  last_sync_message: string;
+}
+
+export const fetchIntegrations = async (tenantId = 1) =>
+  (await httpClient.get<ApiRes<HISIntegration[]>>('/saas/integrations', { params: { tenant_id: tenantId } })).data.data;
+
+export const createIntegration = async (data: Partial<HISIntegration>) =>
+  (await httpClient.post<ApiRes<HISIntegration>>('/saas/integrations', data)).data.data;
+
+export const updateIntegration = async (id: number, data: Partial<HISIntegration>) =>
+  (await httpClient.put<ApiRes<HISIntegration>>(`/saas/integrations/${id}`, data)).data.data;
+
+export const deleteIntegration = async (id: number) =>
+  (await httpClient.delete<ApiRes<void>>(`/saas/integrations/${id}`)).data;
+
+// ============================================================
+// QR Codes (#96)
+// ============================================================
+export interface QRCode {
+  id: number; entity_type: string; entity_id: number; qr_data: string; is_active: boolean;
+}
+
+export const fetchQRCode = async (entityType: string, entityId: number) =>
+  (await httpClient.get<ApiRes<QRCode>>(`/extras/${entityType}/${entityId}`)).data.data;
+
+export const batchGenerateQR = async (entityType: string) =>
+  (await httpClient.post<ApiRes<void>>(`/extras/batch/${entityType}`)).data;
+
+// ============================================================
+// Dashboard Widgets (#69)
+// ============================================================
+export interface DashboardWidget {
+  id: number; widget_key: string; widget_name: string; widget_type: string;
+  is_visible: boolean; sort_order: number; settings: any;
+}
+
+export const fetchDashboardWidgets = async () =>
+  (await httpClient.get<ApiRes<DashboardWidget[]>>('/extras/dashboard-widgets/user')).data.data;
+
+export const updateDashboardWidget = async (widgetId: number, data: { is_visible?: boolean; sort_order?: number; settings?: any }) =>
+  (await httpClient.put<ApiRes<void>>(`/extras/dashboard-widgets/user/${widgetId}`, data)).data;
+
+// ============================================================
+// Patient Notes (#36)
+// ============================================================
+export interface PatientNote {
+  id: number; admission_id: number; content: string; note_type: string;
+  created_by_name: string; created_at: string;
+}
+
+export const fetchPatientNotes = async (admissionId: number) =>
+  (await httpClient.get<ApiRes<PatientNote[]>>(`/patients/${admissionId}/notes`)).data.data;
+
+export const createPatientNote = async (admissionId: number, content: string, noteType = 'general') =>
+  (await httpClient.post<ApiRes<PatientNote[]>>(`/patients/${admissionId}/notes`, { content, note_type: noteType })).data.data;
+
+// ============================================================
+// Transfer History (#34)
+// ============================================================
+export const fetchTransferHistory = async (admissionId: number) =>
+  (await httpClient.get<ApiRes<BedHistoryEntry[]>>(`/patients/${admissionId}/transfer-history`)).data.data;
+
+// ============================================================
+// Checklist Review History (#48)
+// ============================================================
+export interface ChecklistReviewEntry {
+  id: number; admission_id: number; checklist_name: string; reviewed_by_name: string;
+  action: string; answer_text: string; notes: string; created_at: string;
+}
+
+export const fetchChecklistHistory = async (admissionId: number) =>
+  (await httpClient.get<ApiRes<ChecklistReviewEntry[]>>(`/patients/${admissionId}/checklist-history`)).data.data;
+
+// ============================================================
+// Audit Summary (#100)
+// ============================================================
+export interface AuditSummary {
+  by_action: { action: string; count: number }[];
+  by_entity: { entity_type: string; count: number }[];
+  by_user: { user_id: number; full_name: string; count: number }[];
+  by_day: { log_date: string; count: number }[];
+}
+
+export const fetchAuditSummary = async (days = 7) =>
+  (await httpClient.get<ApiRes<AuditSummary>>('/audit/summary', { params: { days } })).data.data;

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchOccupancyReport, fetchDischargeReport, fetchMissingRecordsReport, fetchDepartmentReport, fetchDischargeHistory, fetchDepartments, exportReportCSV, type OccupancyReport, type DischargeReport, type DischargeHistoryItem, type Department } from '../../services/api/medboardApi';
+import { fetchOccupancyReport, fetchDischargeReport, fetchMissingRecordsReport, fetchDepartmentReport, fetchDischargeHistory, fetchDepartments, fetchDoctorReport, exportReportCSV } from '../../services/api/medboardApi';
+import type { OccupancyReport, DischargeReport, DischargeHistoryItem, Department, DoctorReport } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import PatientDrawer from '../../components/PatientDrawer/PatientDrawer';
 import './AdminPages.scss';
 
-type Tab = 'occupancy' | 'discharge' | 'history' | 'missing' | 'department';
+type Tab = 'occupancy' | 'discharge' | 'history' | 'missing' | 'department' | 'doctor';
 
 export default function ReportsPage() {
   const { t, lang } = useTranslation();
@@ -15,6 +16,7 @@ export default function ReportsPage() {
   const [discharge, setDischarge] = useState<DischargeReport[]>([]);
   const [missing, setMissing] = useState<any[]>([]);
   const [department, setDepartment] = useState<any[]>([]);
+  const [doctorData, setDoctorData] = useState<DoctorReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -43,6 +45,7 @@ export default function ReportsPage() {
         }));
         if (tab === 'missing') setMissing(await fetchMissingRecordsReport());
         if (tab === 'department') setDepartment(await fetchDepartmentReport());
+        if (tab === 'doctor') setDoctorData(await fetchDoctorReport());
       } catch {}
       setLoading(false);
     };
@@ -59,6 +62,7 @@ export default function ReportsPage() {
     ['occupancy', t.reports.tabOccupancy], ['discharge', t.reports.tabDischarge],
     ['history', t.reports.tabHistory || 'Lịch sử ra viện'],
     ['missing', t.reports.tabMissing], ['department', t.reports.tabDepartment],
+    ['doctor', t.reports.tabDoctor || 'Bác sĩ'],
   ];
 
   return (
@@ -227,6 +231,35 @@ export default function ReportsPage() {
                       <td>{r.total_beds}</td>
                       <td>{r.occupied_beds}</td>
                       <td>{r.active_patients}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {tab === 'doctor' && (
+            <div className="card" style={{ padding: 0 }}>
+              <div className="card__header" style={{ padding: '12px 20px' }}>
+                <span className="card__title">{`${t.reports.tabDoctor || 'Bác sĩ'} (${doctorData.length})`}</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn--secondary btn--sm" onClick={handlePrint}>{t.common.print}</button>
+                  <button className="btn btn--secondary btn--sm" onClick={() => exportReportCSV('doctor')}>{t.reports.exportCSV}</button>
+                </div>
+              </div>
+              <table className="data-table">
+                <thead><tr><th>{t.reports.doctor}</th><th>{t.reports.department}</th><th>{t.common.total}</th><th>{t.common.active || 'Đang điều trị'}</th><th>{t.discharge.title || 'Ra viện'}</th><th>{t.reports.avgStay}</th></tr></thead>
+                <tbody>
+                  {doctorData.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#9CA3AF' }}>{t.reports.noData}</td></tr>
+                  ) : doctorData.map((r, i) => (
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600 }}>{r.doctor_name}</td>
+                      <td>{r.department_name || '—'}</td>
+                      <td>{r.total_patients}</td>
+                      <td>{r.active_patients}</td>
+                      <td>{r.discharged_patients}</td>
+                      <td>{r.avg_stay_days != null ? `${r.avg_stay_days} ${t.common.day}` : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
