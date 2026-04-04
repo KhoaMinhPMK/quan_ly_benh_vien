@@ -38,11 +38,10 @@ export default function BottomNav() {
   const pageHasSearch = ['/', '/patients', '/rooms', '/discharge'].includes(location.pathname);
 
   const handleSearchFab = () => {
-    // Try focusing header search first
-    const headerSearch = document.querySelector('.header__search-input') as HTMLInputElement;
-    if (headerSearch) {
-      headerSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => headerSearch.focus(), 300);
+    // Trigger the mobile search expansion in the header
+    const mobileBtn = document.querySelector('.header__search-mobile-btn') as HTMLButtonElement;
+    if (mobileBtn) {
+      mobileBtn.click();
       return;
     }
     // Fallback: focus page-level search input

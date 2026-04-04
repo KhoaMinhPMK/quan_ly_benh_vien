@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
   const [patientsWithNotes, setPatientsWithNotes] = useState<Patient[]>([]);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
-  const [notesCollapsed, setNotesCollapsed] = useState(true);
+  const [notesCollapsed, setNotesCollapsed] = useState(false);
   const [trendTooltip, setTrendTooltip] = useState<{ x: number; y: number; date: string; adm: number; dis: number } | null>(null);
 
   const loadData = () => {
@@ -46,10 +46,13 @@ export default function DashboardPage() {
     loadData();
     const interval = setInterval(loadData, 30000);
     const handleFocus = () => loadData();
+    const handlePullRefresh = () => loadData();
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('pullrefresh', handlePullRefresh);
     return () => { 
       clearInterval(interval); 
-      window.removeEventListener('focus', handleFocus); 
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pullrefresh', handlePullRefresh);
     };
   }, []);
 

@@ -13,11 +13,22 @@ interface PatientDrawerProps {
   patientId: number;
   onClose: () => void;
   onUpdated?: () => void;
+  // Bed context (when opened from room view)
+  bedCode?: string;
+  bedStatus?: string;
+  onTransfer?: () => void;
+  onRelease?: () => void;
+  onMarkClean?: () => void;
+  // Prev/Next bed navigation
+  onPrevBed?: () => void;
+  onNextBed?: () => void;
+  hasPrevBed?: boolean;
+  hasNextBed?: boolean;
 }
 
 type Tab = 'info' | 'checklist' | 'history' | 'notes';
 
-export default function PatientDrawer({ patientId, onClose, onUpdated }: PatientDrawerProps) {
+export default function PatientDrawer({ patientId, onClose, onUpdated, bedCode, bedStatus, onTransfer, onRelease, onMarkClean, onPrevBed, onNextBed, hasPrevBed, hasNextBed }: PatientDrawerProps) {
   const { t, lang } = useTranslation();
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -233,11 +244,25 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
       <div className="panel-overlay" onClick={onClose} />
       <div className="bed-panel">
         <div className="bed-panel__header">
-          <div>
-            <h3 className="bed-panel__title">{patient.full_name}</h3>
-            <span className={`bed-panel__status bed-panel__status--${patient.status}`}>
-              {statusLabels[patient.status] || patient.status}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {/* Prev/Next bed navigation */}
+            {(onPrevBed || onNextBed) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginRight: 4 }}>
+                <button className="btn btn--ghost" style={{ padding: '2px 6px', fontSize: 14, lineHeight: 1, opacity: hasPrevBed ? 1 : 0.3 }}
+                  onClick={onPrevBed} disabled={!hasPrevBed} title="Giường trước">▲</button>
+                <button className="btn btn--ghost" style={{ padding: '2px 6px', fontSize: 14, lineHeight: 1, opacity: hasNextBed ? 1 : 0.3 }}
+                  onClick={onNextBed} disabled={!hasNextBed} title="Giường sau">▼</button>
+              </div>
+            )}
+            <div>
+              <h3 className="bed-panel__title">{patient.full_name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span className={`bed-panel__status bed-panel__status--${patient.status}`}>
+                  {statusLabels[patient.status] || patient.status}
+                </span>
+                {bedCode && <span style={{ fontSize: 11, color: '#64748b' }}>· {bedCode}</span>}
+              </div>
+            </div>
           </div>
           <button className="bed-panel__close" onClick={onClose}>&times;</button>
         </div>
@@ -424,7 +449,7 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                 <div className="bed-panel__notes-area">
                   {/* Existing notes list */}
                   {notesList.length > 0 && (
-                    <div style={{ marginBottom: 12, maxHeight: 200, overflowY: 'auto' }}>
+                    <div style={{ marginBottom: 12, maxHeight: 320, overflowY: 'auto' }}>
                       {notesList.map(n => (
                         <div key={n.id} style={{ padding: '8px 0', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -472,6 +497,19 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
         </div>
 
         <div className="bed-panel__actions">
+          {/* Bed-specific actions (when opened from room view) */}
+          {onTransfer && patient.status !== 'discharged' && (
+            <button className="btn btn--secondary btn--sm" onClick={onTransfer}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M18 8L22 12L18 16"/><path d="M2 12H22"/></svg>
+              {t.bedPanel?.transferBed || 'Chuyển giường'}
+            </button>
+          )}
+          {onMarkClean && bedStatus === 'cleaning' && (
+            <button className="btn btn--primary btn--sm" onClick={onMarkClean}>{t.bedPanel?.markClean || 'Đã dọn xong'}</button>
+          )}
+          {onRelease && bedStatus === 'locked' && (
+            <button className="btn btn--secondary btn--sm" onClick={onRelease}>{t.bedPanel?.releaseBed || 'Mở khóa giường'}</button>
+          )}
           {/* Quick action buttons based on patient status */}
           {!editing && patient.status !== 'discharged' && (
             <div className="bed-panel__quick-actions">

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchRoom, fetchBedsByRoom, releaseBed, markBedClean, updatePatient, type Room, type Bed } from '../../services/api/medboardApi';
+import { fetchRoom, fetchRooms, fetchBedsByRoom, releaseBed, markBedClean, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import BedVisual from '../../components/BedVisual/BedVisual';
-import BedDetailPanel from '../../components/BedDetailPanel/BedDetailPanel';
+import PatientDrawer from '../../components/PatientDrawer/PatientDrawer';
 import TransferModal from '../../components/TransferModal/TransferModal';
 import AssignBedModal from '../../components/AssignBedModal/AssignBedModal';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
@@ -25,8 +25,14 @@ export default function RoomDetailPage() {
   const [showAssign, setShowAssign] = useState<Bed | null>(null);
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [releasing, setReleasing] = useState(false);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
 
   const isFirstLoad = useRef(true);
+
+  // Fetch all rooms for room-to-room navigation
+  useEffect(() => {
+    fetchRooms().then(setAllRooms).catch(() => {});
+  }, []);
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -55,7 +61,9 @@ export default function RoomDetailPage() {
     };
     load();
     const timer = setInterval(load, 30000);
-    return () => { active = false; clearInterval(timer); };
+    const handlePullRefresh = () => load();
+    window.addEventListener('pullrefresh', handlePullRefresh);
+    return () => { active = false; clearInterval(timer); window.removeEventListener('pullrefresh', handlePullRefresh); };
   }, [id]);
 
   const handleBedClick = (bed: Bed) => {
@@ -65,6 +73,8 @@ export default function RoomDetailPage() {
       setSelectedBed(bed);
     }
   };
+
+  // Remove the old handleRequestDischarge — PatientDrawer handles this now
 
   const handleMarkClean = async (bedId: number) => {
     try {
@@ -95,17 +105,6 @@ export default function RoomDetailPage() {
       showToast(t.common.error, 'error');
     } finally {
       setReleasing(false);
-    }
-  };
-
-  const handleRequestDischarge = async () => {
-    if (!selectedBed || !selectedBed.patient_id) return;
-    try {
-      await updatePatient(selectedBed.patient_id, { status: 'waiting_discharge' });
-      showToast(t.common.success, 'success');
-      loadData();
-    } catch {
-      showToast(t.common.error, 'error');
     }
   };
 
@@ -146,14 +145,33 @@ export default function RoomDetailPage() {
   const floorLabel = `${t.rooms.floorN} ${room.floor}`;
   const capacityLabel = t.rooms.detail.capacityLabel;
 
+  // Room-to-room navigation
+  const currentRoomIdx = allRooms.findIndex(r => r.id === room.id);
+  const prevRoom = currentRoomIdx > 0 ? allRooms[currentRoomIdx - 1] : null;
+  const nextRoom = currentRoomIdx >= 0 && currentRoomIdx < allRooms.length - 1 ? allRooms[currentRoomIdx + 1] : null;
+
   return (
     <div className="room-detail">
       {/* Header */}
       <div className="room-detail__header">
         <div>
-          <button className="btn btn--ghost btn--sm" onClick={() => navigate('/rooms')} style={{ marginBottom: '8px' }}>
-            {t.rooms.detail.backToList}
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <button className="btn btn--ghost btn--sm" onClick={() => navigate('/rooms')}>
+              {t.rooms.detail.backToList}
+            </button>
+            {allRooms.length > 1 && (
+              <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+                <button className="btn btn--ghost btn--sm" disabled={!prevRoom} style={{ padding: '4px 8px', opacity: prevRoom ? 1 : 0.3 }}
+                  onClick={() => prevRoom && navigate(`/rooms/${prevRoom.id}`)} title={prevRoom ? prevRoom.name : ''}>
+                  ◀ {prevRoom?.room_code || ''}
+                </button>
+                <button className="btn btn--ghost btn--sm" disabled={!nextRoom} style={{ padding: '4px 8px', opacity: nextRoom ? 1 : 0.3 }}
+                  onClick={() => nextRoom && navigate(`/rooms/${nextRoom.id}`)} title={nextRoom ? nextRoom.name : ''}>
+                  {nextRoom?.room_code || ''} ▶
+                </button>
+              </div>
+            )}
+          </div>
           <h2 className="page-header__title">{room.name}</h2>
           <p className="page-header__subtitle">{room.room_code} · {room.department_name} · {floorLabel}</p>
         </div>
@@ -217,20 +235,63 @@ export default function RoomDetailPage() {
         ))}
       </div>
 
-      {/* Bed Detail Panel */}
-      {selectedBed && (
-        <BedDetailPanel bedId={selectedBed.id} bedCode={selectedBed.bed_code} bedStatus={selectedBed.status}
-          patient={selectedBed.patient_id ? {
-            id: selectedBed.patient_id, patient_code: selectedBed.patient_code || '', full_name: selectedBed.patient_name || '',
-            date_of_birth: selectedBed.date_of_birth || undefined, gender: selectedBed.gender || undefined,
-            phone: selectedBed.phone || undefined, diagnosis: selectedBed.diagnosis || undefined,
-            doctor_name: selectedBed.doctor_name || undefined, admitted_at: selectedBed.admitted_at || undefined,
-            expected_discharge: selectedBed.expected_discharge || undefined, status: selectedBed.patient_status || undefined,
-            notes: selectedBed.notes || undefined,
-          } : null}
-          onClose={() => setSelectedBed(null)} onTransfer={() => setShowTransfer(true)}
-          onRelease={handleRelease} onAssign={() => setShowAssign(selectedBed)} onRequestDischarge={handleRequestDischarge}
-          onMarkClean={() => handleMarkClean(selectedBed.id)} />
+      {/* Patient Drawer (unified from BedDetailPanel) */}
+      {selectedBed && selectedBed.patient_id && (() => {
+        const occupiedBeds = beds.filter(b => b.status === 'occupied' && b.patient_id);
+        const currentIdx = occupiedBeds.findIndex(b => b.id === selectedBed.id);
+        return (
+          <PatientDrawer
+            patientId={selectedBed.patient_id}
+            bedCode={selectedBed.bed_code}
+            bedStatus={selectedBed.status}
+            onClose={() => setSelectedBed(null)}
+            onUpdated={loadData}
+            onTransfer={() => setShowTransfer(true)}
+            onRelease={handleRelease}
+            onMarkClean={() => handleMarkClean(selectedBed.id)}
+            hasPrevBed={currentIdx > 0}
+            hasNextBed={currentIdx < occupiedBeds.length - 1}
+            onPrevBed={currentIdx > 0 ? () => setSelectedBed(occupiedBeds[currentIdx - 1]) : undefined}
+            onNextBed={currentIdx < occupiedBeds.length - 1 ? () => setSelectedBed(occupiedBeds[currentIdx + 1]) : undefined}
+          />
+        );
+      })()}
+
+      {/* Non-patient bed panel (empty/locked/cleaning beds) */}
+      {selectedBed && !selectedBed.patient_id && (
+        <>
+          <div className="panel-overlay" onClick={() => setSelectedBed(null)} />
+          <div className="bed-panel">
+            <div className="bed-panel__header">
+              <div>
+                <h3 className="bed-panel__title">{t.bedPanel?.title || 'Giường'} {selectedBed.bed_code}</h3>
+                <span className={`bed-panel__status bed-panel__status--${selectedBed.status}`}>
+                  {selectedBed.status === 'empty' ? t.beds?.statusEmpty : selectedBed.status === 'locked' ? t.beds?.statusLocked : selectedBed.status === 'cleaning' ? t.beds?.statusCleaning : selectedBed.status}
+                </span>
+              </div>
+              <button className="bed-panel__close" onClick={() => setSelectedBed(null)}>&times;</button>
+            </div>
+            <div className="bed-panel__content">
+              <div className="bed-panel__empty" style={{ textAlign: 'center', padding: '32px 16px' }}>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" strokeWidth="1.5">
+                  <path d="M3 7v11a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7"/><path d="M3 7l4-4h10l4 4"/><path d="M12 11v4"/><path d="M10 13h4"/>
+                </svg>
+                <p style={{ marginTop: 12, color: '#6B7280' }}>{t.bedPanel?.emptyBed || 'Giường trống'}</p>
+              </div>
+            </div>
+            <div className="bed-panel__actions">
+              {selectedBed.status === 'empty' && (
+                <button className="btn btn--primary btn--sm" onClick={() => setShowAssign(selectedBed)}>{t.bedPanel?.assignPatient || 'Gán bệnh nhân'}</button>
+              )}
+              {selectedBed.status === 'cleaning' && (
+                <button className="btn btn--primary btn--sm" onClick={() => handleMarkClean(selectedBed.id)}>{t.bedPanel?.markClean || 'Đã dọn xong'}</button>
+              )}
+              {selectedBed.status === 'locked' && (
+                <button className="btn btn--secondary btn--sm" onClick={handleRelease}>{t.bedPanel?.releaseBed || 'Mở khóa'}</button>
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {showTransfer && selectedBed && selectedBed.patient_id && (

@@ -25,6 +25,7 @@ export default function Header({ onMenuToggle }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showPwModal, setShowPwModal] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -107,7 +108,12 @@ export default function Header({ onMenuToggle }: HeaderProps) {
 
         <div className="header__right">
           {/* Global Search */}
-          <div className="header__search" ref={searchRef}>
+          <div className={`header__search ${mobileSearchOpen ? 'header__search--expanded' : ''}`} ref={searchRef}>
+            {mobileSearchOpen && (
+              <button className="header__search-close" onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); setShowSearch(false); }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            )}
             <img src={iconSearch} alt="" className="header__search-icon" />
             <input type="text" className="header__search-input" placeholder={t.header.searchPlaceholder}
               value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => searchResults && setShowSearch(true)} />
@@ -161,6 +167,11 @@ export default function Header({ onMenuToggle }: HeaderProps) {
               </div>
             )}
           </div>
+
+          {/* Mobile search trigger */}
+          <button className="header__search-mobile-btn" onClick={() => setMobileSearchOpen(true)} title="Tìm kiếm">
+            <img src={iconSearch} alt="" width="18" height="18" />
+          </button>
 
           {/* Language Switch */}
           <div className="header__lang-toggle" role="radiogroup" aria-label={t.header.languageSwitch}>

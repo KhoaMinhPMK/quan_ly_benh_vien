@@ -217,3 +217,19 @@
     opacity: 1;
   }
 }
+
+// ── Mobile improvements ──
+@media (max-width: 768px) {
+  .bed-visual {
+    min-height: 140px;
+    padding: v.$space-2 v.$space-3;
+
+    &__icon-area { display: none; }  // Hide bed SVG on mobile to save space
+    &__patient-name { font-size: 14px; }
+    &__diagnosis { font-size: 12px; white-space: normal; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+    &__doctor { font-size: 12px; }
+    &__badge { font-size: 11px; }
+    &__code { font-size: 14px; }
+    &__action-hint { opacity: 1; }  // Always show on touch devices
+  }
+}
