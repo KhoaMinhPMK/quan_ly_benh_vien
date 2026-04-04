@@ -69,8 +69,14 @@ def deploy_full():
     if not ok:
         return
 
+    step("Install Server deps",
+         f"cd {PROJECT}\\server && npm install", timeout=120)
+
     step("Build Server (tsc)",
          f"cd {PROJECT}\\server && npm run build", timeout=180)
+
+    step("Install Client deps",
+         f"cd {PROJECT}\\client && npm install", timeout=120)
 
     step("Build Client (vite)",
          f"cd {PROJECT}\\client && npm run build", timeout=180)
