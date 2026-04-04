@@ -26,6 +26,8 @@ export default function DashboardPage() {
   const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
   const [patientsWithNotes, setPatientsWithNotes] = useState<Patient[]>([]);
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
+  const [notesCollapsed, setNotesCollapsed] = useState(true);
+  const [trendTooltip, setTrendTooltip] = useState<{ x: number; y: number; date: string; adm: number; dis: number } | null>(null);
 
   const loadData = () => {
     if (isFirstLoad.current) setLoading(true);
@@ -239,30 +241,35 @@ export default function DashboardPage() {
       {/* Patient Notes Overview */}
       {patientsWithNotes.length > 0 && (
         <>
-          <h3 className="dashboard__section-title">
+          <h3 className="dashboard__section-title" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setNotesCollapsed(!notesCollapsed)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:6}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             {t.dashboard.notesOverview || 'Ghi chú bệnh nhân'}
             <span className="dashboard__section-count">{patientsWithNotes.length}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginLeft:8,transition:'transform 0.2s',transform:notesCollapsed?'rotate(0)':'rotate(180deg)'}}><polyline points="6 9 12 15 18 9"/></svg>
           </h3>
-          <div className="dashboard__notes-grid">
-            {patientsWithNotes.slice(0, 6).map(p => (
-              <Link to={`/patients?edit=${p.id}`} key={p.id} className="dashboard__note-card">
-                <div className="dashboard__note-card-header">
-                  <strong>{p.full_name}</strong>
-                  <span className="dashboard__note-card-code">{p.patient_code}</span>
-                </div>
-                <p className="dashboard__note-card-text">{p.notes!.length > 120 ? p.notes!.substring(0, 120) + '...' : p.notes}</p>
-                <div className="dashboard__note-card-meta">
-                  {p.room_code && <span>{p.room_code}</span>}
-                  {p.doctor_name && <span>{p.doctor_name}</span>}
-                </div>
-              </Link>
-            ))}
-          </div>
-          {patientsWithNotes.length > 6 && (
-            <Link to="/patients" className="btn btn--ghost btn--sm" style={{ marginTop: 8 }}>
-              {t.common.viewAll || 'Xem tất cả'} ({patientsWithNotes.length}) →
-            </Link>
+          {!notesCollapsed && (
+            <>
+              <div className="dashboard__notes-grid">
+                {patientsWithNotes.slice(0, 6).map(p => (
+                  <Link to={`/patients?edit=${p.id}`} key={p.id} className="dashboard__note-card">
+                    <div className="dashboard__note-card-header">
+                      <strong>{p.full_name}</strong>
+                      <span className="dashboard__note-card-code">{p.patient_code}</span>
+                    </div>
+                    <p className="dashboard__note-card-text">{p.notes!.length > 120 ? p.notes!.substring(0, 120) + '...' : p.notes}</p>
+                    <div className="dashboard__note-card-meta">
+                      {p.room_code && <span>{p.room_code}</span>}
+                      {p.doctor_name && <span>{p.doctor_name}</span>}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              {patientsWithNotes.length > 6 && (
+                <Link to="/patients" className="btn btn--ghost btn--sm" style={{ marginTop: 8 }}>
+                  {t.common.viewAll || 'Xem tất cả'} ({patientsWithNotes.length}) →
+                </Link>
+              )}
+            </>
           )}
         </>
       )}
@@ -320,14 +327,19 @@ export default function DashboardPage() {
                 <span className="trend-chart__legend-item trend-chart__legend-item--admissions">{t.dashboard.trendAdmissions || 'Nhập viện'}</span>
                 <span className="trend-chart__legend-item trend-chart__legend-item--discharges">{t.dashboard.trendDischarges || 'Ra viện'}</span>
               </div>
-              <div className="trend-chart__bars">
+              <div className="trend-chart__bars" style={{ position: 'relative' }} onMouseLeave={() => setTrendTooltip(null)}>
                 {trendData.map((d, i) => {
                   const maxVal = Math.max(...trendData.map(dd => Math.max(Number(dd.new_admissions || 0), Number(dd.discharges || 0))), 1);
                   const admH = (Number(d.new_admissions || 0) / maxVal) * 100;
                   const disH = (Number(d.discharges || 0) / maxVal) * 100;
                   const dateLabel = d.stat_date ? new Date(d.stat_date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
                   return (
-                    <div key={i} className="trend-chart__bar-group" title={`${dateLabel}: +${d.new_admissions || 0} nhập / -${d.discharges || 0} ra`}>
+                    <div key={i} className="trend-chart__bar-group"
+                      onMouseEnter={e => {
+                        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                        const parent = (e.currentTarget as HTMLElement).closest('.trend-chart__bars')?.getBoundingClientRect();
+                        setTrendTooltip({ x: rect.left - (parent?.left || 0) + rect.width / 2, y: 0, date: dateLabel, adm: Number(d.new_admissions || 0), dis: Number(d.discharges || 0) });
+                      }}>
                       <div className="trend-chart__bar-pair">
                         <div className="trend-chart__bar trend-chart__bar--admissions" style={{ height: `${admH}%` }} />
                         <div className="trend-chart__bar trend-chart__bar--discharges" style={{ height: `${disH}%` }} />
@@ -336,6 +348,13 @@ export default function DashboardPage() {
                     </div>
                   );
                 })}
+                {trendTooltip && (
+                  <div style={{ position: 'absolute', top: -8, left: trendTooltip.x, transform: 'translate(-50%, -100%)', background: '#1E293B', color: '#fff', padding: '6px 10px', borderRadius: 6, fontSize: 12, whiteSpace: 'nowrap', pointerEvents: 'none', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+                    <div style={{ fontWeight: 600, marginBottom: 2 }}>{trendTooltip.date}</div>
+                    <div><span style={{ color: '#60A5FA' }}>●</span> Nhập viện: <strong>{trendTooltip.adm}</strong></div>
+                    <div><span style={{ color: '#F472B6' }}>●</span> Ra viện: <strong>{trendTooltip.dis}</strong></div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

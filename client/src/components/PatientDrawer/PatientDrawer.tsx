@@ -4,7 +4,9 @@ import { fetchPatient, fetchChecklists, toggleChecklist, fetchBedHistory, update
 import type { Patient, ChecklistItem, BedHistoryEntry, PatientNote, ChecklistReviewEntry } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 import Select from '../Select/Select';
+import ConfirmDialog from '../ConfirmDialog/ConfirmDialog';
 import '../BedDetailPanel/BedDetailPanel.scss';
 
 interface PatientDrawerProps {
@@ -18,6 +20,7 @@ type Tab = 'info' | 'checklist' | 'history' | 'notes';
 export default function PatientDrawer({ patientId, onClose, onUpdated }: PatientDrawerProps) {
   const { t, lang } = useTranslation();
   const { showToast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const locale = lang === 'vi' ? 'vi-VN' : 'en-US';
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -30,7 +33,13 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSaved, setNotesSaved] = useState(false);
   const [notesList, setNotesList] = useState<PatientNote[]>([]);
-  const [noteType, setNoteType] = useState('general');
+  const [noteType, setNoteType] = useState(() => {
+    // F5: Auto-default note type based on user role
+    if (!user) return 'general';
+    if (user.role === 'doctor') return 'clinical';
+    if (user.role === 'nurse') return 'nursing';
+    return 'general';
+  });
   const [checklistHistory, setChecklistHistory] = useState<ChecklistReviewEntry[]>([]);
   const [transferHistory, setTransferHistory] = useState<BedHistoryEntry[]>([]);
 
@@ -40,11 +49,15 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
 
-  // Status transition rules (mirrors backend)
+  // C1: Confirm dialog state for status changes
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
+
+  // C2: Allow revert waiting_discharge → treating (mirrors backend)
   const VALID_TRANSITIONS: Record<string, string[]> = {
     admitted: ['treating', 'waiting_discharge'],
     treating: ['waiting_discharge'],
-    waiting_discharge: [],
+    waiting_discharge: ['treating'],
     discharged: [],
   };
 
@@ -120,7 +133,19 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
   };
   void handleSaveNotes; // keep for future use
 
+  // C1: If status changed in edit form, require confirm first
   const handleEditSave = async () => {
+    if (!patient || editSaving) return;
+    // If status is being changed, show confirm dialog first
+    if (editForm.status && editForm.status !== patient.status) {
+      setPendingStatusChange('edit');
+      setStatusConfirmOpen(true);
+      return;
+    }
+    await doEditSave();
+  };
+
+  const doEditSave = async () => {
     if (!patient || editSaving) return;
     setEditError('');
     setEditSaving(true);
@@ -128,7 +153,6 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
       await updatePatient(patient.id, editForm as Record<string, string>);
       setEditing(false);
       showToast(t.common?.success || 'Thành công', 'success');
-      // Reload patient data
       const updated = await fetchPatient(patientId);
       setPatient(updated);
       if (onUpdated) onUpdated();
@@ -138,6 +162,28 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
     } finally {
       setEditSaving(false);
     }
+  };
+
+  // C1: Handle confirm for quick-action status change
+  const handleQuickStatusChange = (newStatus: string) => {
+    setPendingStatusChange(newStatus);
+    setStatusConfirmOpen(true);
+  };
+
+  const handleStatusConfirm = async () => {
+    setStatusConfirmOpen(false);
+    if (pendingStatusChange === 'edit') {
+      await doEditSave();
+    } else if (pendingStatusChange && patient) {
+      try {
+        await updatePatient(patient.id, { status: pendingStatusChange } as Record<string, string>);
+        showToast(t.common?.success || 'Thành công', 'success');
+        const updated = await fetchPatient(patientId);
+        setPatient(updated);
+        if (onUpdated) onUpdated();
+      } catch { showToast(t.common?.error || 'Lỗi', 'error'); }
+    }
+    setPendingStatusChange(null);
   };
 
   const daysAdmitted = patient?.admitted_at ? Math.ceil((Date.now() - new Date(patient.admitted_at).getTime()) / 86400000) : null;
@@ -436,17 +482,16 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
                 </button>
               )}
               {(patient.status === 'treating' || patient.status === 'admitted') && (
-                <button className="btn btn--warning btn--sm" onClick={async () => {
-                  try {
-                    await updatePatient(patient.id, { status: 'waiting_discharge' } as Record<string, string>);
-                    showToast(t.common?.success || 'Thành công', 'success');
-                    const updated = await fetchPatient(patientId);
-                    setPatient(updated);
-                    if (onUpdated) onUpdated();
-                  } catch { showToast(t.common?.error || 'Lỗi', 'error'); }
-                }}>
+                <button className="btn btn--warning btn--sm" onClick={() => handleQuickStatusChange('waiting_discharge')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                   {t.bedPanel?.requestDischarge || 'Yêu cầu XV'}
+                </button>
+              )}
+              {/* C2: Allow revert waiting_discharge → treating */}
+              {patient.status === 'waiting_discharge' && (
+                <button className="btn btn--ghost btn--sm" onClick={() => handleQuickStatusChange('treating')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                  {'Quay lại Đang điều trị'}
                 </button>
               )}
               {patient.status === 'waiting_discharge' && (
@@ -473,6 +518,17 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
           )}
         </div>
       </div>
+
+      {/* C1: Confirm dialog for status change */}
+      <ConfirmDialog
+        open={statusConfirmOpen}
+        title="Xác nhận đổi trạng thái"
+        message={`Bạn có chắc muốn chuyển trạng thái bệnh nhân ${patient.full_name} sang "${statusLabels[pendingStatusChange === 'edit' ? editForm.status : (pendingStatusChange || '')] || pendingStatusChange}"?`}
+        confirmLabel="Xác nhận"
+        variant="warning"
+        onConfirm={handleStatusConfirm}
+        onCancel={() => { setStatusConfirmOpen(false); setPendingStatusChange(null); }}
+      />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from '../../i18n/LanguageContext';
 import './BottomNav.scss';
 
@@ -32,20 +32,49 @@ const TabIcon = ({ labelKey }: { labelKey: string }) => {
 
 export default function BottomNav() {
   const { t } = useTranslation();
+  const location = useLocation();
+
+  // Pages that already have their own search input visible
+  const pageHasSearch = ['/', '/patients', '/rooms', '/discharge'].includes(location.pathname);
+
+  const handleSearchFab = () => {
+    // Try focusing header search first
+    const headerSearch = document.querySelector('.header__search-input') as HTMLInputElement;
+    if (headerSearch) {
+      headerSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => headerSearch.focus(), 300);
+      return;
+    }
+    // Fallback: focus page-level search input
+    const pageSearch = document.querySelector('input[type="text"][placeholder]') as HTMLInputElement;
+    if (pageSearch) {
+      pageSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => pageSearch.focus(), 300);
+    }
+  };
 
   return (
-    <nav className="bottom-nav">
-      {tabs.map(tab => (
-        <NavLink
-          key={tab.path}
-          to={tab.path}
-          end={tab.path === '/'}
-          className={({ isActive }) => `bottom-nav__tab ${isActive ? 'bottom-nav__tab--active' : ''}`}
-        >
-          <span className="bottom-nav__icon"><TabIcon labelKey={tab.labelKey} /></span>
-          <span className="bottom-nav__label">{t.nav[tab.labelKey]}</span>
-        </NavLink>
-      ))}
-    </nav>
+    <>
+      {!pageHasSearch && (
+        <button className="search-fab" onClick={handleSearchFab} title="Tìm kiếm">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </button>
+      )}
+      <nav className="bottom-nav">
+        {tabs.map(tab => (
+          <NavLink
+            key={tab.path}
+            to={tab.path}
+            end={tab.path === '/'}
+            className={({ isActive }) => `bottom-nav__tab ${isActive ? 'bottom-nav__tab--active' : ''}`}
+          >
+            <span className="bottom-nav__icon"><TabIcon labelKey={tab.labelKey} /></span>
+            <span className="bottom-nav__label">{t.nav[tab.labelKey]}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </>
   );
 }

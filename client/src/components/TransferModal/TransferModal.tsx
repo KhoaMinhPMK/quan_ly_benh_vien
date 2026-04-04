@@ -6,10 +6,12 @@ import './TransferModal.scss';
 
 interface TransferModalProps {
   open: boolean; patientName: string; patientId: number; currentBedId: number;
-  currentBedCode: string; currentRoomId: number; onClose: () => void; onTransferred: () => void;
+  currentBedCode: string; currentRoomId: number;
+  currentRoomCode?: string; patientStatus?: string;
+  onClose: () => void; onTransferred: () => void;
 }
 
-export default function TransferModal({ open, patientName, patientId, currentBedId, currentBedCode, currentRoomId, onClose, onTransferred }: TransferModalProps) {
+export default function TransferModal({ open, patientName, patientId, currentBedId, currentBedCode, currentRoomId, currentRoomCode, patientStatus, onClose, onTransferred }: TransferModalProps) {
   const { t } = useTranslation();
   const [rooms, setRooms] = useState<Room[]>([]);
   const [targetRoomId, setTargetRoomId] = useState<number | null>(null);
@@ -45,14 +47,16 @@ export default function TransferModal({ open, patientName, patientId, currentBed
           <button className="transfer-modal__close" onClick={onClose}>&times;</button>
         </div>
         <div className="transfer-modal__body">
-          <div className="transfer-modal__current">
-            <span className="transfer-modal__label">{t.transfer.patient}</span>
-            <span className="transfer-modal__value">{patientName}</span>
+          {/* F6: Context banner */}
+          <div style={{ padding: '10px 14px', background: '#F0F9FF', borderRadius: 8, marginBottom: 12, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, border: '1px solid #BAE6FD' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284C7" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <div>
+              <strong>{patientName}</strong>
+              {patientStatus && <span style={{ marginLeft: 6, padding: '1px 6px', background: '#DBEAFE', borderRadius: 4, fontSize: 11 }}>{patientStatus === 'treating' ? 'Đang điều trị' : patientStatus === 'admitted' ? 'Nhập viện' : patientStatus}</span>}
+              <span style={{ color: '#64748B', marginLeft: 6 }}>— từ {currentRoomCode || ''} / {currentBedCode}</span>
+            </div>
           </div>
-          <div className="transfer-modal__current">
-            <span className="transfer-modal__label">{t.transfer.currentBed}</span>
-            <span className="transfer-modal__value">{currentBedCode}</span>
-          </div>
+
           <div className="transfer-modal__arrow">↓</div>
           <div className="transfer-modal__field">
             <label>{t.transfer.targetRoom}</label>

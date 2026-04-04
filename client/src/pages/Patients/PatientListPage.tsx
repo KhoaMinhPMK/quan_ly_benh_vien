@@ -65,6 +65,12 @@ export default function PatientListPage() {
       if (p) setSelectedDrawerPatientId(p.id);
       setSearchParams(new URLSearchParams());
     }
+    const action = searchParams.get('action');
+    if (action === 'add') {
+      setShowAddModal(true);
+      searchParams.delete('action');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, [searchParams, patients, setSearchParams]);
 
   const formatDate = (d: string | null) => {
@@ -280,13 +286,11 @@ export default function PatientListPage() {
               <thead>
                 <tr>
                   <th>{t.patients.patientCode}</th>
-                  <th>{t.patients.admissionCode}</th>
                   <th>{t.patients.fullName}</th>
                   <th>{t.patients.roomBed}</th>
                   <th>{t.patients.diagnosis}</th>
                   <th>{t.patients.doctor}</th>
-                  <th>{t.patients.admitted}</th>
-                  <th>{t.patients.expectedDC}</th>
+                  <th>{t.patients.admitted} / {t.patients.expectedDC}</th>
                   <th>{t.patients.status}</th>
                   <th className="data-table__col-action"></th>
                 </tr>
@@ -295,15 +299,17 @@ export default function PatientListPage() {
                 {filteredPatients.map((p) => (
                   <tr key={p.id} onClick={() => setSelectedDrawerPatientId(p.id)} style={{ cursor: 'pointer' }}>
                     <td><strong>{p.patient_code}</strong></td>
-                    <td style={{ fontSize: 12, color: '#6B7280' }}>{p.admission_code || '—'}</td>
                     <td>{p.full_name}</td>
                     <td>{p.room_code && p.bed_code ? `${p.room_code} / ${p.bed_code}` : <span className="text-muted">{t.patients.noBed}</span>}</td>
                     <td className="data-table__col-diagnosis">{p.diagnosis || '--'}</td>
                     <td>{p.doctor_name || '--'}</td>
-                    <td>{formatDate(p.admitted_at)}</td>
-                    <td style={p.expected_discharge && new Date(p.expected_discharge) <= new Date() ? { color: '#EF4444', fontWeight: 600 } : {}}>
-                      {formatDate(p.expected_discharge)}
-                      {p.expected_discharge && new Date(p.expected_discharge) <= new Date() && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" style={{verticalAlign:'middle',marginLeft:4}}><path d="M12 9v4M12 17h.01M10.29 3.86l-8.8 15.23A2 2 0 0 0 3.24 22h17.52a2 2 0 0 0 1.75-2.91l-8.8-15.23a2 2 0 0 0-3.42 0z"/></svg>}
+                    <td>
+                      <span>{formatDate(p.admitted_at)}</span>
+                      <span style={{ color: '#94A3B8', margin: '0 3px' }}>→</span>
+                      <span style={p.expected_discharge && new Date(p.expected_discharge) <= new Date() ? { color: '#EF4444', fontWeight: 600 } : {}}>
+                        {formatDate(p.expected_discharge)}
+                        {p.expected_discharge && new Date(p.expected_discharge) <= new Date() && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" style={{verticalAlign:'middle',marginLeft:2}}><path d="M12 9v4M12 17h.01M10.29 3.86l-8.8 15.23A2 2 0 0 0 3.24 22h17.52a2 2 0 0 0 1.75-2.91l-8.8-15.23a2 2 0 0 0-3.42 0z"/></svg>}
+                      </span>
                     </td>
                     <td>
                       <span className={`badge ${STATUS_BADGE[p.status] || 'badge--neutral'}`}>

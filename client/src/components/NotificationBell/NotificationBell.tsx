@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchNotifications, fetchUnreadCount, markNotificationRead, markAllNotificationsRead, subscribeToPush, getVapidPublicKey, type Notification } from '../../services/api/medboardApi';
 import './NotificationBell.scss';
 
@@ -8,6 +9,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   // Poll unread count
   useEffect(() => {
@@ -142,7 +144,20 @@ export default function NotificationBell() {
               notifications.map(n => (
                 <div key={n.id} 
                   className={`notif-bell__item ${!n.is_read ? 'notif-bell__item--unread' : ''}`}
-                  onClick={() => !n.is_read && handleRead(n.id)}>
+                  style={{ cursor: n.reference_type ? 'pointer' : undefined }}
+                  onClick={() => {
+                    if (!n.is_read) handleRead(n.id);
+                    if (n.reference_type && n.reference_id) {
+                      setOpen(false);
+                      if (n.reference_type === 'patient' || n.reference_type === 'admission') {
+                        navigate(`/patients?edit=${n.reference_id}`);
+                      } else if (n.reference_type === 'room') {
+                        navigate(`/rooms/${n.reference_id}`);
+                      } else if (n.reference_type === 'bed') {
+                        navigate(`/rooms?bed=${n.reference_id}`);
+                      }
+                    }
+                  }}>
                   <div className="notif-bell__item-title">{n.title}</div>
                   <div className="notif-bell__item-msg">{n.message}</div>
                   <div className="notif-bell__item-time">{timeAgo(n.created_at)}</div>

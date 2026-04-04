@@ -236,11 +236,13 @@ export default function RoomDetailPage() {
       {showTransfer && selectedBed && selectedBed.patient_id && (
         <TransferModal open patientName={selectedBed.patient_name || ''} patientId={selectedBed.patient_id}
           currentBedId={selectedBed.id} currentBedCode={selectedBed.bed_code} currentRoomId={selectedBed.room_id}
+          currentRoomCode={room?.room_code} patientStatus={selectedBed.patient_status || undefined}
           onClose={() => setShowTransfer(false)} onTransferred={handleTransferDone} />
       )}
 
       {showAssign && (
         <AssignBedModal open bedId={showAssign.id} bedCode={showAssign.bed_code}
+          roomBeds={beds}
           onClose={() => setShowAssign(null)} onAssigned={handleAssignDone} />
       )}
 

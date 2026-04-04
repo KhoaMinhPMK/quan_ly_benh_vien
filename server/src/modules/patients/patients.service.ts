@@ -24,7 +24,7 @@ interface PatientRow extends RowDataPacket {
 const VALID_TRANSITIONS: Record<string, string[]> = {
   admitted: ['treating', 'waiting_discharge'],
   treating: ['waiting_discharge'],
-  waiting_discharge: ['discharged'],
+  waiting_discharge: ['discharged', 'treating'], // C2: Allow revert to treating
   discharged: [], // No reverse transitions allowed
 };
 
@@ -280,7 +280,7 @@ export async function dischargePatient(id: number, performedBy?: number) {
       );
     }
 
-    // Verify checklist completion
+    // Verify checklist completion — C3: Show specific missing items
     const [checklistStatus] = await conn.execute<RowDataPacket[]>(
       `SELECT
         (SELECT COUNT(*) FROM checklist_templates WHERE is_active = TRUE) AS total_items,
@@ -292,8 +292,19 @@ export async function dischargePatient(id: number, performedBy?: number) {
     const totalItems = Number(checklistStatus[0]?.total_items || 0);
     const completedItems = Number(checklistStatus[0]?.completed_items || 0);
     if (totalItems > 0 && completedItems < totalItems) {
+      // C3: Get the names of missing checklist items
+      const [missingItems] = await conn.execute<RowDataPacket[]>(
+        `SELECT ct.name FROM checklist_templates ct
+         WHERE ct.is_active = TRUE
+         AND ct.id NOT IN (
+           SELECT ac.checklist_template_id FROM admission_checklists ac
+           WHERE ac.admission_id = ? AND ac.is_completed = TRUE
+         )`,
+        [id]
+      );
+      const missingNames = missingItems.map((r: RowDataPacket) => r.name as string);
       throw Object.assign(
-        new Error(`Chưa hoàn thành checklist xuất viện (${completedItems}/${totalItems}). Vui lòng hoàn tất trước khi xuất viện.`),
+        new Error(`Chưa hoàn thành checklist xuất viện (${completedItems}/${totalItems}). Còn thiếu: ${missingNames.join(', ')}`),
         { statusCode: 422, code: 'CHECKLIST_INCOMPLETE' }
       );
     }
