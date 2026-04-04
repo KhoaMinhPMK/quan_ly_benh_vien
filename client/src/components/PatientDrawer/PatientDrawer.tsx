@@ -118,6 +118,7 @@ export default function PatientDrawer({ patientId, onClose, onUpdated }: Patient
     } catch {}
     setSavingNotes(false);
   };
+  void handleSaveNotes; // keep for future use
 
   const handleEditSave = async () => {
     if (!patient || editSaving) return;

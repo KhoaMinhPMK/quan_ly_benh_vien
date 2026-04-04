@@ -5,8 +5,8 @@ import Modal from '../../components/Modal/Modal';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import {
   fetchPlans, createPlan, updatePlan,
-  fetchTenants, updateTenant, fetchResourceLimits,
-  fetchIntegrations, createIntegration, updateIntegration, deleteIntegration,
+  fetchTenants, updateTenant as _updateTenant, fetchResourceLimits,
+  fetchIntegrations, createIntegration, updateIntegration, deleteIntegration as _deleteIntegration,
   fetchSessions, revokeSession, revokeAllSessions,
   fetchSLASummary,
   fetchBedRules, createBedRule, updateBedRule, deleteBedRule,
@@ -22,9 +22,11 @@ import './SaasAdminPage.scss';
 
 type Tab = 'plans' | 'tenants' | 'rules' | 'integrations' | 'sessions' | 'sla' | 'widgets' | 'qr' | 'audit';
 
+void _updateTenant; void _deleteIntegration; // reserved for future CRUD
+
 export default function SaasAdminPage() {
   const { t } = useTranslation();
-  const { showToast } = useToast();
+  const _toast = useToast(); void _toast;
   const [tab, setTab] = useState<Tab>('plans');
 
   const tabs: { key: Tab; label: string }[] = [
@@ -141,7 +143,7 @@ function PlansSection() {
 
 // ── Tenants Section (#90) ──
 function TenantsSection() {
-  const { showToast } = useToast();
+  const _toast = useToast(); void _toast;
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [limits, setLimits] = useState<ResourceLimits | null>(null);
   const [selectedTenant, setSelectedTenant] = useState<number | null>(null);
@@ -267,7 +269,7 @@ function RulesSection() {
         </Modal>
       )}
       {confirmDelete !== null && (
-        <ConfirmDialog title="Xoá quy tắc?" message="Hành động này không thể hoàn tác." confirmLabel="Xoá" cancelLabel="Huỷ" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} variant="danger" />
+        <ConfirmDialog open={true} title="Xoá quy tắc?" message="Hành động này không thể hoàn tác." confirmLabel="Xoá" cancelLabel="Huỷ" onConfirm={handleDelete} onCancel={() => setConfirmDelete(null)} variant="danger" />
       )}
     </div>
   );
