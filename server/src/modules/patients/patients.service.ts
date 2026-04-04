@@ -143,7 +143,7 @@ export async function createPatient(data: {
     let targetPatientId = data.patient_id;
 
     if (!targetPatientId) {
-      // Create patient
+      // Create new patient
       const patientCode = data.patient_code || await generatePatientCode();
       const [pRes] = await conn.execute<ResultSetHeader>(
         `INSERT INTO patients (patient_code, full_name, date_of_birth, gender, phone, address, id_number, insurance_number)
@@ -152,6 +152,21 @@ export async function createPatient(data: {
          data.phone || null, data.address || null, data.id_number || null, data.insurance_number || null]
       );
       targetPatientId = pRes.insertId;
+    } else {
+      // Re-admission: verify patient exists & no active admission
+      const [existing] = await conn.execute<RowDataPacket[]>(
+        'SELECT id FROM patients WHERE id = ?', [targetPatientId]
+      );
+      if (existing.length === 0) {
+        throw Object.assign(new Error('Bệnh nhân không tồn tại'), { statusCode: 404, code: 'PATIENT_NOT_FOUND' });
+      }
+      const [activeAdmissions] = await conn.execute<RowDataPacket[]>(
+        "SELECT id FROM admissions WHERE patient_id = ? AND status IN ('admitted','treating','waiting_discharge') LIMIT 1",
+        [targetPatientId]
+      );
+      if (activeAdmissions.length > 0) {
+        throw Object.assign(new Error('Bệnh nhân đang có hồ sơ nhập viện chưa xuất viện'), { statusCode: 422, code: 'ACTIVE_ADMISSION_EXISTS' });
+      }
     }
 
     // Create admission

@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
 
     // Search patients by demographics + active admissions
     const [patients] = await db.execute<RowDataPacket[]>(
-      `SELECT a.id, p.patient_code, p.full_name, a.admission_code, a.status
+      `SELECT a.id, p.id AS patient_id, p.patient_code, p.full_name, a.admission_code, a.status
        FROM admissions a
        JOIN patients p ON a.patient_id = p.id
        WHERE (p.full_name LIKE ? OR p.patient_code LIKE ? OR a.admission_code LIKE ?)
@@ -32,6 +32,32 @@ router.get('/', async (req, res, next) => {
     );
 
     res.json({ success: true, data: { patients, rooms, beds } });
+  } catch (e) { next(e); }
+});
+
+// Search for readmission — includes discharged patients, returns patient-level data
+router.get('/readmission', async (req, res, next) => {
+  try {
+    const q = req.query.q as string;
+    if (!q || q.length < 2) { res.json({ success: true, data: [] }); return; }
+    const like = `%${q}%`;
+
+    const [rows] = await db.execute<RowDataPacket[]>(
+      `SELECT p.id AS patient_id, p.patient_code, p.full_name, p.date_of_birth,
+              p.gender, p.phone, p.address, p.id_number, p.insurance_number,
+              COUNT(a.id) AS total_admissions,
+              MAX(a.discharged_at) AS last_discharged_at,
+              (SELECT diagnosis FROM admissions WHERE patient_id = p.id ORDER BY id DESC LIMIT 1) AS last_diagnosis
+       FROM patients p
+       LEFT JOIN admissions a ON a.patient_id = p.id
+       WHERE p.full_name LIKE ? OR p.patient_code LIKE ? OR p.phone LIKE ? OR p.id_number LIKE ?
+       GROUP BY p.id
+       ORDER BY MAX(a.admitted_at) DESC
+       LIMIT 15`,
+      [like, like, like, like]
+    );
+
+    res.json({ success: true, data: rows });
   } catch (e) { next(e); }
 });
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createPatient, fetchRooms, fetchBedsByRoom, globalSearch, type Room, type Bed } from '../../services/api/medboardApi';
+import { createPatient, fetchRooms, fetchBedsByRoom, searchReadmission, type Room, type Bed, type ReadmissionPatient } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import Select from '../../components/Select/Select';
 import '../../components/Modal/Modal.scss';
@@ -22,7 +22,7 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
   const [error, setError] = useState('');
   // Re-admission (tái khám) search
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<ReadmissionPatient[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedExistingId, setSelectedExistingId] = useState<number | null>(null);
   const [showResults, setShowResults] = useState(false);
@@ -40,14 +40,14 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
     setForm({ ...form, [e.target.name]: e.target.value }); setError('');
   };
 
-  // Debounced search for existing patients
+  // Debounced search for existing patients (includes discharged)
   useEffect(() => {
     if (searchQuery.length < 2) { setSearchResults([]); setShowResults(false); return; }
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const r = await globalSearch(searchQuery);
-        setSearchResults(r.patients || []);
+        const results = await searchReadmission(searchQuery);
+        setSearchResults(results || []);
         setShowResults(true);
       } catch { setSearchResults([]); }
       setSearching(false);
@@ -55,16 +55,23 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const selectExistingPatient = (p: any) => {
-    setSelectedExistingId(p.id);
-    setForm(f => ({ ...f, full_name: p.full_name }));
+  const selectExistingPatient = (p: ReadmissionPatient) => {
+    setSelectedExistingId(p.patient_id);
+    setForm(f => ({
+      ...f,
+      full_name: p.full_name,
+      date_of_birth: p.date_of_birth ? p.date_of_birth.slice(0, 10) : '',
+      gender: p.gender || 'male',
+      phone: p.phone || '',
+      address: p.address || '',
+    }));
     setSearchQuery('');
     setShowResults(false);
   };
 
   const clearExistingPatient = () => {
     setSelectedExistingId(null);
-    setForm(f => ({ ...f, full_name: '', date_of_birth: '', gender: 'male', phone: '' }));
+    setForm(f => ({ ...f, full_name: '', date_of_birth: '', gender: 'male', phone: '', address: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,14 +121,18 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
                     onFocus={() => searchResults.length > 0 && setShowResults(true)} />
                   {searching && <span style={{ position: 'absolute', right: 12, top: 10, fontSize: 12, color: '#9CA3AF' }}>Đang tìm...</span>}
                   {showResults && searchResults.length > 0 && (
-                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: 200, overflowY: 'auto' }}>
+                    <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: 240, overflowY: 'auto' }}>
                       {searchResults.map(p => (
-                        <div key={p.id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}
+                        <div key={p.patient_id} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid #F1F5F9', fontSize: 13 }}
                           onClick={() => selectExistingPatient(p)}
                           onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
                           onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                          <strong>{p.full_name}</strong> — {p.patient_code}
-                          {p.admission_code && <span style={{ color: '#9CA3AF', marginLeft: 8 }}>{p.admission_code}</span>}
+                          <div><strong>{p.full_name}</strong> — <span style={{ color: '#6366F1' }}>{p.patient_code}</span></div>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>
+                            {p.phone && <span>{p.phone} · </span>}
+                            {p.total_admissions > 0 ? `${p.total_admissions} lần nhập viện` : 'Chưa có lần nhập viện'}
+                            {p.last_diagnosis && <span> · {p.last_diagnosis}</span>}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -138,14 +149,17 @@ export default function AddPatientModal({ open, onClose, onCreated }: Props) {
             </div>
             <div className="modal__row">
               <div className="form-field"><label className="form-field__label">{t.addPatient.dob}</label>
-                <input className="form-field__input" name="date_of_birth" type="date" value={form.date_of_birth} onChange={handleChange} /></div>
+                <input className="form-field__input" name="date_of_birth" type="date" value={form.date_of_birth} onChange={handleChange}
+                  disabled={!!selectedExistingId} style={selectedExistingId ? { opacity: 0.6 } : {}} /></div>
               <div className="form-field"><label className="form-field__label">{t.addPatient.gender}</label>
                 <Select value={form.gender} onChange={val => setForm({...form, gender: val})}
                   options={[{ value: 'male', label: t.addPatient.male }, { value: 'female', label: t.addPatient.female }]}
+                  disabled={!!selectedExistingId}
                 /></div>
             </div>
             <div className="form-field"><label className="form-field__label">{t.addPatient.phone}</label>
-              <input className="form-field__input" name="phone" value={form.phone} onChange={handleChange} placeholder={t.addPatient.phonePlaceholder} /></div>
+              <input className="form-field__input" name="phone" value={form.phone} onChange={handleChange} placeholder={t.addPatient.phonePlaceholder}
+                disabled={!!selectedExistingId} style={selectedExistingId ? { opacity: 0.6 } : {}} /></div>
             <div className="form-field"><label className="form-field__label">{t.addPatient.diagnosis} *</label>
               <input className="form-field__input" name="diagnosis" value={form.diagnosis} onChange={handleChange} placeholder={t.addPatient.diagnosisPlaceholder} /></div>
             <div className="form-field"><label className="form-field__label">{t.addPatient.doctor} *</label>

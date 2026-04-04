@@ -77,9 +77,24 @@ export interface BedHistoryEntry {
 }
 
 export interface SearchResults {
-  patients: { id: number; patient_code: string; full_name: string; admission_code: string; status: string }[];
+  patients: { id: number; patient_id: number; patient_code: string; full_name: string; admission_code: string; status: string }[];
   rooms: { id: number; room_code: string; name: string }[];
   beds: { id: number; room_id: number; bed_code: string; room_code: string; room_name: string }[];
+}
+
+export interface ReadmissionPatient {
+  patient_id: number;
+  patient_code: string;
+  full_name: string;
+  date_of_birth: string | null;
+  gender: string;
+  phone: string | null;
+  address: string | null;
+  id_number: string | null;
+  insurance_number: string | null;
+  total_admissions: number;
+  last_discharged_at: string | null;
+  last_diagnosis: string | null;
 }
 
 export interface AuditLog {
@@ -256,6 +271,9 @@ export const getVapidPublicKey = async () =>
 // ============================================================
 export const globalSearch = async (q: string) =>
   (await httpClient.get<ApiRes<SearchResults>>('/search', { params: { q } })).data.data;
+
+export const searchReadmission = async (q: string): Promise<ReadmissionPatient[]> =>
+  (await httpClient.get<ApiRes<ReadmissionPatient[]>>('/search/readmission', { params: { q } })).data.data;
 
 // ============================================================
 // Reports
