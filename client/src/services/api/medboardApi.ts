@@ -529,10 +529,14 @@ export const deleteIntegration = async (id: number) =>
 // ============================================================
 export interface QRCode {
   id: number; entity_type: string; entity_id: number; qr_data: string; is_active: boolean;
+  room_code?: string; room_name?: string; bed_code?: string;
 }
 
 export const fetchQRCode = async (entityType: string, entityId: number) =>
   (await httpClient.get<ApiRes<QRCode>>(`/extras/${entityType}/${entityId}`)).data.data;
+
+export const fetchQRList = async (entityType: string) =>
+  (await httpClient.get<ApiRes<QRCode[]>>(`/extras/qr-list/${entityType}`)).data.data;
 
 export const batchGenerateQR = async (entityType: string) =>
   (await httpClient.post<ApiRes<void>>(`/extras/batch/${entityType}`)).data;

@@ -11,9 +11,10 @@ import {
   fetchSLASummary,
   fetchBedRules, createBedRule, updateBedRule, deleteBedRule,
   fetchAuditSummary,
-  batchGenerateQR,
+  batchGenerateQR, fetchQRList,
   fetchDashboardWidgets, updateDashboardWidget,
 } from '../../services/api/medboardApi';
+import type { QRCode as QRCodeData } from '../../services/api/medboardApi';
 import type {
   ServicePlan, Tenant, ResourceLimits, HISIntegration,
   UserSession, SLASummary, BedAllocationRule, AuditSummary, DashboardWidget,
@@ -446,27 +447,99 @@ function WidgetsSection() {
 function QRSection() {
   const { showToast } = useToast();
   const [generating, setGenerating] = useState(false);
+  const [tab, setTab] = useState<'room' | 'bed'>('room');
+  const [list, setList] = useState<QRCodeData[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadList = useCallback(async () => {
+    setLoading(true);
+    try { const data = await fetchQRList(tab); setList(data ?? []); }
+    catch { setList([]); }
+    finally { setLoading(false); }
+  }, [tab]);
+
+  useEffect(() => { loadList(); }, [loadList]);
 
   const generate = async (type: string) => {
     setGenerating(true);
-    try { await batchGenerateQR(type); showToast(`Đã tạo QR cho ${type}`, 'success'); } catch { showToast('Lỗi', 'error'); }
+    try { await batchGenerateQR(type); showToast(`Đã tạo QR cho ${type}`, 'success'); loadList(); }
+    catch { showToast('Lỗi', 'error'); }
     finally { setGenerating(false); }
+  };
+
+  const handlePrint = () => {
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+    const cards = list.map(q => {
+      const label = q.entity_type === 'room'
+        ? `${q.room_name || ''} (${q.room_code || ''})`
+        : `${q.bed_code || ''} — ${q.room_name || ''}`;
+      const svg = document.querySelector(`[data-qr-id="${q.id}"] svg`);
+      const svgHtml = svg ? svg.outerHTML : '';
+      return `<div style="display:inline-block;width:180px;margin:12px;text-align:center;page-break-inside:avoid">
+        ${svgHtml}
+        <div style="font-size:12px;font-weight:600;margin-top:4px">${label}</div>
+        <div style="font-size:10px;color:#666">${q.entity_type === 'room' ? 'Phòng' : 'Giường'}</div>
+      </div>`;
+    }).join('');
+    printWin.document.write(`<!DOCTYPE html><html><head><title>In QR Code</title></head>
+      <body style="font-family:sans-serif;padding:16px">${cards}</body></html>`);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 300);
   };
 
   return (
     <div>
       <h3>Quản lý QR Code</h3>
       <p>Tạo mã QR cho phòng và giường để quét nhanh trên điện thoại.</p>
-      <div className="saas-admin__toolbar">
-        <button className="btn btn--primary" disabled={generating} onClick={() => generate('room')}>
-          {generating ? 'Đang tạo...' : 'Tạo QR cho tất cả phòng'}
+      <div className="saas-admin__toolbar" style={{ gap: 8, flexWrap: 'wrap' }}>
+        <button className={`btn ${tab === 'room' ? 'btn--primary' : 'btn--ghost'}`} onClick={() => setTab('room')}>Phòng</button>
+        <button className={`btn ${tab === 'bed' ? 'btn--primary' : 'btn--ghost'}`} onClick={() => setTab('bed')}>Giường</button>
+        <button className="btn btn--primary" disabled={generating} onClick={() => generate(tab)}>
+          {generating ? 'Đang tạo...' : `Tạo QR tất cả ${tab === 'room' ? 'phòng' : 'giường'}`}
         </button>
-        <button className="btn btn--primary" disabled={generating} onClick={() => generate('bed')}>
-          {generating ? 'Đang tạo...' : 'Tạo QR cho tất cả giường'}
-        </button>
+        {list.length > 0 && (
+          <button className="btn btn--ghost" onClick={handlePrint}>🖨️ In tất cả</button>
+        )}
       </div>
+      {loading ? <p style={{ textAlign: 'center', padding: 24 }}>Đang tải...</p> : list.length === 0 ? (
+        <p style={{ textAlign: 'center', padding: 24, color: '#888' }}>
+          Chưa có QR nào. Bấm "Tạo QR" để khởi tạo.
+        </p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 16 }}>
+          {list.map(q => {
+            const label = q.entity_type === 'room'
+              ? `${q.room_name || ''} (${q.room_code || ''})`
+              : `${q.bed_code || ''} — ${q.room_name || ''}`;
+            return (
+              <div key={q.id} data-qr-id={q.id} style={{
+                border: '1px solid #e0e0e0', borderRadius: 8, padding: 12,
+                textAlign: 'center', width: 160, background: '#fafafa'
+              }}>
+                <QRSvg value={q.qr_data} size={120} />
+                <div style={{ fontSize: 12, fontWeight: 600, marginTop: 6 }}>{label}</div>
+                <div style={{ fontSize: 10, color: '#888' }}>{q.entity_type === 'room' ? 'Phòng' : 'Giường'}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
+}
+
+// Lightweight QR SVG wrapper (lazy-loaded)
+let _QRCodeSVG: React.ComponentType<{ value: string; size?: number }> | null = null;
+function QRSvg({ value, size = 120 }: { value: string; size?: number }) {
+  const [Comp, setComp] = useState<React.ComponentType<{ value: string; size?: number }> | null>(_QRCodeSVG);
+  useEffect(() => {
+    if (_QRCodeSVG) return;
+    import('qrcode.react').then(m => { _QRCodeSVG = m.QRCodeSVG; setComp(() => m.QRCodeSVG); });
+  }, []);
+  if (!Comp) return <div style={{ width: size, height: size, background: '#eee', borderRadius: 4 }} />;
+  return <Comp value={value} size={size} />;
 }
 
 // ── Audit Advanced (#100) ──

@@ -9,6 +9,29 @@ router.use(authMiddleware);
 
 // ── QR Code generation (#96) ──
 
+// List all QR codes with entity names
+router.get('/qr-list/:entityType', async (req, res, next) => {
+  try {
+    const { entityType } = req.params;
+    if (entityType === 'room') {
+      const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT q.*, r.room_code, r.room_name FROM qr_codes q
+         JOIN rooms r ON q.entity_id = r.id WHERE q.entity_type = 'room' ORDER BY r.room_code`
+      );
+      res.json({ success: true, data: rows });
+    } else if (entityType === 'bed') {
+      const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT q.*, b.bed_code, r.room_name, r.room_code FROM qr_codes q
+         JOIN beds b ON q.entity_id = b.id
+         JOIN rooms r ON b.room_id = r.id WHERE q.entity_type = 'bed' ORDER BY r.room_code, b.bed_code`
+      );
+      res.json({ success: true, data: rows });
+    } else {
+      res.status(400).json({ success: false, error: { message: 'Loại không hợp lệ' } });
+    }
+  } catch (e) { next(e); }
+});
+
 router.get('/:entityType/:entityId', async (req, res, next) => {
   try {
     const { entityType, entityId } = req.params;
@@ -30,7 +53,9 @@ router.get('/:entityType/:entityId', async (req, res, next) => {
 
     // Auto-create QR data
     const baseUrl = process.env.APP_URL || 'https://medboard.app';
-    const qrData = `${baseUrl}/${entityType === 'room' ? 'rooms' : 'rooms'}/${entityId}`;
+    const qrData = entityType === 'room'
+      ? `${baseUrl}/rooms/${entityId}`
+      : `${baseUrl}/scan?type=bed&id=${entityId}`;
 
     await db.execute<ResultSetHeader>(
       'INSERT INTO qr_codes (entity_type, entity_id, qr_data) VALUES (?, ?, ?)',
@@ -65,7 +90,7 @@ router.post('/batch/:entityType', rbacMiddleware(['admin']), async (req, res, ne
     } else if (entityType === 'bed') {
       const [beds] = await db.execute<RowDataPacket[]>('SELECT b.id, b.bed_code, b.room_id FROM beds b JOIN rooms r ON b.room_id = r.id WHERE r.status = "active"');
       for (const b of beds) {
-        const qrData = `${baseUrl}/rooms/${b.room_id}?bed=${b.id}`;
+        const qrData = `${baseUrl}/scan?type=bed&id=${b.id}`;
         await db.execute(
           'INSERT INTO qr_codes (entity_type, entity_id, qr_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE qr_data = VALUES(qr_data)',
           ['bed', b.id, qrData]

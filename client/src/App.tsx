@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams, useNavigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AccessProvider } from './contexts/AccessContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -16,6 +16,34 @@ import AdminPage from './pages/Admin/AdminPage';
 import AccessCenterPage from './pages/Admin/AccessCenterPage';
 import SaasAdminPage from './pages/Admin/SaasAdminPage';
 import './styles/index.scss';
+import { useEffect } from 'react';
+import httpClient from './services/httpClient';
+
+// QR scan redirect: /scan?type=bed&id=5 → resolve room and navigate
+function ScanRedirect() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const type = params.get('type');
+    const id = params.get('id');
+    if (type === 'bed' && id) {
+      httpClient.get(`/beds/${id}`)
+        .then(res => {
+          const bed = res.data?.data;
+          if (bed?.room_id) navigate(`/rooms/${bed.room_id}`, { replace: true });
+          else navigate('/', { replace: true });
+        })
+        .catch(() => navigate('/', { replace: true }));
+    } else if (type === 'room' && id) {
+      navigate(`/rooms/${id}`, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [params, navigate]);
+  return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <div className="loading-screen__spinner" />
+  </div>;
+}
 
 export default function App() {
   return (
@@ -26,6 +54,9 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
+
+          {/* QR Scan redirect (protected) */}
+          <Route path="/scan" element={<ProtectedRoute><ScanRedirect /></ProtectedRoute>} />
 
           {/* Protected — with AppLayout */}
           <Route

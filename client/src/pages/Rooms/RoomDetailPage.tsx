@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { fetchRoom, fetchRooms, fetchBedsByRoom, releaseBed, markBedClean, type Room, type Bed } from '../../services/api/medboardApi';
+import { fetchRoom, fetchRooms, fetchBedsByRoom, releaseBed, markBedClean, fetchQRCode, type Room, type Bed } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import BedVisual from '../../components/BedVisual/BedVisual';
@@ -26,6 +26,8 @@ export default function RoomDetailPage() {
   const [confirmRelease, setConfirmRelease] = useState(false);
   const [releasing, setReleasing] = useState(false);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
+  const [showQR, setShowQR] = useState(false);
+  const [qrData, setQrData] = useState<string | null>(null);
 
   const isFirstLoad = useRef(true);
 
@@ -172,7 +174,16 @@ export default function RoomDetailPage() {
               </div>
             )}
           </div>
-          <h2 className="page-header__title">{room.name}</h2>
+          <h2 className="page-header__title">
+            {room.name}
+            <button className="btn btn--ghost btn--sm" style={{ marginLeft: 8, padding: '2px 6px', fontSize: 16 }}
+              title="QR Code" onClick={() => {
+                setShowQR(true);
+                if (!qrData) fetchQRCode('room', room.id).then(q => setQrData(q?.qr_data || `${window.location.origin}/rooms/${room.id}`)).catch(() => setQrData(`${window.location.origin}/rooms/${room.id}`));
+              }}>
+              ⊞
+            </button>
+          </h2>
           <p className="page-header__subtitle">{room.room_code} · {room.department_name} · {floorLabel}</p>
         </div>
         <div className="room-detail__header-stats">
@@ -316,6 +327,40 @@ export default function RoomDetailPage() {
         onCancel={() => setConfirmRelease(false)}
         loading={releasing}
       />
+
+      {/* QR Modal */}
+      {showQR && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.45)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setShowQR(false)}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 24, textAlign: 'center', minWidth: 240 }}
+            onClick={e => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 8px' }}>{room.name}</h3>
+            <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px' }}>{room.room_code}</p>
+            {qrData && <Suspense fallback={<div style={{ width: 180, height: 180, background: '#eee' }} />}>
+              <LazyQR value={qrData} size={180} />
+            </Suspense>}
+            <div style={{ marginTop: 16, display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button className="btn btn--primary btn--sm" onClick={() => {
+                const svg = document.querySelector('.qr-room-modal svg');
+                if (!svg) return;
+                const w = window.open('', '_blank');
+                if (!w) return;
+                w.document.write(`<html><body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif">
+                  ${svg.outerHTML}<p style="font-size:16px;font-weight:600;margin-top:12px">${room.name} (${room.room_code})</p></body></html>`);
+                w.document.close();
+                setTimeout(() => w.print(), 200);
+              }}>🖨️ In</button>
+              <button className="btn btn--ghost btn--sm" onClick={() => setShowQR(false)}>Đóng</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Lazy-loaded QR component
+const LazyQRInner = lazy(() => import('qrcode.react').then(m => ({ default: m.QRCodeSVG })));
+function LazyQR(props: { value: string; size?: number }) {
+  return <div className="qr-room-modal"><LazyQRInner {...props} /></div>;
 }
