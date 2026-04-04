@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { fetchSystemConfig, updateSystemConfig, fetchChecklistTemplates, createChecklistTemplate, updateChecklistTemplate, fetchConfigDepartments, createDepartment, updateDepartment, fetchAuditLogs, type SystemConfig, type AuditLog } from '../../services/api/medboardApi';
+import { fetchSystemConfig, updateSystemConfig, fetchChecklistTemplates, createChecklistTemplate, updateChecklistTemplate, fetchConfigDepartments, createDepartment, updateDepartment, fetchAuditLogs, fetchWards, createWard, updateWard, deleteWard, type SystemConfig, type AuditLog, type Ward } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
 import Modal from '../../components/Modal/Modal';
+import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
 import './AdminPages.scss';
 
-type Tab = 'config' | 'departments' | 'checklists' | 'statuses' | 'audit';
+type Tab = 'config' | 'departments' | 'wards' | 'checklists' | 'statuses' | 'audit';
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -18,12 +19,13 @@ export default function AdminPage() {
     <div>
       <div className="page-header"><div><h2 className="page-header__title">{t.admin.title}</h2></div></div>
       <div className="tab-bar">
-        {([['config', t.admin.tabConfig], ['departments', t.admin.tabDepartments], ['checklists', t.admin.tabChecklists], ['statuses', t.admin.tabStatuses], ['audit', t.admin.tabAudit]] as [Tab, string][]).map(([k, v]) => (
+        {([['config', t.admin.tabConfig], ['departments', t.admin.tabDepartments], ['wards', t.admin.tabWards || 'Khu điều trị'], ['checklists', t.admin.tabChecklists], ['statuses', t.admin.tabStatuses], ['audit', t.admin.tabAudit]] as [Tab, string][]).map(([k, v]) => (
           <button key={k} className={`tab-bar__item ${tab === k ? 'tab-bar__item--active' : ''}`} onClick={() => setTab(k)}>{v}</button>
         ))}
       </div>
       {tab === 'config' && <ConfigSection />}
       {tab === 'departments' && <DepartmentSection />}
+      {tab === 'wards' && <WardSection />}
       {tab === 'checklists' && <ChecklistSection />}
       {tab === 'statuses' && <StatusSection />}
       {tab === 'audit' && <AuditSection />}
@@ -312,5 +314,129 @@ function StatusSection() {
         </table>
       </div>
     </div>
+  );
+}
+
+// ── Ward Section (#3) ──
+function WardSection() {
+  const { t } = useTranslation();
+  const [wards, setWards] = useState<Ward[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editWd, setEditWd] = useState<Ward | null>(null);
+  const [form, setForm] = useState({ name: '', code: '', description: '', floor_start: 1, floor_end: 1 });
+  const [saving, setSaving] = useState(false);
+  const [confirmDel, setConfirmDel] = useState<Ward | null>(null);
+
+  const load = () => { setLoading(true); fetchWards().then(setWards).catch(() => {}).finally(() => setLoading(false)); };
+  useEffect(load, []);
+
+  const openAdd = () => { setEditWd(null); setForm({ name: '', code: '', description: '', floor_start: 1, floor_end: 1 }); setShowModal(true); };
+  const openEdit = (w: Ward) => { setEditWd(w); setForm({ name: w.name, code: w.code, description: w.description || '', floor_start: w.floor_start, floor_end: w.floor_end }); setShowModal(true); };
+
+  const handleSave = async () => {
+    if (!form.name || !form.code) return;
+    setSaving(true);
+    try {
+      if (editWd) { await updateWard(editWd.id, form); }
+      else { await createWard(form); }
+      setShowModal(false); load();
+    } catch {}
+    setSaving(false);
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDel) return;
+    try { await deleteWard(confirmDel.id); setConfirmDel(null); load(); } catch {}
+  };
+
+  const handleToggle = async (w: Ward) => {
+    try { await updateWard(w.id, { is_active: !w.is_active } as any); load(); } catch {}
+  };
+
+  if (loading) return <div className="card" style={{ textAlign: 'center', padding: 32 }}>{t.common.loading}</div>;
+
+  return (
+    <>
+      <div className="card" style={{ padding: 0 }}>
+        <div className="card__header" style={{ padding: '12px 20px' }}>
+          <span className="card__title">{t.admin.tabWards || 'Khu điều trị'} ({wards.length})</span>
+          <button className="btn btn--primary btn--sm" onClick={openAdd}>+ {t.common.create}</button>
+        </div>
+        <table className="data-table">
+          <thead><tr><th>{t.common.code}</th><th>{t.common.name}</th><th>{t.common.description}</th><th>Tầng</th><th>Phòng</th><th>Giường</th><th>{t.common.status}</th><th>{t.common.actions}</th></tr></thead>
+          <tbody>
+            {wards.length === 0 ? (
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 32, color: '#9CA3AF' }}>{t.common.noData}</td></tr>
+            ) : wards.map(w => (
+              <tr key={w.id}>
+                <td><code>{w.code}</code></td>
+                <td style={{ fontWeight: 600 }}>{w.name}</td>
+                <td>{w.description || '—'}</td>
+                <td>{w.floor_start === w.floor_end ? `Tầng ${w.floor_start}` : `Tầng ${w.floor_start}–${w.floor_end}`}</td>
+                <td>{w.room_count}</td>
+                <td>{w.bed_count}</td>
+                <td>
+                  <button className={`badge badge--${w.is_active ? 'success' : 'default'}`} style={{ cursor: 'pointer', border: 'none' }} onClick={() => handleToggle(w)}>
+                    {w.is_active ? t.common.active : t.common.inactive}
+                  </button>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button className="btn btn--ghost btn--sm" onClick={() => openEdit(w)}>{t.common.edit}</button>
+                    <button className="btn btn--ghost btn--sm" style={{ color: '#EF4444' }} onClick={() => setConfirmDel(w)}>{t.common.delete}</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {showModal && (
+      <Modal onClose={() => setShowModal(false)} title={editWd ? 'Sửa khu điều trị' : 'Thêm khu điều trị'}>
+        <div className="form-stack">
+          <div className="form-field">
+            <label className="form-field__label">{t.common.name} *</label>
+            <input className="form-field__input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Khu A - Nội khoa" />
+          </div>
+          <div className="form-field">
+            <label className="form-field__label">{t.common.code} *</label>
+            <input className="form-field__input" value={form.code} onChange={e => setForm({...form, code: e.target.value})} placeholder="KHU-A" />
+          </div>
+          <div className="form-field">
+            <label className="form-field__label">{t.common.description}</label>
+            <input className="form-field__input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div className="form-field">
+              <label className="form-field__label">Tầng bắt đầu</label>
+              <input className="form-field__input" type="number" min={1} value={form.floor_start} onChange={e => setForm({...form, floor_start: Number(e.target.value)})} />
+            </div>
+            <div className="form-field">
+              <label className="form-field__label">Tầng kết thúc</label>
+              <input className="form-field__input" type="number" min={1} value={form.floor_end} onChange={e => setForm({...form, floor_end: Number(e.target.value)})} />
+            </div>
+          </div>
+          <button className="btn btn--primary" style={{ width: '100%' }} onClick={handleSave} disabled={saving}>
+            {saving ? t.common.processing : t.common.save}
+          </button>
+        </div>
+      </Modal>
+      )}
+
+      {confirmDel && (
+      <ConfirmDialog
+        open={!!confirmDel}
+        title={`Xoá khu "${confirmDel?.name}"?`}
+        message="Các phòng thuộc khu này sẽ bị gỡ liên kết. Hành động này không thể hoàn tác."
+        confirmLabel={t.common.delete}
+        cancelLabel={t.common.cancel}
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDel(null)}
+      />
+      )}
+    </>
   );
 }

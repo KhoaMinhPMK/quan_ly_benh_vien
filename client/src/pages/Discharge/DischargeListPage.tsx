@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchDischargeList, fetchChecklists, toggleChecklist, dischargePatient, type Patient, type ChecklistItem } from '../../services/api/medboardApi';
+import { fetchDischargeList, fetchChecklists, toggleChecklist, dischargePatient, fetchDepartments, type Patient, type ChecklistItem, type Department } from '../../services/api/medboardApi';
 import { useTranslation } from '../../i18n/LanguageContext';
 import { useToast } from '../../contexts/ToastContext';
 import ConfirmDialog from '../../components/ConfirmDialog/ConfirmDialog';
@@ -24,6 +24,10 @@ export default function DischargeListPage() {
   const [togglingId, setTogglingId] = useState<number | null>(null);
   const [dateFilter, setDateFilter] = useState<string>('');
   const [drawerPatientId, setDrawerPatientId] = useState<number | null>(null);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [deptFilter, setDeptFilter] = useState('');
+  const [doctorFilter, setDoctorFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
 
   const statusLabels: Record<string, string> = {
     treating: t.patients.statusTreating, waiting_discharge: t.patients.statusWaiting,
@@ -34,13 +38,19 @@ export default function DischargeListPage() {
 
   const loadList = () => {
     setLoading(true);
-    fetchDischargeList(dateFilter || undefined)
+    fetchDischargeList(dateFilter || undefined, {
+      department_id: deptFilter ? Number(deptFilter) : undefined,
+      doctor_name: doctorFilter || undefined,
+      search: searchFilter || undefined,
+    })
       .then(setPatients)
       .catch(() => { showToast(t.common.error, 'error'); })
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadList(); }, [dateFilter]);
+  useEffect(() => { loadList(); }, [dateFilter, deptFilter, doctorFilter, searchFilter]);
+
+  useEffect(() => { fetchDepartments().then(setDepartments).catch(() => {}); }, []);
 
   // Auto-refresh every 30s
   useEffect(() => {
@@ -131,6 +141,26 @@ export default function DischargeListPage() {
           className="discharge__date-input"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
+        />
+        <select className="discharge__date-input" style={{ maxWidth: 160 }} value={deptFilter} onChange={e => setDeptFilter(e.target.value)}>
+          <option value="">{t.rooms.filterDepartment}</option>
+          {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+        <input
+          type="text"
+          className="discharge__date-input"
+          placeholder={t.discharge.filterDoctor}
+          value={doctorFilter}
+          onChange={e => setDoctorFilter(e.target.value)}
+          style={{ maxWidth: 160 }}
+        />
+        <input
+          type="text"
+          className="discharge__date-input"
+          placeholder={t.common.search}
+          value={searchFilter}
+          onChange={e => setSearchFilter(e.target.value)}
+          style={{ maxWidth: 180 }}
         />
       </div>
 

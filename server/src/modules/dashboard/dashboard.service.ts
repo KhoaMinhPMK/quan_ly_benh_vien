@@ -84,5 +84,47 @@ export async function getDashboardStats(departmentId?: number) {
       empty_beds: Number(r.empty_beds) ?? 0,
       occupied_beds: Number(r.occupied_beds) || 0,
     })),
+    ...await getWarnings(departmentId),
+  };
+}
+
+async function getWarnings(departmentId?: number) {
+  const deptFilter = departmentId ? ' AND r.department_id = ?' : '';
+  const deptParam = departmentId ? [departmentId] : [];
+
+  // Waiting queue count (#62)
+  const [waitingRows] = await db.execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM admissions
+     WHERE bed_id IS NULL AND status IN ('admitted', 'treating')`
+  );
+
+  // Overdue records (#63) — admissions with expected_discharge in the past and not discharged
+  const [overdueRows] = await db.execute<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM admissions a
+     LEFT JOIN beds b ON a.bed_id = b.id
+     LEFT JOIN rooms r ON b.room_id = r.id
+     WHERE a.status IN ('admitted', 'treating', 'waiting_discharge')
+       AND a.expected_discharge IS NOT NULL
+       AND a.expected_discharge < CURDATE()${deptFilter}`,
+    deptParam
+  );
+
+  // Near-full rooms (#15) — rooms where empty_beds <= 1 and total_beds > 0
+  const [nearFullRows] = await db.execute<RowDataPacket[]>(
+    `SELECT r.id, r.room_code, r.name, d.name AS department_name,
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id) AS total_beds,
+      (SELECT COUNT(*) FROM beds WHERE room_id = r.id AND status = 'empty') AS empty_beds
+    FROM rooms r
+    LEFT JOIN departments d ON d.id = r.department_id
+    WHERE r.status = 'active'${departmentId ? ' AND r.department_id = ?' : ''}
+    HAVING total_beds > 0 AND empty_beds <= 1
+    ORDER BY empty_beds ASC`,
+    deptParam
+  );
+
+  return {
+    waiting_bed_count: Number(waitingRows[0]?.total) || 0,
+    overdue_records_count: Number(overdueRows[0]?.total) || 0,
+    near_full_rooms: nearFullRows,
   };
 }

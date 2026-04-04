@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchDashboardStats, fetchPatients, type DashboardStats, type Patient } from '../../services/api/medboardApi';
+import { fetchDashboardStats, fetchPatients, fetchTrendData, type DashboardStats, type Patient, type TrendDataPoint } from '../../services/api/medboardApi';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from '../../i18n/LanguageContext';
 import AddPatientModal from '../Patients/AddPatientModal';
@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [assignBedPatientId, setAssignBedPatientId] = useState<number | null>(null);
   const [patientsWithNotes, setPatientsWithNotes] = useState<Patient[]>([]);
+  const [trendData, setTrendData] = useState<TrendDataPoint[]>([]);
 
   const loadData = () => {
     if (isFirstLoad.current) setLoading(true);
@@ -36,6 +37,7 @@ export default function DashboardPage() {
       setWaitingList(patients.filter(p => !p.bed_id));
       setPatientsWithNotes(patients.filter(p => p.notes && p.notes.trim() && p.status !== 'discharged'));
     }).catch(() => {});
+    fetchTrendData(14).then(setTrendData).catch(() => {});
   };
 
   useEffect(() => {
@@ -88,8 +90,21 @@ export default function DashboardPage() {
       </div>
 
       {/* Alerts */}
-      {(fullRooms.length > 0 || nearFullRooms.length > 0 || waitingList.length > 0) && (
+      {(fullRooms.length > 0 || nearFullRooms.length > 0 || waitingList.length > 0 || (stats?.overdue_records_count ?? 0) > 0) && (
         <div className="dashboard__alerts">
+          {(stats?.overdue_records_count ?? 0) > 0 && (
+            <div className="alert-banner alert-banner--error">
+              <div className="alert-banner__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div className="alert-banner__content">
+                <div className="alert-banner__title">
+                  {stats?.overdue_records_count} {t.dashboard.overdueRecords || 'hồ sơ quá hạn xử lý'}
+                </div>
+              </div>
+            </div>
+          )}
+
           {fullRooms.length > 0 && (
             <div className="alert-banner alert-banner--error">
               <div className="alert-banner__icon">
@@ -288,6 +303,41 @@ export default function DashboardPage() {
                 </Link>
               );
             })}
+          </div>
+        </>
+      )}
+
+      {/* Trend Chart (#60) */}
+      {trendData.length > 1 && (
+        <>
+          <h3 className="dashboard__section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign:'middle',marginRight:4}}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            {t.dashboard.trendTitle || 'Xu hướng 14 ngày'}
+          </h3>
+          <div className="dashboard__trend-chart">
+            <div className="trend-chart">
+              <div className="trend-chart__legend">
+                <span className="trend-chart__legend-item trend-chart__legend-item--admissions">{t.dashboard.trendAdmissions || 'Nhập viện'}</span>
+                <span className="trend-chart__legend-item trend-chart__legend-item--discharges">{t.dashboard.trendDischarges || 'Ra viện'}</span>
+              </div>
+              <div className="trend-chart__bars">
+                {trendData.map((d, i) => {
+                  const maxVal = Math.max(...trendData.map(dd => Math.max(Number(dd.new_admissions || 0), Number(dd.discharges || 0))), 1);
+                  const admH = (Number(d.new_admissions || 0) / maxVal) * 100;
+                  const disH = (Number(d.discharges || 0) / maxVal) * 100;
+                  const dateLabel = d.stat_date ? new Date(d.stat_date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) : '';
+                  return (
+                    <div key={i} className="trend-chart__bar-group" title={`${dateLabel}: +${d.new_admissions || 0} nhập / -${d.discharges || 0} ra`}>
+                      <div className="trend-chart__bar-pair">
+                        <div className="trend-chart__bar trend-chart__bar--admissions" style={{ height: `${admH}%` }} />
+                        <div className="trend-chart__bar trend-chart__bar--discharges" style={{ height: `${disH}%` }} />
+                      </div>
+                      <span className="trend-chart__label">{dateLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </>
       )}

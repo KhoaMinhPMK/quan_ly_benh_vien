@@ -310,7 +310,7 @@ export async function dischargePatient(id: number, performedBy?: number) {
   }
 }
 
-export async function getDischargeList(filters: { date?: string; department_id?: number }) {
+export async function getDischargeList(filters: { date?: string; department_id?: number; doctor_name?: string; room_id?: number; search?: string }) {
   let sql = `
     SELECT a.id, a.patient_id, p.patient_code, p.full_name, p.date_of_birth, p.gender, p.phone,
            a.admission_code, a.diagnosis, a.doctor_name, a.bed_id, a.status, a.admitted_at, a.expected_discharge, a.discharged_at, a.notes,
@@ -333,6 +333,18 @@ export async function getDischargeList(filters: { date?: string; department_id?:
   if (filters.department_id) {
     sql += ' AND r.department_id = ?';
     params.push(filters.department_id);
+  }
+  if (filters.doctor_name) {
+    sql += ' AND a.doctor_name LIKE ?';
+    params.push(`%${filters.doctor_name}%`);
+  }
+  if (filters.room_id) {
+    sql += ' AND b.room_id = ?';
+    params.push(filters.room_id);
+  }
+  if (filters.search) {
+    sql += ' AND (p.patient_code LIKE ? OR p.full_name LIKE ? OR a.admission_code LIKE ?)';
+    params.push(`%${filters.search}%`, `%${filters.search}%`, `%${filters.search}%`);
   }
 
   sql += ' ORDER BY a.expected_discharge ASC';
@@ -368,8 +380,9 @@ export async function getWaitingQueue(filters: { department_id?: number; search?
 export async function getPatientChecklists(admissionId: number) {
   const [rows] = await db.execute<RowDataPacket[]>(
     `SELECT ct.id AS template_id, ct.name, ct.description, ct.sort_order,
+      ct.question_type, ct.options, ct.is_required, ct.department_id,
       COALESCE(ac.is_completed, FALSE) AS is_completed,
-      ac.completed_at, ac.notes,
+      ac.completed_at, ac.notes, ac.answer_text,
       u.full_name AS completed_by_name
     FROM checklist_templates ct
     LEFT JOIN admission_checklists ac ON ac.checklist_template_id = ct.id AND ac.admission_id = ?
@@ -381,7 +394,7 @@ export async function getPatientChecklists(admissionId: number) {
   return rows;
 }
 
-export async function toggleChecklist(admissionId: number, templateId: number, completed: boolean | string | number, userId?: number) {
+export async function toggleChecklist(admissionId: number, templateId: number, completed: boolean | string | number, userId?: number, answerText?: string, notes?: string) {
   // Ensure strict MySQL TinyInt(1) type handling and avoid JS Date parser issues
   const isCompletedInt = (completed === true || completed === 'true' || completed === 1) ? 1 : 0;
   const completedBy = isCompletedInt ? (userId || null) : null;
@@ -389,10 +402,10 @@ export async function toggleChecklist(admissionId: number, templateId: number, c
 
   // Upsert
   await db.execute(
-    `INSERT INTO admission_checklists (admission_id, checklist_template_id, is_completed, completed_by, completed_at)
-     VALUES (?, ?, ?, ?, ${dateExpr})
-     ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed), completed_by = VALUES(completed_by), completed_at = VALUES(completed_at)`,
-    [admissionId, templateId, isCompletedInt, completedBy]
+    `INSERT INTO admission_checklists (admission_id, checklist_template_id, is_completed, completed_by, completed_at, answer_text, notes)
+     VALUES (?, ?, ?, ?, ${dateExpr}, ?, ?)
+     ON DUPLICATE KEY UPDATE is_completed = VALUES(is_completed), completed_by = VALUES(completed_by), completed_at = VALUES(completed_at), answer_text = VALUES(answer_text), notes = VALUES(notes)`,
+    [admissionId, templateId, isCompletedInt, completedBy, answerText || null, notes || null]
   );
   return getPatientChecklists(admissionId);
 }

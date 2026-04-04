@@ -41,8 +41,10 @@ export interface Department { id: number; name: string; code: string; }
 
 export interface ChecklistItem {
   template_id: number; name: string; description: string; sort_order: number;
+  question_type: 'checkbox' | 'text' | 'radio' | 'number' | 'note';
+  options: string[] | null; is_required: boolean; department_id: number | null;
   is_completed: boolean; completed_at: string | null; notes: string | null;
-  completed_by_name: string | null;
+  answer_text: string | null; completed_by_name: string | null;
 }
 
 export interface DashboardStats {
@@ -51,6 +53,9 @@ export interface DashboardStats {
   discharge_pending: number;
   patients_missing_checklist: number;
   rooms: Room[];
+  waiting_bed_count: number;
+  overdue_records_count: number;
+  near_full_rooms: { id: number; room_code: string; name: string; department_name: string; total_beds: number; empty_beds: number }[];
 }
 
 export interface User {
@@ -167,8 +172,8 @@ export const dischargePatient = async (id: number) =>
 // ============================================================
 // Discharge
 // ============================================================
-export const fetchDischargeList = async (date?: string) =>
-  (await httpClient.get<ApiRes<Patient[]>>('/patients/discharge-list', { params: { date } })).data.data;
+export const fetchDischargeList = async (date?: string, filters?: { department_id?: number; doctor_name?: string; search?: string }) =>
+  (await httpClient.get<ApiRes<Patient[]>>('/patients/discharge-list', { params: { date, ...filters } })).data.data;
 
 // ============================================================
 // Waiting Queue
@@ -189,8 +194,8 @@ export const fetchWaitingQueue = async (search?: string) =>
 export const fetchChecklists = async (patientId: number) =>
   (await httpClient.get<ApiRes<ChecklistItem[]>>(`/patients/${patientId}/checklists`)).data.data;
 
-export const toggleChecklist = async (patientId: number, templateId: number, completed: boolean) =>
-  (await httpClient.post<ApiRes<ChecklistItem[]>>(`/patients/${patientId}/checklists/toggle`, { template_id: templateId, completed })).data.data;
+export const toggleChecklist = async (patientId: number, templateId: number, completed: boolean, answerText?: string, notes?: string) =>
+  (await httpClient.post<ApiRes<ChecklistItem[]>>(`/patients/${patientId}/checklists/toggle`, { template_id: templateId, completed, answer_text: answerText, notes })).data.data;
 
 // ============================================================
 // Dashboard
@@ -299,3 +304,59 @@ export const createDepartment = async (data: { name: string; code: string; descr
 
 export const updateDepartment = async (id: number, data: any) =>
   (await httpClient.put<ApiRes<void>>(`/config/departments/${id}`, data)).data;
+
+// ============================================================
+// Wards (#3)
+// ============================================================
+export interface Ward {
+  id: number; name: string; code: string; description: string | null;
+  floor_start: number; floor_end: number; is_active: boolean;
+  room_count: number; bed_count: number;
+}
+
+export const fetchWards = async (params?: { is_active?: string; search?: string }) =>
+  (await httpClient.get<ApiRes<Ward[]>>('/wards', { params })).data.data;
+
+export const fetchWard = async (id: number) =>
+  (await httpClient.get<ApiRes<Ward>>(`/wards/${id}`)).data.data;
+
+export const createWard = async (data: Partial<Ward>) =>
+  (await httpClient.post<ApiRes<Ward>>('/wards', data)).data.data;
+
+export const updateWard = async (id: number, data: Partial<Ward>) =>
+  (await httpClient.put<ApiRes<Ward>>(`/wards/${id}`, data)).data.data;
+
+export const deleteWard = async (id: number) =>
+  (await httpClient.delete<ApiRes<void>>(`/wards/${id}`)).data;
+
+// ============================================================
+// Reports — Enhanced (#42, #60, #80)
+// ============================================================
+export interface DischargeHistoryItem {
+  id: number; patient_code: string; full_name: string; admission_code: string;
+  diagnosis: string; doctor_name: string; admitted_at: string; discharged_at: string;
+  room_code: string; room_name: string; bed_code: string; department_name: string;
+  stay_days: number;
+}
+
+export interface TrendDataPoint {
+  stat_date: string; total_patients: number; new_admissions: number;
+  discharges: number; occupied_beds?: number; occupancy_rate?: number;
+}
+
+export const fetchDischargeHistory = async (params?: { from?: string; to?: string; doctor_name?: string; department_id?: number; search?: string }) =>
+  (await httpClient.get<ApiRes<DischargeHistoryItem[]>>('/reports/discharge-history', { params })).data.data;
+
+export const fetchTrendData = async (days = 30, departmentId?: number) =>
+  (await httpClient.get<ApiRes<TrendDataPoint[]>>('/reports/trends', { params: { days, department_id: departmentId } })).data.data;
+
+export const exportReportCSV = async (type: string, params?: Record<string, string>) => {
+  const response = await httpClient.get(`/reports/export/${type}`, { params, responseType: 'blob' });
+  const blob = new Blob([response.data as BlobPart], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `report-${type}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};

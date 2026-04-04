@@ -53,7 +53,10 @@ export async function dischargeList(req: Request, res: Response, next: NextFunct
   try {
     const patients = await patientsService.getDischargeList({
       date: req.query.date as string | undefined,
-      department_id: req.dataScope?.departmentId,
+      department_id: req.query.department_id ? Number(req.query.department_id) : req.dataScope?.departmentId,
+      doctor_name: req.query.doctor_name as string | undefined,
+      room_id: req.query.room_id ? Number(req.query.room_id) : undefined,
+      search: req.query.search as string | undefined,
     });
     res.json({ success: true, data: patients });
   } catch (error) { next(error); }
@@ -78,9 +81,9 @@ export async function getChecklists(req: Request, res: Response, next: NextFunct
 
 export async function toggleChecklist(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const { template_id, completed } = req.body;
+    const { template_id, completed, answer_text, notes } = req.body;
     const checklists = await patientsService.toggleChecklist(
-      Number(req.params.id), template_id, completed, req.user?.id
+      Number(req.params.id), template_id, completed, req.user?.id, answer_text, notes
     );
     res.json({ success: true, data: checklists });
   } catch (error) { next(error); }

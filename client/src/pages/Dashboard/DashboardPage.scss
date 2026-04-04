@@ -370,3 +370,105 @@
     margin-top: 1px;
   }
 }
+
+// ── Trend Chart ──
+.trend-chart {
+  background: v.$color-bg-white;
+  border: 1px solid v.$color-border;
+  border-radius: v.$radius-lg;
+  padding: v.$space-4 v.$space-5;
+  margin-bottom: v.$space-6;
+
+  &__legend {
+    display: flex;
+    gap: v.$space-4;
+    margin-bottom: v.$space-3;
+    font-size: v.$font-size-xs;
+    color: v.$color-text-muted;
+  }
+
+  &__legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    &::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    &--admissions::before { background: v.$color-primary; }
+    &--discharges::before { background: v.$color-success; }
+  }
+
+  &__bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 120px;
+    border-bottom: 1px solid v.$color-border;
+    padding-bottom: v.$space-1;
+  }
+
+  &__bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__bar-pair {
+    display: flex;
+    gap: 1px;
+    align-items: flex-end;
+    height: 100px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &__bar {
+    width: 6px;
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height 0.3s ease;
+
+    &--admissions { background: v.$color-primary; }
+    &--discharges { background: v.$color-success; }
+  }
+
+  &__label {
+    font-size: 9px;
+    color: v.$color-text-muted;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  @media (max-width: v.$breakpoint-sm) {
+    &__bars { height: 80px; }
+    &__bar-pair { height: 70px; }
+    &__bar { width: 4px; }
+    &__label { font-size: 8px; }
+  }
+}
+
+// ── Print styles ──
+@media print {
+  .dashboard {
+    &__alerts,
+    &__actions { display: none; }
+
+    &__stats .stat-card {
+      break-inside: avoid;
+      border: 1px solid #ddd;
+    }
+  }
+
+  .alert-banner { display: none; }
+}

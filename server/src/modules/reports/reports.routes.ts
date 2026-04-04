@@ -7,7 +7,11 @@ router.use(authMiddleware);
 
 router.get('/occupancy', ctrl.occupancy);
 router.get('/discharge', ctrl.discharge);
+router.get('/discharge-history', ctrl.dischargeHistory);
 router.get('/missing-records', ctrl.missingRecords);
 router.get('/department', ctrl.department);
+router.get('/trends', ctrl.trends);
+router.get('/export/:type', ctrl.exportCSV);
+router.post('/snapshot', ctrl.snapshotDaily);
 
 export default router;
