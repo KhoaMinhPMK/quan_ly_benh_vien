@@ -77,7 +77,7 @@ export interface BedHistoryEntry {
 }
 
 export interface SearchResults {
-  patients: { id: number; patient_id: number; patient_code: string; full_name: string; admission_code: string; status: string }[];
+  patients: { id: number; patient_id: number; patient_code: string; full_name: string; admission_code: string; status: string; doctor_name: string | null; bed_code: string | null; room_code: string | null; room_name: string | null }[];
   rooms: { id: number; room_code: string; name: string }[];
   beds: { id: number; room_id: number; bed_code: string; room_code: string; room_name: string }[];
 }

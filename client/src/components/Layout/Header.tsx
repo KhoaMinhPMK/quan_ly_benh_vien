@@ -116,11 +116,23 @@ export default function Header({ onMenuToggle }: HeaderProps) {
                 {searchResults.patients.length > 0 && (
                   <div className="header__search-group">
                     <div className="header__search-group-title">{t.header.searchGroupPatient}</div>
-                    {searchResults.patients.map(p => (
-                      <div key={p.id} className="header__search-item" onClick={() => { navigate(`/patients?edit=${p.id}`); setShowSearch(false); setSearchQuery(''); }}>
-                        <strong>{p.full_name}</strong> — {p.patient_code}
-                      </div>
-                    ))}
+                    {searchResults.patients.map(p => {
+                      const statusLabel: Record<string, string> = { admitted: 'Nhập viện', treating: 'Đang điều trị', waiting_discharge: 'Chờ xuất viện', discharged: 'Đã xuất viện' };
+                      const statusColor: Record<string, string> = { admitted: '#3B82F6', treating: '#10B981', waiting_discharge: '#F59E0B', discharged: '#9CA3AF' };
+                      return (
+                        <div key={`${p.id}-${p.patient_id}`} className="header__search-item" onClick={() => { navigate(p.status === 'discharged' ? '/patients' : `/patients?edit=${p.id}`); setShowSearch(false); setSearchQuery(''); }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <strong>{p.full_name}</strong>
+                            <span style={{ fontSize: 11, color: statusColor[p.status] || '#9CA3AF', fontWeight: 500 }}>{statusLabel[p.status] || p.status}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 2 }}>
+                            {p.patient_code} · {p.admission_code}
+                            {p.bed_code && <span> · {p.room_code}-{p.bed_code}</span>}
+                            {p.doctor_name && <span> · BS. {p.doctor_name}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
                 {searchResults.rooms.length > 0 && (
